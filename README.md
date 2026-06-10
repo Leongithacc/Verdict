@@ -13,7 +13,7 @@ parte dei "gaming tweak" la risposta onesta è "nessun effetto misurabile" — e
 |---|---|
 | R1 — Diagnostics CLI (ETW DPC/ISR per driver) | ✅ validata live (idle + in partita) |
 | R2 — Benchmark (PresentMon, percentili) | ✅ validata live (smoke su dwm.exe) |
-| R3 — Statistics (Mann–Whitney, bootstrap, noise floor) | ⬜ |
+| R3 — Statistics (Mann–Whitney, bootstrap CI, compare) | ✅ 46 test, validato su run reali |
 | R4 — KnowledgeBase con fonti primarie | ⬜ |
 | R5 — Advisor + SystemAnalyzer | ⬜ |
 | R6 — Reporting | ⬜ |
