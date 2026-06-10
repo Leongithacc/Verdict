@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <AssemblyName>wpep</AssemblyName>
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+    <SelfContained>false</SelfContained>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\WPEP.Core\WPEP.Core.csproj" />
+    <ProjectReference Include="..\WPEP.Diagnostics\WPEP.Diagnostics.csproj" />
+  </ItemGroup>
+</Project>
