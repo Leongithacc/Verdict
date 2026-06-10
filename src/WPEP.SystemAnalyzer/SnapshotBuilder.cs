@@ -52,6 +52,9 @@ public static class SnapshotBuilder
             NetworkThrottlingIndex = throttlingIndex,
             SystemResponsiveness = systemResponsiveness,
             StartupAppsCount = Probe(ReadStartupAppsCount, (int?)null),
+            Ipv6Disabled = Probe(ReadIpv6Disabled, (bool?)null),
+            SearchIndexingRunning = Probe(() => ReadServiceRunning("WSearch"), (bool?)null),
+            AnyHddPresent = Probe(ReadAnyHddPresent, (bool?)null),
         };
     }
 
@@ -227,13 +230,44 @@ public static class SnapshotBuilder
             n.NetworkInterfaceType == System.Net.NetworkInformation.NetworkInterfaceType.Wireless80211);
     }
 
-    private static bool? ReadSysMainRunning()
+    private static bool? ReadSysMainRunning() => ReadServiceRunning("SysMain");
+
+    private static bool? ReadServiceRunning(string serviceName)
     {
         using var searcher = new ManagementObjectSearcher(
-            "SELECT State FROM Win32_Service WHERE Name='SysMain'");
+            $"SELECT State FROM Win32_Service WHERE Name='{serviceName}'");
         foreach (var service in searcher.Get())
             return (service["State"] as string) == "Running";
         return null;
+    }
+
+    private static bool? ReadIpv6Disabled()
+    {
+        using var key = Registry.LocalMachine.OpenSubKey(
+            @"SYSTEM\CurrentControlSet\Services\Tcpip6\Parameters");
+        // Assente o 0 = IPv6 attivo (default). 0xFF = tutto disabilitato.
+        return key?.GetValue("DisabledComponents") switch
+        {
+            null or 0 => false,
+            int v => (v & 0xFF) == 0xFF,
+            _ => null,
+        };
+    }
+
+    private static bool? ReadAnyHddPresent()
+    {
+        using var searcher = new ManagementObjectSearcher(
+            @"root\Microsoft\Windows\Storage",
+            "SELECT MediaType FROM MSFT_PhysicalDisk");
+        bool sawAny = false;
+        foreach (var disk in searcher.Get())
+        {
+            sawAny = true;
+            // MediaType: 3 = HDD, 4 = SSD, 0 = Unspecified.
+            if (Convert.ToInt32(disk["MediaType"]) == 3)
+                return true;
+        }
+        return sawAny ? false : null;
     }
 
     private static bool? ReadTransparency()

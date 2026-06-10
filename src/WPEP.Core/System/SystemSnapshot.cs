@@ -42,4 +42,7 @@ public sealed record SystemSnapshot
     public int? NetworkThrottlingIndex { get; init; }
     public int? SystemResponsiveness { get; init; }
     public int? StartupAppsCount { get; init; }
+    public bool? Ipv6Disabled { get; init; }
+    public bool? SearchIndexingRunning { get; init; }
+    public bool? AnyHddPresent { get; init; }
 }

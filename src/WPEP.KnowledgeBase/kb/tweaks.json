@@ -723,5 +723,248 @@
       "disable-fullscreen-optimizations"
     ],
     "measurable": true
+  },
+  {
+    "id": "dlss-fsr-upscaling",
+    "name": "Upscaling (DLSS/FSR/XeSS) nei giochi pesanti",
+    "category": "gpu",
+    "description": "Il rendering interno avviene a risoluzione più bassa e l'AI ricostruisce l'immagine alla risoluzione del monitor (documentazione NVIDIA DLSS; FSR e XeSS sono gli equivalenti AMD/Intel). È il modo documentato più efficace per aumentare FPS quando si è GPU-bound, con un costo in qualità d'immagine che dipende dal preset (Quality ≈ quasi indistinguibile, Performance visibile).",
+    "hardware_prerequisites": [],
+    "expected_impact": "Da +20% a +100% di FPS nei giochi GPU-bound a seconda del preset. Nei giochi competitivi leggeri (Valorant, CS2) sei CPU-bound: l'upscaling lì serve a poco.",
+    "evidence_level": "evidence_strong",
+    "sources": [
+      "https://www.nvidia.com/en-us/geforce/technologies/dlss/"
+    ],
+    "risk": "none",
+    "risk_notes": "",
+    "rollback": "Impostazioni grafiche del gioco → upscaling → Off/Nativo.",
+    "manual_steps": "Impostazioni grafiche del gioco → DLSS/FSR → inizia da Quality → misura con wpep bench → scala verso Performance solo se servono altri FPS.",
+    "conflicts_with": [],
+    "measurable": true
+  },
+  {
+    "id": "frame-gen-competitive-tradeoff",
+    "name": "Frame Generation nel competitivo: capire il trade-off",
+    "category": "gpu",
+    "description": "La Frame Generation inserisce frame generati dall'AI tra quelli reali: gli FPS visualizzati salgono, ma la latenza di input NON migliora — anzi aumenta, tanto che NVIDIA stessa rende Reflex obbligatorio insieme a FG per compensare (documentato nell'annuncio DLSS 3). Per single-player cinematici è un ottimo affare; per il competitivo gli 'FPS' generati non riducono il ritardo tra il tuo input e ciò che vedi.",
+    "hardware_prerequisites": [
+      "gpu:nvidia"
+    ],
+    "expected_impact": "FPS visualizzati molto più alti, latenza di input uguale o leggermente peggiore rispetto a Reflex da solo. Nel competitivo: Reflex ON + FG OFF è la combinazione a latenza minima.",
+    "evidence_level": "controversial",
+    "sources": [
+      "https://www.nvidia.com/en-us/geforce/news/dlss3-ai-powered-neural-graphics-innovations/"
+    ],
+    "risk": "none",
+    "risk_notes": "",
+    "rollback": "Impostazioni del gioco → Frame Generation → On/Off a piacere.",
+    "manual_steps": "Competitivo: Frame Generation OFF, Reflex ON. Single-player pesante: FG ON va benissimo (e Reflex viene attivato automaticamente). I numeri FPS con FG attivo non sono confrontabili con quelli senza: wpep bench li separa se PresentMon riporta FrameType.",
+    "conflicts_with": [],
+    "measurable": true
+  },
+  {
+    "id": "monitor-on-dgpu",
+    "name": "Monitor collegato alla GPU dedicata, non alla scheda madre",
+    "category": "gpu",
+    "description": "Se il cavo del monitor è nella porta video della scheda madre, l'output passa per la iGPU: nel migliore dei casi i frame della GPU dedicata vengono copiati attraverso la iGPU (overhead e latenza), nel peggiore il gioco gira proprio sulla iGPU. Errore di assemblaggio frequentissimo e gratuito da correggere.",
+    "hardware_prerequisites": [
+      "desktop"
+    ],
+    "expected_impact": "Se il monitor era sulla scheda madre: guadagno enorme e immediato. Se è già sulla GPU: nulla da fare.",
+    "evidence_level": "plausible",
+    "sources": [
+      "https://pcguide101.com/motherboard/should-you-connect-monitor-to-gpu-or-motherboard/"
+    ],
+    "risk": "none",
+    "risk_notes": "",
+    "rollback": "Ricollegare il cavo dov'era.",
+    "manual_steps": "Spegni il PC → sposta il cavo DisplayPort/HDMI dalla porta verticale vicino alle USB (scheda madre) a una delle porte della scheda video (orizzontali, in basso) → riaccendi.",
+    "conflicts_with": [],
+    "measurable": true
+  },
+  {
+    "id": "game-on-nvme-ssd",
+    "name": "Giochi su SSD NVMe (non su HDD)",
+    "category": "background",
+    "description": "Microsoft DirectStorage (documentazione GDK) è progettato per NVMe e i motori moderni assumono storage veloce per lo streaming degli asset: un gioco su HDD oggi non significa solo caricamenti lenti, ma stutter da streaming durante il gioco (texture/mondo che non arrivano in tempo).",
+    "hardware_prerequisites": [],
+    "expected_impact": "Da HDD a NVMe: caricamenti drasticamente più rapidi e meno hitch da streaming asset nei giochi open-world. Da SATA SSD a NVMe: differenza minore ma reale nei titoli DirectStorage.",
+    "evidence_level": "evidence_strong",
+    "sources": [
+      "https://learn.microsoft.com/en-us/gaming/gdk/docs/features/console/storage/directstorage/directstorage-overview"
+    ],
+    "risk": "none",
+    "risk_notes": "",
+    "rollback": "Spostare il gioco sul disco precedente (Steam: Impostazioni → Archiviazione → Sposta).",
+    "manual_steps": "Steam → Impostazioni → Archiviazione → seleziona i giochi → Sposta sul drive NVMe. Epic/altri launcher hanno funzioni analoghe.",
+    "conflicts_with": [],
+    "measurable": true
+  },
+  {
+    "id": "disable-drive-optimization-myth",
+    "name": "Il mito di 'disattivare la deframmentazione su SSD'",
+    "category": "background",
+    "description": "Consiglio fossile: 'Windows defragga gli SSD e li consuma, disattiva l'ottimizzazione pianificata'. La documentazione di Optimize-Volume attesta che su SSD con TRIM l'operazione di default è il Retrim (notifica dei settori liberi al controller), non la deframmentazione, e la pianificazione settimanale è il comportamento corretto che mantiene le prestazioni dell'SSD.",
+    "hardware_prerequisites": [],
+    "expected_impact": "Disattivare l'ottimizzazione pianificata: nessun guadagno, e nel tempo prestazioni SSD potenzialmente peggiori (niente retrim periodico).",
+    "evidence_level": "placebo",
+    "sources": [
+      "https://learn.microsoft.com/en-us/powershell/module/storage/optimize-volume"
+    ],
+    "risk": "none",
+    "risk_notes": "",
+    "rollback": "Ottimizza unità → Modifica impostazioni → riattiva la pianificazione settimanale.",
+    "manual_steps": "Non disattivarla. Verifica che sia attiva: Start → 'Deframmenta e ottimizza unità' → Ottimizzazione pianificata: Attivata (settimanale).",
+    "conflicts_with": [],
+    "measurable": false
+  },
+  {
+    "id": "router-bufferbloat-sqm",
+    "name": "Bufferbloat: SQM/QoS sul router",
+    "category": "network",
+    "description": "Il bufferbloat è latenza causata da buffer eccessivi nel router: quando qualcuno in casa scarica/streamma, il ping in gioco schizza da 20ms a 100-300ms. È IL motivo per cui 'laggo quando mio fratello guarda Netflix'. Documentato e misurabile (test Waveform: voto A = <5ms di latenza aggiunta sotto carico). Fix: Smart Queue Management (fq_codel/CAKE) sul router.",
+    "hardware_prerequisites": [],
+    "expected_impact": "Su connessioni con bufferbloat (comunissimo): ping stabile anche con la rete occupata. Probabilmente il singolo intervento di rete con più impatto reale per il gioco online — e non tocca nemmeno il PC.",
+    "evidence_level": "plausible",
+    "sources": [
+      "https://www.bufferbloat.net/projects/bloat/wiki/Tests_for_Bufferbloat/",
+      "https://openwrt.org/docs/guide-user/network/traffic-shaping/sqm"
+    ],
+    "risk": "low",
+    "risk_notes": "SQM limita la banda a ~95% della linea per tenere la coda corta: si scambia un filo di throughput per latenza stabile.",
+    "rollback": "Disattivare SQM/QoS nell'interfaccia del router.",
+    "manual_steps": "1) Misura: test bufferbloat di Waveform durante un download. Voto C o peggio = problema reale. 2) Nel router: attiva SQM/Smart Queue/QoS adattivo (fq_codel o CAKE) impostando ~95% della banda misurata. Router consumer senza SQM: valutare OpenWrt o un router con CAKE.",
+    "conflicts_with": [],
+    "measurable": true
+  },
+  {
+    "id": "ipv6-disable",
+    "name": "Disattivare IPv6 'per il ping'",
+    "category": "network",
+    "description": "Mito diffuso. Microsoft documenta esplicitamente di NON disabilitare IPv6: è parte centrale di Windows, non viene testato disabilitato, e componenti del sistema possono smettere di funzionare. Nessuna evidenza che disattivarlo riduca la latenza di gioco; se una rete ha problemi IPv6, la raccomandazione documentata è 'prefer IPv4', non disabilitare.",
+    "hardware_prerequisites": [],
+    "expected_impact": "Zero guadagno documentato. Rischio di rompere componenti Windows che lo richiedono.",
+    "evidence_level": "placebo",
+    "sources": [
+      "https://learn.microsoft.com/en-us/troubleshoot/windows-server/networking/configure-ipv6-in-windows",
+      "https://learn.microsoft.com/en-us/archive/blogs/netro/arguments-against-disabling-ipv6"
+    ],
+    "risk": "none",
+    "risk_notes": "",
+    "rollback": "Se era stato disattivato: HKLM\\SYSTEM\\CurrentControlSet\\Services\\Tcpip6\\Parameters → eliminare DisabledComponents → riavvio.",
+    "manual_steps": "Non farlo. Se IPv6 è già stato disattivato in passato, valuta di ripristinarlo (vedi rollback).",
+    "conflicts_with": [],
+    "measurable": false
+  },
+  {
+    "id": "pbo-curve-optimizer",
+    "name": "PBO + Curve Optimizer (overclock Ryzen)",
+    "category": "power",
+    "description": "Precision Boost Overdrive alza i limiti di potenza/corrente e il Curve Optimizer applica offset di tensione per-core: guadagni reali (specie sugli X3D, che salgono di clock col carico termico ridotto). MA: AMD dichiara che l'uso di PBO invalida la garanzia del processore, e un undervolt instabile produce crash subdoli sotto carichi specifici.",
+    "hardware_prerequisites": [
+      "cpu:amd",
+      "desktop"
+    ],
+    "expected_impact": "Su X3D ben raffreddati: pochi punti percentuali di FPS in CPU-bound, misurabili. Non è gratis: è overclock con costo di garanzia e rischio stabilità.",
+    "evidence_level": "risky",
+    "sources": [
+      "https://www.amd.com/en/products/software/ryzen-master.html"
+    ],
+    "risk": "high",
+    "risk_notes": "AMD: PBO invalida la garanzia del processore. Undervolt aggressivo = instabilità intermittente difficile da diagnosticare (crash in gioco, WHEA). Richiede stress test seri (ore di OCCT/y-cruncher) prima di fidarsi.",
+    "rollback": "BIOS → PBO → Auto/Disabled, Curve Optimizer → 0.",
+    "manual_steps": "Solo se accetti i rischi: BIOS → PBO → Advanced → Curve Optimizer → negative offset graduale (parti da -10, stress test, scendi di 5 alla volta). Misura il guadagno reale con wpep bench/compare prima di decidere se ne vale la pena.",
+    "conflicts_with": [],
+    "measurable": true
+  },
+  {
+    "id": "mouse-polling-1000hz",
+    "name": "Polling rate del mouse a 1000Hz",
+    "category": "input",
+    "description": "A 125Hz il mouse riporta la posizione ogni 8ms, a 1000Hz ogni 1ms: granularità dell'input più fine e fino a 7ms di ritardo medio in meno, nel pieno spirito della guida NVIDIA alla system latency (le periferiche sono parte della catena). Oltre 1000Hz (4k/8k) i ritorni calano e il costo CPU sale: su alcuni giochi vecchi causa addirittura problemi.",
+    "hardware_prerequisites": [],
+    "expected_impact": "Da 125→1000Hz: riduzione reale della latenza media di input (~3.5ms) e tracking più fluido. Da 1000→8000Hz: differenza marginale, costo CPU non nullo.",
+    "evidence_level": "plausible",
+    "sources": [
+      "https://www.nvidia.com/en-us/geforce/guides/gfecnt/202010/system-latency-optimization-guide/"
+    ],
+    "risk": "none",
+    "risk_notes": "",
+    "rollback": "Software del mouse → polling rate precedente.",
+    "manual_steps": "Software del produttore (Synapse, G HUB, ecc.) → Polling rate → 1000Hz. Verifica che non sia rimasto a 125/500Hz di default.",
+    "conflicts_with": [],
+    "measurable": false
+  },
+  {
+    "id": "windows-search-indexing-off",
+    "name": "Disattivare l'indicizzazione di Windows Search",
+    "category": "background",
+    "description": "Consiglio dell'era HDD: l'indexer oggi lavora a bassa priorità, si ferma sotto carico e su SSD il suo I/O è irrilevante per il gioco. Disattivarlo non produce FPS e rompe la ricerca di Start/Esplora risorse. Se l'indexer risultasse davvero anomalo su un sistema, è un problema da diagnosticare, non una feature da spegnere.",
+    "hardware_prerequisites": [],
+    "expected_impact": "Nessun effetto misurabile sul gaming su sistemi SSD moderni. Ricerca file degradata.",
+    "evidence_level": "placebo",
+    "sources": [],
+    "risk": "none",
+    "risk_notes": "",
+    "rollback": "services.msc → Windows Search → Automatico (avvio ritardato) → Avvia.",
+    "manual_steps": "Non farlo. Il costo (ricerca rotta) supera il beneficio (zero misurabile).",
+    "conflicts_with": [],
+    "measurable": false
+  },
+  {
+    "id": "debloat-scripts-telemetry",
+    "name": "Script di 'debloat' e disattivazione telemetria per gli FPS",
+    "category": "background",
+    "description": "Gli script che disattivano decine di servizi/telemetria promettono FPS: nessuna misura seria ha mai mostrato guadagni oltre la varianza su un sistema sano, e gli script aggressivi rompono Windows Update, lo Store, la ricerca o funzioni che serviranno tra sei mesi (e a quel punto nessuno ricorda cosa aveva toccato lo script). La versione razionale di questo desiderio è: autostart pulito (voce dedicata) + niente software residente inutile.",
+    "hardware_prerequisites": [],
+    "expected_impact": "FPS: dentro la varianza su sistemi sani. Rischio reale di rotture differite difficili da diagnosticare.",
+    "evidence_level": "placebo",
+    "sources": [],
+    "risk": "medium",
+    "risk_notes": "Script irreversibili o semi-irreversibili; componenti rotti si manifestano settimane dopo. Se proprio, preferire le impostazioni ufficiali (Privacy → Diagnostica → dati facoltativi off) che sono reversibili.",
+    "rollback": "Dipende dallo script (spesso incompleto). Caso peggiore: ripristino/reinstallazione di Windows.",
+    "manual_steps": "Sconsigliato. Per la privacy: Impostazioni → Privacy e sicurezza → Diagnostica e feedback → disattiva i dati facoltativi (ufficiale e reversibile). Per le prestazioni: usa 'wpep advise' e misura.",
+    "conflicts_with": [
+      "disable-startup-bloat"
+    ],
+    "measurable": true
+  },
+  {
+    "id": "defender-disable-completely",
+    "name": "Disattivare completamente Defender/antivirus",
+    "category": "security",
+    "description": "Variante estrema delle esclusioni: spegnere del tutto la protezione real-time per gli FPS. Defender a riposo non scansiona nulla durante il gioco (scansiona I/O nuovo, non il rendering): il guadagno in partita è nullo o entro la varianza, mentre il costo è l'intera superficie di protezione del sistema — su un PC dove si scaricano mod, trainer e client di terze parti.",
+    "hardware_prerequisites": [],
+    "expected_impact": "FPS in gioco: nessun guadagno misurabile atteso (Defender non è nel percorso di rendering). Sicurezza: persa del tutto.",
+    "evidence_level": "risky",
+    "sources": [
+      "https://learn.microsoft.com/en-us/defender-endpoint/configure-exclusions-microsoft-defender-antivirus"
+    ],
+    "risk": "high",
+    "risk_notes": "Protezione zero su un sistema esposto a download di terze parti. Windows inoltre riattiva da solo la protezione (tamper protection), quindi il 'tweak' non è nemmeno persistente.",
+    "rollback": "Sicurezza di Windows → Protezione da virus e minacce → riattiva la protezione in tempo reale.",
+    "manual_steps": "Non farlo. Se sospetti che l'antivirus causi stutter su questo sistema specifico: misuralo (wpep bench con protezione on/off nello stesso scenario ripetibile) e porta i numeri, non la sensazione.",
+    "conflicts_with": [
+      "defender-game-exclusions"
+    ],
+    "measurable": true
+  },
+  {
+    "id": "in-game-raw-input-on",
+    "name": "Raw Input attivo nei giochi che lo offrono",
+    "category": "input",
+    "description": "Con Raw Input (WM_INPUT) il gioco legge il mouse direttamente, bypassando sensibilità e accelerazione di Windows — è la modalità che la documentazione Microsoft indica per i giochi. Se il gioco offre l'opzione, attivarla garantisce input 1:1 indipendente dalle impostazioni desktop.",
+    "hardware_prerequisites": [],
+    "expected_impact": "Input consistente e indipendente dalle impostazioni di Windows. Nei giochi moderni è spesso già attivo di default.",
+    "evidence_level": "evidence_strong",
+    "sources": [
+      "https://learn.microsoft.com/en-us/windows/win32/dxtecharts/taking-advantage-of-high-dpi-mouse-movement"
+    ],
+    "risk": "none",
+    "risk_notes": "",
+    "rollback": "Stessa opzione in-game → off.",
+    "manual_steps": "Impostazioni del gioco → Mouse/Input → 'Raw Input' → On (es. CS2: m_rawinput 1, già default).",
+    "conflicts_with": [],
+    "measurable": false
   }
 ]

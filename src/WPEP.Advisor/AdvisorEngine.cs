@@ -221,6 +221,27 @@ public static class AdvisorEngine
             int v => (true, $"SystemResponsiveness modificato: {v} (default 20). Già applicato: valuta rollback."),
         },
 
+        "ipv6-disable" => s.Ipv6Disabled switch
+        {
+            true => (true, "IPv6 GIÀ disattivato: Microsoft sconsiglia, valuta il ripristino."),
+            false => (false, "IPv6 attivo (configurazione corretta, lasciarlo così)."),
+            null => (null, "Stato non rilevato."),
+        },
+
+        "windows-search-indexing-off" => s.SearchIndexingRunning switch
+        {
+            false => (true, "Windows Search già disattivato (per gli FPS era comunque irrilevante)."),
+            true => (false, "Windows Search attivo (default corretto)."),
+            null => (null, "Stato non rilevato."),
+        },
+
+        "game-on-nvme-ssd" => s.AnyHddPresent switch
+        {
+            false => (true, "Tutti i dischi rilevati sono SSD."),
+            true => (false, "Rilevato almeno un HDD: verifica che nessun gioco ci giri sopra."),
+            null => (null, "Tipo dischi non rilevato."),
+        },
+
         "disable-startup-bloat" when s.StartupAppsCount is int n =>
             n <= 5
                 ? (true, $"{n} voci in autostart: situazione pulita.")
