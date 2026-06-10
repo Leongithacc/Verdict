@@ -23,6 +23,8 @@ switch (args[0])
         return RunCompare(args.Skip(1).ToArray());
     case "noise":
         return RunNoise(args.Skip(1).ToArray());
+    case "kb":
+        return RunKb(args.Skip(1).ToArray());
     case "tools" when args.Length >= 2 && args[1] == "install-presentmon":
         return await InstallPresentMon();
     default:
@@ -341,6 +343,82 @@ static int RunNoise(string[] args)
     return 0;
 }
 
+static int RunKb(string[] args)
+{
+    IReadOnlyList<WPEP.KnowledgeBase.TweakEntry> entries;
+    try
+    {
+        entries = WPEP.KnowledgeBase.KnowledgeBaseLoader.Load();
+    }
+    catch (Exception ex)
+    {
+        Console.Error.WriteLine($"Caricamento KB fallito: {ex.Message}");
+        return 1;
+    }
+
+    if (args.Length >= 2 && args[0] == "show")
+    {
+        var entry = entries.FirstOrDefault(e =>
+            e.Id.Equals(args[1], StringComparison.OrdinalIgnoreCase));
+        if (entry is null)
+        {
+            Console.Error.WriteLine($"Voce '{args[1]}' non trovata. Usa 'wpep kb' per la lista.");
+            return 2;
+        }
+        PrintKbEntry(entry);
+        return 0;
+    }
+
+    Console.WriteLine($"Knowledge Base: {entries.Count} voci (dettaglio: wpep kb show <id>)\n");
+    Console.WriteLine($"{"Id",-42} {"Categoria",-11} {"Evidenza",-16} {"Rischio",-8}");
+    Console.WriteLine(new string('-', 80));
+    foreach (var e in entries.OrderBy(e => e.EvidenceLevel).ThenBy(e => e.Id))
+    {
+        Console.WriteLine($"{e.Id,-42} {e.Category,-11} {EvidenceLabel(e.EvidenceLevel),-16} {e.Risk.ToString().ToLowerInvariant(),-8}");
+    }
+    Console.WriteLine(
+        """
+
+        Legenda evidenza (spec §5):
+          forte         fonte primaria + misurabile      → può essere consigliato
+          plausibile    ragionamento valido, non provato → opzionale
+          controversa   fonti in disaccordo              → opzionale con warning
+          placebo       nessuna evidenza / smentito      → non lo tocchiamo
+          rischiosa     guadagno possibile, rischio reale → warning forte
+        """);
+    return 0;
+}
+
+static void PrintKbEntry(WPEP.KnowledgeBase.TweakEntry e)
+{
+    Console.WriteLine($"\n{e.Name}  [{e.Id}]");
+    Console.WriteLine(new string('=', Math.Min(70, e.Name.Length + e.Id.Length + 4)));
+    Console.WriteLine($"Categoria : {e.Category}    Evidenza: {EvidenceLabel(e.EvidenceLevel)}    Rischio: {e.Risk.ToString().ToLowerInvariant()}");
+    Console.WriteLine($"\n{e.Description}");
+    Console.WriteLine($"\nImpatto atteso:\n  {e.ExpectedImpact}");
+    if (!string.IsNullOrWhiteSpace(e.RiskNotes))
+        Console.WriteLine($"\nNote di rischio:\n  {e.RiskNotes}");
+    Console.WriteLine($"\nPassi manuali:\n  {e.ManualSteps}");
+    Console.WriteLine($"\nRollback:\n  {e.Rollback}");
+    if (e.Sources.Count > 0)
+    {
+        Console.WriteLine("\nFonti:");
+        foreach (var s in e.Sources)
+            Console.WriteLine($"  {s}");
+    }
+    Console.WriteLine($"\nMisurabile con wpep bench/diag: {(e.Measurable ? "sì" : "no (effetto sotto la soglia di misura)")}");
+}
+
+static string EvidenceLabel(WPEP.KnowledgeBase.EvidenceLevel level) => level switch
+{
+    WPEP.KnowledgeBase.EvidenceLevel.EvidenceStrong => "forte",
+    WPEP.KnowledgeBase.EvidenceLevel.Plausible => "plausibile",
+    WPEP.KnowledgeBase.EvidenceLevel.Controversial => "controversa",
+    WPEP.KnowledgeBase.EvidenceLevel.Placebo => "placebo",
+    WPEP.KnowledgeBase.EvidenceLevel.Risky => "rischiosa",
+    _ => level.ToString(),
+};
+
 static async Task<int> InstallPresentMon()
 {
     try
@@ -428,6 +506,10 @@ static void PrintUsage()
           wpep noise --dir <dir>
               Misura la varianza naturale run-to-run da run ripetute della
               stessa configurazione. Sotto questa soglia è tutto rumore.
+
+          wpep kb [show <id>]
+              Knowledge base dei tweak: grading di evidenza con fonti primarie,
+              passi manuali e rollback. Include i placebo, spiegando perché.
 
           wpep tools install-presentmon
               Scarica PresentMon (Intel, MIT) nella cartella tools di WPEP.

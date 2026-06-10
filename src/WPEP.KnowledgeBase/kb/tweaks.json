@@ -1,0 +1,276 @@
+[
+  {
+    "id": "power-plan-high-performance",
+    "name": "Power Plan: High/Ultimate Performance",
+    "category": "power",
+    "description": "Imposta il piano energetico su High/Ultimate Performance. Disabilita lo scaling dinamico delle prestazioni: i P-state restano alti invece di salire/scendere col carico. Il turbo boost è attivo anche sul piano Balanced, quindi il guadagno riguarda solo la rapidità di risposta ai carichi bursty, non il clock massimo.",
+    "hardware_prerequisites": ["desktop"],
+    "expected_impact": "Riduce core parking e downclock sotto carichi intermittenti. Su CPU moderne ben raffreddate (es. X3D) con piano Balanced aggiornato il delta in gioco è tipicamente entro la varianza. Consumo a vuoto più alto.",
+    "evidence_level": "plausible",
+    "sources": [
+      "https://learn.microsoft.com/en-us/windows-server/administration/performance-tuning/hardware/power/power-performance-tuning",
+      "https://learn.microsoft.com/en-us/windows-hardware/customize/power-settings/configure-processor-power-management-options"
+    ],
+    "risk": "low",
+    "risk_notes": "Maggior consumo e temperatura a vuoto. Nessun rischio di stabilità.",
+    "rollback": "Pannello di controllo → Opzioni risparmio energia → seleziona il piano precedente (Balanced).",
+    "manual_steps": "Pannello di controllo → Opzioni risparmio energia → Mostra piani aggiuntivi → Prestazioni elevate. Per Ultimate Performance: powercfg -duplicatescheme e9a42b02-d5df-448d-aa00-03f14749eb61 da terminale admin, poi selezionarlo.",
+    "conflicts_with": [],
+    "measurable": true
+  },
+  {
+    "id": "disable-enhance-pointer-precision",
+    "name": "Disattiva 'Migliora precisione puntatore'",
+    "category": "input",
+    "description": "Disattiva l'accelerazione del mouse di Windows (pointer ballistics). Documentazione Microsoft: i giochi che leggono il mouse via Raw Input (WM_INPUT) NON sono influenzati da questa impostazione; quelli che usano WM_MOUSEMOVE sì. Quasi tutti gli FPS competitivi moderni usano Raw Input.",
+    "hardware_prerequisites": [],
+    "expected_impact": "Mira consistente nei giochi senza Raw Input e coerenza desktop/gioco. Nei titoli competitivi moderni con Raw Input l'effetto in-game è nullo per design — il valore è la consistenza fuori dal gioco e nei titoli legacy.",
+    "evidence_level": "evidence_strong",
+    "sources": [
+      "https://learn.microsoft.com/en-us/windows/win32/dxtecharts/taking-advantage-of-high-dpi-mouse-movement"
+    ],
+    "risk": "none",
+    "risk_notes": "",
+    "rollback": "Impostazioni → Bluetooth e dispositivi → Mouse → Impostazioni aggiuntive → Opzioni puntatore → rispunta 'Migliora precisione puntatore'.",
+    "manual_steps": "Impostazioni → Bluetooth e dispositivi → Mouse → Impostazioni aggiuntive del mouse → scheda Opzioni puntatore → togli la spunta a 'Migliora precisione puntatore' → OK.",
+    "conflicts_with": [],
+    "measurable": false
+  },
+  {
+    "id": "disable-background-overlays",
+    "name": "Disattiva overlay e software RGB non necessari",
+    "category": "background",
+    "description": "Overlay (Discord, GeForce Experience/App, Game Bar, software RGB con polling) aggiungono lavoro a ogni frame presentato e in alcuni casi driver con DPC frequenti. Le linee guida Microsoft per i driver fissano 100µs come soglia massima consigliata per DPC: software di terze parti che la viola degrada la responsiveness. L'impatto è specifico del software e del sistema: va misurato, non assunto.",
+    "hardware_prerequisites": [],
+    "expected_impact": "Variabile da zero a significativo a seconda del software. Verificabile direttamente su questo sistema con 'wpep diag' (DPC per driver) e 'wpep bench' before/after.",
+    "evidence_level": "plausible",
+    "sources": [
+      "https://learn.microsoft.com/en-us/windows-hardware/drivers/kernel/guidelines-for-writing-dpc-routines"
+    ],
+    "risk": "none",
+    "risk_notes": "",
+    "rollback": "Riattiva gli overlay dalle impostazioni delle rispettive app.",
+    "manual_steps": "Discord: Impostazioni → Overlay di gioco → off. NVIDIA App: Impostazioni → Overlay → off. Game Bar: Impostazioni Windows → Giochi → Game Bar → off. Software RGB: chiudi o disinstalla quelli non usati; per quelli necessari riduci il polling/effetti dinamici.",
+    "conflicts_with": [],
+    "measurable": true
+  },
+  {
+    "id": "hags-hardware-gpu-scheduling",
+    "name": "Hardware-Accelerated GPU Scheduling (HAGS)",
+    "category": "gpu",
+    "description": "Sposta la schedulazione delle code GPU dalla CPU a un processore dedicato sulla GPU (WDDM 2.7+). Microsoft stessa, nel blog DirectX di annuncio, dichiara che l'utente tipico non noterà differenze. È però REQUISITO per DLSS Frame Generation su NVIDIA.",
+    "hardware_prerequisites": ["gpu:wddm2.7+"],
+    "expected_impact": "Neutro o marginale sugli FPS nella maggior parte dei casi; piccole differenze positive o negative a seconda di gioco e driver. Necessario per DLSS FG. Da misurare per-sistema.",
+    "evidence_level": "controversial",
+    "sources": [
+      "https://devblogs.microsoft.com/directx/hardware-accelerated-gpu-scheduling/"
+    ],
+    "risk": "low",
+    "risk_notes": "Con driver vecchi sono stati segnalati stutter; risolvibile disattivandolo.",
+    "rollback": "Stesso percorso, interruttore su Disattivato, riavvio.",
+    "manual_steps": "Impostazioni → Sistema → Schermo → Grafica → Modifica impostazioni grafiche predefinite → Pianificazione GPU con accelerazione hardware → Attivato → riavvio.",
+    "conflicts_with": [],
+    "measurable": true
+  },
+  {
+    "id": "gpu-msi-mode",
+    "name": "Forza MSI mode sulla GPU",
+    "category": "gpu",
+    "description": "Gli interrupt Message-Signaled (PCI 2.2+) sono il meccanismo moderno alternativo agli interrupt line-based, documentato da Microsoft. La community li forza via registry su dispositivi che risultano in modalità legacy. I driver GPU NVIDIA/AMD recenti usano già MSI di default, quindi nella maggior parte dei sistemi moderni questo tweak non cambia nulla.",
+    "hardware_prerequisites": ["gpu:any"],
+    "expected_impact": "Nullo se la GPU è già in MSI mode (caso tipico su driver moderni). Nessuna fonte primaria dimostra benefici di latenza nel forzarlo dove non è già attivo.",
+    "evidence_level": "controversial",
+    "sources": [
+      "https://learn.microsoft.com/en-us/windows-hardware/drivers/kernel/introduction-to-message-signaled-interrupts",
+      "https://learn.microsoft.com/en-us/windows-hardware/drivers/kernel/enabling-message-signaled-interrupts-in-the-registry"
+    ],
+    "risk": "medium",
+    "risk_notes": "Modifica registry sotto il device; valore sbagliato sul dispositivo sbagliato può impedire il boot del driver. Verificare prima lo stato attuale (MSI util v3 o registry).",
+    "rollback": "Ripristinare MSISupported=0 nella stessa chiave registry del dispositivo, riavvio.",
+    "manual_steps": "Verifica prima se già attivo: HKLM\\SYSTEM\\CurrentControlSet\\Enum\\PCI\\<GPU>\\Device Parameters\\Interrupt Management\\MessageSignaledInterruptProperties → MSISupported. Se 1, non fare nulla. Se assente/0 su GPU moderna, indagare perché prima di forzare.",
+    "conflicts_with": [],
+    "measurable": true
+  },
+  {
+    "id": "disable-fullscreen-optimizations",
+    "name": "Disattiva Fullscreen Optimizations per gioco",
+    "category": "gpu",
+    "description": "Le Fullscreen Optimizations (FSO) fanno girare il gioco in borderless con flip model moderno mantenendo le prestazioni del fullscreen esclusivo — è Microsoft stessa a documentarlo nel blog DirectX ('Demystifying Fullscreen Optimizations'). Disattivarle forza il percorso legacy. Utile solo come workaround per giochi specifici con problemi.",
+    "hardware_prerequisites": [],
+    "expected_impact": "Per la maggior parte dei giochi: nullo o peggiorativo (si perde il present path moderno). Sensato solo su titoli specifici con incompatibilità note.",
+    "evidence_level": "controversial",
+    "sources": [
+      "https://devblogs.microsoft.com/directx/demystifying-full-screen-optimizations/",
+      "https://devblogs.microsoft.com/directx/dxgi-flip-model/"
+    ],
+    "risk": "low",
+    "risk_notes": "Alt-tab più lento, possibile latenza maggiore con overlay.",
+    "rollback": "Stessa finestra Proprietà → Compatibilità → togli la spunta.",
+    "manual_steps": "Tasto destro sull'exe del gioco → Proprietà → Compatibilità → 'Disabilita ottimizzazioni a schermo intero' → OK. Solo per il gioco problematico, non globalmente.",
+    "conflicts_with": [],
+    "measurable": true
+  },
+  {
+    "id": "memory-integrity-vbs-off",
+    "name": "Disattiva Memory Integrity (HVCI) / VBS",
+    "category": "security",
+    "description": "Memory Integrity (HVCI) esegue il controllo di integrità del codice kernel in un ambiente virtualizzato isolato (VBS). Microsoft documenta un costo prestazionale, maggiore su CPU senza MBEC (Intel pre-Kaby Lake) o GMET (AMD pre-Zen 2); su CPU moderne il costo è ridotto ma non nullo. Disattivarlo rimuove una protezione reale contro exploit kernel.",
+    "hardware_prerequisites": [],
+    "expected_impact": "Su CPU moderne (Zen 2+, Kaby Lake+): pochi punti percentuali nel caso peggiore, spesso entro la varianza. Su CPU vecchie: impatto maggiore. Da misurare prima di decidere se il costo di sicurezza vale.",
+    "evidence_level": "risky",
+    "sources": [
+      "https://learn.microsoft.com/en-us/windows/security/hardware-security/enable-virtualization-based-protection-of-code-integrity",
+      "https://learn.microsoft.com/en-us/windows-hardware/design/device-experiences/oem-vbs"
+    ],
+    "risk": "high",
+    "risk_notes": "Costo di SICUREZZA reale e documentato: rimuove la protezione hypervisor del kernel. Alcuni anti-cheat (es. Vanguard) interagiscono con lo stato VBS: cambiare questa impostazione può richiedere ri-validazioni. Non consigliabile come tweak di default.",
+    "rollback": "Sicurezza di Windows → Sicurezza dispositivi → Isolamento core → Integrità della memoria → Attivato, riavvio.",
+    "manual_steps": "Sicurezza di Windows → Sicurezza dispositivi → Dettagli isolamento core → Integrità della memoria → Disattivato → riavvio. SOLO dopo aver misurato un beneficio reale con wpep bench/compare e accettato consapevolmente il costo di sicurezza.",
+    "conflicts_with": [],
+    "measurable": true
+  },
+  {
+    "id": "disable-core-parking",
+    "name": "Disattiva core parking",
+    "category": "power",
+    "description": "Il core parking è documentato da Microsoft: il PPM e lo scheduler riducono dinamicamente i core attivi; i core parcheggiati processano comunque interrupt, DPC e lavoro affinitizzato. I piani moderni e i driver chipset (es. AMD per X3D) gestiscono già il parking in modo adeguato per il gaming; nessuna fonte primaria dimostra benefici nel forzarlo a 100% unparked su sistemi recenti.",
+    "hardware_prerequisites": ["desktop"],
+    "expected_impact": "Tipicamente nullo su Windows 11 con driver chipset aggiornati. Possibile micro-beneficio su configurazioni con parking aggressivo e carichi molto bursty; consumo idle più alto.",
+    "evidence_level": "controversial",
+    "sources": [
+      "https://learn.microsoft.com/en-us/windows-hardware/customize/power-settings/static-configuration-options-for-core-parking",
+      "https://learn.microsoft.com/en-us/windows-server/administration/performance-tuning/hardware/power/power-performance-tuning"
+    ],
+    "risk": "low",
+    "risk_notes": "Consumo e temperature idle più alti. Su X3D dual-CCD può interferire con il driver AMD che gestisce il parking del secondo CCD.",
+    "rollback": "Riportare 'Processor performance core parking min cores' al valore precedente (default 0%) o ripristinare il piano energetico.",
+    "manual_steps": "powercfg -attributes SUB_PROCESSOR 0cc5b647-c1df-4637-891a-dec35c318583 -ATTRIB_HIDE per esporre l'opzione, poi nel piano avanzato: 'Numero minimo di core non parcheggiati' → 100%. In alternativa, High Performance plan lo fa già.",
+    "conflicts_with": ["power-plan-high-performance"],
+    "measurable": true
+  },
+  {
+    "id": "disable-dynamic-tick",
+    "name": "bcdedit disabledynamictick yes",
+    "category": "scheduler",
+    "description": "Il dynamic tick è una feature di risparmio energetico che ferma il timer tick del kernel nei periodi idle. La documentazione Microsoft di bcdedit dichiara ESPLICITAMENTE che questa opzione 'should only be used for debugging'. La community la usa sperando in frame pacing più stabile; segnalazioni miste includono lag e problemi di mouse.",
+    "hardware_prerequisites": [],
+    "expected_impact": "Non dimostrato. Vendor dichiara uso solo debug. Segnalazioni community contraddittorie (alcuni meglio, altri peggio o problemi evidenti).",
+    "evidence_level": "risky",
+    "sources": [
+      "https://learn.microsoft.com/en-us/windows-hardware/drivers/devtest/bcdedit--set"
+    ],
+    "risk": "medium",
+    "risk_notes": "Microsoft: opzione di debug, non di produzione. Effetti collaterali segnalati: lag di sistema, comportamento anomalo di timer/mouse, maggior consumo. Da evitare salvo test controllato con rollback pronto.",
+    "rollback": "Terminale admin: bcdedit /deletevalue disabledynamictick → riavvio.",
+    "manual_steps": "SCONSIGLIATO di default. Per test controllato: terminale admin → bcdedit /set disabledynamictick yes → riavvio → misura con wpep bench (5+ run) → rollback se nessun miglioramento oltre il noise floor.",
+    "conflicts_with": [],
+    "measurable": true
+  },
+  {
+    "id": "nagle-tcpackfrequency",
+    "name": "TcpAckFrequency / TCPNoDelay (Nagle)",
+    "category": "network",
+    "description": "Il delayed ACK e l'algoritmo di Nagle sono documentati da Microsoft, inclusa la loro interazione patologica (ritardi fino a 200-500ms) su flussi TCP request-response. MA: la quasi totalità dei giochi competitivi moderni usa UDP per il traffico di gameplay, dove questi parametri sono completamente inerti. Reale solo per giochi TCP-based (alcuni MMO datati).",
+    "hardware_prerequisites": [],
+    "expected_impact": "Nullo sui giochi UDP (Valorant, CS2, Fortnite, la maggioranza dei titoli moderni). Misurabile solo su giochi che usano TCP per il gameplay.",
+    "evidence_level": "controversial",
+    "sources": [
+      "https://learn.microsoft.com/en-us/troubleshoot/windows-server/networking/registry-entry-control-tcp-acknowledgment-behavior",
+      "https://learn.microsoft.com/en-us/archive/blogs/nettracer/tcp-delayed-ack-combined-with-nagle-algorithm-can-badly-impact-communication-performance"
+    ],
+    "risk": "low",
+    "risk_notes": "Modifica registry per-interfaccia; ACK più frequenti = overhead di rete marginalmente più alto.",
+    "rollback": "Eliminare i valori TcpAckFrequency e TCPNoDelay dalla chiave dell'interfaccia, riavvio.",
+    "manual_steps": "Solo se il gioco target usa TCP per il gameplay (verificare!). HKLM\\SYSTEM\\CurrentControlSet\\Services\\Tcpip\\Parameters\\Interfaces\\<GUID interfaccia attiva> → DWORD TcpAckFrequency=1 → riavvio.",
+    "conflicts_with": [],
+    "measurable": true
+  },
+  {
+    "id": "dns-change",
+    "name": "Cambio DNS (1.1.1.1, 8.8.8.8, ...)",
+    "category": "network",
+    "description": "Il DNS traduce nomi in indirizzi IP al momento della connessione. Una volta stabilita la connessione al game server, il DNS non è più nel percorso dei pacchetti: il ping in-game è determinato dal routing verso il server, non dal resolver. Un DNS più veloce accelera solo la fase di lookup iniziale (matchmaking/menu, millisecondi una tantum).",
+    "hardware_prerequisites": [],
+    "expected_impact": "Zero sul ping e sulla latenza in partita. Eventuale beneficio percepibile solo nei caricamenti/connessioni iniziali se il DNS dell'ISP è particolarmente lento.",
+    "evidence_level": "placebo",
+    "sources": [],
+    "risk": "none",
+    "risk_notes": "",
+    "rollback": "Impostazioni → Rete → proprietà della connessione → Assegnazione server DNS → Automatico (DHCP).",
+    "manual_steps": "Non necessario per la latenza in-game. Se si vuole comunque (privacy/velocità di navigazione): Impostazioni → Rete e Internet → proprietà connessione → DNS manuale.",
+    "conflicts_with": [],
+    "measurable": false
+  },
+  {
+    "id": "windows-game-mode",
+    "name": "Windows Game Mode",
+    "category": "scheduler",
+    "description": "Documentato da Microsoft (supporto ufficiale): con un gioco attivo, Game Mode impedisce a Windows Update di installare driver e inviare notifiche di riavvio, e dà priorità alle risorse del gioco per un frame rate più stabile 'a seconda del gioco e del sistema'. Attivo di default su Windows 10/11.",
+    "hardware_prerequisites": [],
+    "expected_impact": "Piccolo ma reale nella prevenzione di interferenze (update, notifiche). Sul frame rate puro l'effetto è tipicamente entro la varianza; il valore è la consistenza, non gli FPS medi.",
+    "evidence_level": "evidence_strong",
+    "sources": [
+      "https://support.microsoft.com/en-us/help/4028293/windows-using-game-mode-on-your-pc"
+    ],
+    "risk": "none",
+    "risk_notes": "",
+    "rollback": "Impostazioni → Giochi → Modalità gioco → Disattivato.",
+    "manual_steps": "Già attivo di default. Verifica: Impostazioni → Giochi → Modalità gioco → Attivato.",
+    "conflicts_with": [],
+    "measurable": false
+  },
+  {
+    "id": "timer-resolution-0.5ms",
+    "name": "Tool 'Timer Resolution' globale (0.5ms)",
+    "category": "scheduler",
+    "description": "Storicamente timeBeginPeriod era globale: un tool poteva alzare la risoluzione timer per tutto il sistema. La documentazione Microsoft di timeBeginPeriod attesta che da Windows 10 2004 la chiamata NON è più globale, e da Windows 11 i processi che non la invocano non hanno garanzie di risoluzione elevata (e le finestre occluse vengono throttlate). Un tool esterno quindi NON può più alzare la risoluzione timer di un gioco: alza solo la propria. I giochi che ne hanno bisogno la richiedono già da soli.",
+    "hardware_prerequisites": [],
+    "expected_impact": "Su Windows 11: nullo per design documentato — il tool esterno non influenza il processo del gioco. Su Windows 10 pre-2004 il comportamento globale esisteva davvero.",
+    "evidence_level": "placebo",
+    "sources": [
+      "https://learn.microsoft.com/en-us/windows/win32/api/timeapi/nf-timeapi-timebeginperiod"
+    ],
+    "risk": "none",
+    "risk_notes": "",
+    "rollback": "Chiudere/disinstallare il tool.",
+    "manual_steps": "Su Windows 11 non installare tool timer resolution: non possono influenzare il gioco. Se un gioco specifico ha problemi di timing è un bug del gioco, da segnalare allo sviluppatore.",
+    "conflicts_with": [],
+    "measurable": false
+  },
+  {
+    "id": "systemresponsiveness-gpupriority-registry",
+    "name": "SystemResponsiveness=0 / GPU Priority registry",
+    "category": "scheduler",
+    "description": "MMCSS è documentato da Microsoft: SystemResponsiveness riserva una percentuale di CPU (default 20%) ai task a bassa priorità, e il profilo 'Games' in SystemProfile\\Tasks esiste. MA: MMCSS si applica solo ai thread che si registrano esplicitamente al servizio — la maggior parte dei game engine non lo fa. Nessuna fonte primaria documenta benefici nel modificare questi valori per il gaming.",
+    "hardware_prerequisites": [],
+    "expected_impact": "Tipicamente nullo: i giochi non registrati a MMCSS non sono toccati da questi valori. Meccanismo reale, applicabilità al gaming non dimostrata.",
+    "evidence_level": "controversial",
+    "sources": [
+      "https://learn.microsoft.com/en-us/windows/win32/procthread/multimedia-class-scheduler-service"
+    ],
+    "risk": "low",
+    "risk_notes": "Valori estremi possono penalizzare audio/streaming che usano davvero MMCSS (es. OBS, Discord audio).",
+    "rollback": "Ripristinare SystemResponsiveness=20 (default) in HKLM\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Multimedia\\SystemProfile.",
+    "manual_steps": "Sconsigliato senza misura. Per test: SystemProfile → SystemResponsiveness → 10 o 0, riavvio, misura con wpep bench/compare, rollback se entro il noise floor.",
+    "conflicts_with": [],
+    "measurable": true
+  },
+  {
+    "id": "correct-refresh-rate-and-fps-cap",
+    "name": "Refresh rate corretto + FPS cap sensato",
+    "category": "gpu",
+    "description": "Due errori di configurazione frequentissimi e gratuiti da correggere: (1) monitor ad alto refresh lasciato a 60Hz in Windows; (2) frame rate non gestito che satura la GPU aumentando la latenza. La guida NVIDIA alla system latency documenta che con G-SYNC/VRR un cap pochi FPS sotto il refresh (o Reflex, che lo fa da solo) evita la coda di rendering e il backpressure del VSync, riducendo la latenza misurata.",
+    "hardware_prerequisites": ["monitor:high-refresh"],
+    "expected_impact": "Refresh sbagliato: differenza enorme e immediata. Cap corretto con VRR: riduzione di latenza documentata dal vendor e consistenza del frame pacing. Tra i pochi tweak con beneficio grande, gratuito e misurabile.",
+    "evidence_level": "evidence_strong",
+    "sources": [
+      "https://www.nvidia.com/en-us/geforce/guides/gfecnt/202010/system-latency-optimization-guide/"
+    ],
+    "risk": "none",
+    "risk_notes": "",
+    "rollback": "Riportare refresh/limitatore ai valori precedenti.",
+    "manual_steps": "1) Impostazioni → Sistema → Schermo → Schermo avanzato → verifica che la frequenza sia il massimo del monitor. 2) Se il gioco supporta Reflex: attivalo. Altrimenti con G-SYNC: cap in-game ~3-5 FPS sotto il refresh. 3) Verifica con wpep bench che il frametime sia stabile al cap.",
+    "conflicts_with": [],
+    "measurable": true
+  }
+]
