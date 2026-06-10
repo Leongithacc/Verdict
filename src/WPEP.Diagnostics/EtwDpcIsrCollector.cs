@@ -1,9 +1,9 @@
 using System.Diagnostics;
-using System.Security.Principal;
 using Microsoft.Diagnostics.Tracing.Parsers;
 using Microsoft.Diagnostics.Tracing.Parsers.Kernel;
 using Microsoft.Diagnostics.Tracing.Session;
 using WPEP.Core.Diagnostics;
+using WPEP.Core.Platform;
 
 namespace WPEP.Diagnostics;
 
@@ -16,11 +16,7 @@ public sealed class EtwDpcIsrCollector
 {
     public const string SessionName = "WPEP-DpcIsr";
 
-    public static bool IsElevated()
-    {
-        using var identity = WindowsIdentity.GetCurrent();
-        return new WindowsPrincipal(identity).IsInRole(WindowsBuiltInRole.Administrator);
-    }
+    public static bool IsElevated() => Elevation.IsElevated();
 
     /// <summary>
     /// Captures for the given duration and returns the aggregated report.
