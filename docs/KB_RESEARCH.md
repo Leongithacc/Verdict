@@ -36,13 +36,24 @@ Confermati: `power-plan-high-performance` (plausible), `disable-enhance-pointer-
 registrati al servizio, i game engine di solito non lo fanno),
 `correct-refresh-rate-and-fps-cap` (evidence_strong — guida NVIDIA system latency).
 
+## Round 2 (13 voci aggiunte → 51 totali)
+
+Forti: upscaling DLSS/FSR (doc NVIDIA), giochi su NVMe (DirectStorage, doc Microsoft GDK),
+Raw Input in-game (doc Microsoft). Plausibili: monitor sulla dGPU, bufferbloat/SQM
+(bufferbloat.net — probabilmente il fix di rete più sottovalutato), polling mouse 1000Hz.
+Controversi: Frame Generation nel competitivo (NVIDIA stessa documenta che FG richiede
+Reflex per compensare la latenza aggiunta). Placebo: IPv6 off (Microsoft documenta
+esplicitamente di NON disattivarlo), mito della defrag su SSD (Optimize-Volume fa Retrim),
+Windows Search off, script di debloat (con risk note: rotture differite). Rischiosi:
+PBO/Curve Optimizer (AMD: invalida la garanzia), Defender completamente off.
+
 ## Bilancio onesto
 
-Su 38 tweak totali: **8 con evidenza forte**, 11 plausibili, **10 controversi**,
-**5 placebo documentati**, **4 rischiosi**. Tradotto: anche allargando la rete, meno
-di un quarto dei tweak che circolano ha evidenza primaria forte — e quasi tutti quelli
-forti sono "configura correttamente ciò che hai" (refresh, profilo RAM, Reflex, BIOS
-aggiornato), non magie da registry.
+Su 51 tweak totali: **11 con evidenza forte**, 13 plausibili, **12 controversi**,
+**9 placebo documentati**, **6 rischiosi**. Il pattern si conferma allargando la rete:
+quasi tutto ciò che ha evidenza forte è "configura correttamente ciò che hai"
+(refresh, profilo RAM, Reflex, upscaling, SSD, Raw Input, BIOS aggiornato) — le magie
+da registry stanno tutte tra controverso e placebo.
 
 ## Fonti primarie principali
 
