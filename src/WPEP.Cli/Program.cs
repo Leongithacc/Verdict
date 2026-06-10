@@ -2,6 +2,8 @@ using System.Text.Json;
 using WPEP.Core.Diagnostics;
 using WPEP.Diagnostics;
 
+Console.OutputEncoding = System.Text.Encoding.UTF8;
+
 if (args.Length == 0 || args[0] is "-h" or "--help" or "help")
 {
     PrintUsage();

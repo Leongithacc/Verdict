@@ -10,8 +10,7 @@ namespace WPEP.Diagnostics;
 /// <summary>
 /// Real-time kernel ETW session collecting DPC and ISR events.
 /// Requires elevation: kernel providers cannot be enabled otherwise.
-/// The ETW kernel logs DPC/ISR events on routine exit; InitialTime is the entry
-/// timestamp, so duration = event timestamp - InitialTime.
+/// TraceEvent exposes the routine execution time directly as ElapsedTimeMSec.
 /// </summary>
 public sealed class EtwDpcIsrCollector
 {
@@ -51,12 +50,11 @@ public sealed class EtwDpcIsrCollector
 
             void OnDpc(DPCTraceData data, KernelEventKind kind)
             {
-                double durationUs =
-                    (data.TimeStampRelativeMSec - data.InitialTimeRelativeMSec) * 1000.0;
+                double durationUs = data.ElapsedTimeMSec * 1000.0;
                 if (durationUs < 0)
                     return;
                 pending.Add(new DpcIsrEvent(
-                    kind, (ulong)data.Routine, data.ProcessorNumber,
+                    kind, data.Routine, data.ProcessorNumber,
                     data.TimeStampRelativeMSec, durationUs));
             }
 
@@ -66,12 +64,11 @@ public sealed class EtwDpcIsrCollector
 
             kernel.PerfInfoISR += data =>
             {
-                double durationUs =
-                    (data.TimeStampRelativeMSec - data.InitialTimeRelativeMSec) * 1000.0;
+                double durationUs = data.ElapsedTimeMSec * 1000.0;
                 if (durationUs < 0)
                     return;
                 pending.Add(new DpcIsrEvent(
-                    KernelEventKind.Isr, (ulong)data.Routine, data.ProcessorNumber,
+                    KernelEventKind.Isr, data.Routine, data.ProcessorNumber,
                     data.TimeStampRelativeMSec, durationUs));
             };
 
