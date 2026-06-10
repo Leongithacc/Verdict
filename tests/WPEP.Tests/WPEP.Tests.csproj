@@ -11,5 +11,6 @@
     <ProjectReference Include="..\..\src\WPEP.Core\WPEP.Core.csproj" />
     <ProjectReference Include="..\..\src\WPEP.Diagnostics\WPEP.Diagnostics.csproj" />
     <ProjectReference Include="..\..\src\WPEP.Benchmark\WPEP.Benchmark.csproj" />
+    <ProjectReference Include="..\..\src\WPEP.Statistics\WPEP.Statistics.csproj" />
   </ItemGroup>
 </Project>

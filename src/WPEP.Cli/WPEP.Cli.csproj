@@ -9,5 +9,6 @@
     <ProjectReference Include="..\WPEP.Core\WPEP.Core.csproj" />
     <ProjectReference Include="..\WPEP.Diagnostics\WPEP.Diagnostics.csproj" />
     <ProjectReference Include="..\WPEP.Benchmark\WPEP.Benchmark.csproj" />
+    <ProjectReference Include="..\WPEP.Statistics\WPEP.Statistics.csproj" />
   </ItemGroup>
 </Project>

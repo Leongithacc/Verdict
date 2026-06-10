@@ -19,6 +19,8 @@ switch (args[0])
         return RunDiag(args.Skip(1).ToArray());
     case "bench":
         return await RunBench(args.Skip(1).ToArray());
+    case "compare":
+        return RunCompare(args.Skip(1).ToArray());
     case "tools" when args.Length >= 2 && args[1] == "install-presentmon":
         return await InstallPresentMon();
     default:
@@ -197,6 +199,85 @@ static async Task<int> RunBench(string[] args)
     return 0;
 }
 
+static int RunCompare(string[] args)
+{
+    string? baselineDir = null;
+    string? postDir = null;
+
+    for (int i = 0; i < args.Length; i++)
+    {
+        switch (args[i])
+        {
+            case "--baseline" or "-b" when i + 1 < args.Length:
+                baselineDir = args[++i];
+                break;
+            case "--post" or "-p" when i + 1 < args.Length:
+                postDir = args[++i];
+                break;
+            default:
+                Console.Error.WriteLine($"Argomento sconosciuto: {args[i]}");
+                return 2;
+        }
+    }
+
+    if (baselineDir is null || postDir is null)
+    {
+        Console.Error.WriteLine("Servono --baseline <dir> e --post <dir> (cartelle di run salvate da 'bench').");
+        return 2;
+    }
+
+    WPEP.Statistics.ComparisonEngine.ComparisonReport report;
+    try
+    {
+        var baseline = BenchmarkRunStore.LoadDirectory(baselineDir);
+        var post = BenchmarkRunStore.LoadDirectory(postDir);
+        report = WPEP.Statistics.ComparisonEngine.Compare(baseline, post);
+    }
+    catch (Exception ex)
+    {
+        Console.Error.WriteLine($"Confronto fallito: {ex.Message}");
+        return 1;
+    }
+
+    Console.WriteLine($"Baseline: {report.BaselineRuns} run   Post: {report.PostRuns} run");
+    if (!report.Conclusive)
+        Console.WriteLine(
+            $"""
+            ⚠ Meno di {WPEP.Statistics.ComparisonEngine.MinRunsForConclusion} run per lato:
+              i numeri sotto sono INDICATIVI, non conclusioni (spec §6).
+            """);
+    Console.WriteLine();
+    Console.WriteLine($"{"Metrica",-26} {"Base",9} {"Post",9} {"Δ%",7} {"p",7} {"CI 95%",20}  Verdetto");
+    Console.WriteLine(new string('-', 96));
+
+    foreach (var m in report.Metrics)
+    {
+        string verdict = m.Verdict switch
+        {
+            WPEP.Statistics.Verdict.Improvement => "MIGLIORAMENTO",
+            WPEP.Statistics.Verdict.Regression => "PEGGIORAMENTO",
+            _ => "nessun effetto misurabile",
+        };
+        Console.WriteLine(
+            $"{m.Metric,-26} {m.BaselineMedian,9:F2} {m.PostMedian,9:F2} {m.DeltaPercent,6:+0.0;-0.0;0.0}% " +
+            $"{m.PValue,7:F3} [{m.Ci.Lower,8:F3}, {m.Ci.Upper,8:F3}]  {verdict}");
+    }
+
+    Console.WriteLine();
+    if (report.Metrics.All(m => m.Verdict == WPEP.Statistics.Verdict.NoMeasurableEffect))
+        Console.WriteLine("Conclusione onesta: nessun effetto misurabile su questo sistema.");
+    Console.WriteLine(
+        """
+        Note di lettura:
+        - Frametime: più basso = meglio. Δ% negativo = post più veloce.
+        - L'unità statistica è la RUN, non il singolo frame: i frame aggregati
+          renderebbero "significativo" qualsiasi delta microscopico (placebo).
+        - p = Mann–Whitney (permutation test), CI = bootstrap sulla differenza
+          delle mediane tra run.
+        """);
+    return 0;
+}
+
 static async Task<int> InstallPresentMon()
 {
     try
@@ -276,6 +357,10 @@ static void PrintUsage()
                      [--label nome] [--out dir] [--presentmon path]
               Misura frametime con PresentMon: avg/median FPS, 1% low, 0.2% low.
               Salva ogni run in JSON per il confronto statistico (R3).
+
+          wpep compare --baseline <dir> --post <dir>
+              Confronto statistico onesto tra due set di run (Mann–Whitney +
+              bootstrap CI). Se il delta è dentro la varianza, lo dice.
 
           wpep tools install-presentmon
               Scarica PresentMon (Intel, MIT) nella cartella tools di WPEP.
