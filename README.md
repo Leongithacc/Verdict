@@ -16,7 +16,7 @@ parte dei "gaming tweak" la risposta onesta è "nessun effetto misurabile" — e
 | R3 — Statistics (Mann–Whitney, bootstrap CI, compare) | ✅ 46 test, validato su run reali |
 | R4 — KnowledgeBase con fonti primarie | ✅ 51 voci verificate e graduate ([ricerca](docs/KB_RESEARCH.md)) |
 | R5 — Advisor + SystemAnalyzer | ✅ analyze + advise, 70 test, validato live |
-| R6 — Reporting | ⬜ |
+| R6 — Reporting | ✅ `wpep report` → HTML scuro/viola, 81 test |
 | R7 — UI WPF (tema scuro/viola) | ⬜ |
 
 Documenti: [BUILDSPEC_V1.1.md](BUILDSPEC_V1.1.md) (decisioni correnti).

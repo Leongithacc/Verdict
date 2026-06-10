@@ -14,5 +14,6 @@
     <ProjectReference Include="..\..\src\WPEP.Statistics\WPEP.Statistics.csproj" />
     <ProjectReference Include="..\..\src\WPEP.KnowledgeBase\WPEP.KnowledgeBase.csproj" />
     <ProjectReference Include="..\..\src\WPEP.Advisor\WPEP.Advisor.csproj" />
+    <ProjectReference Include="..\..\src\WPEP.Reporting\WPEP.Reporting.csproj" />
   </ItemGroup>
 </Project>

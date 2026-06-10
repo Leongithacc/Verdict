@@ -27,6 +27,8 @@ switch (args[0])
         return RunKb(args.Skip(1).ToArray());
     case "analyze":
         return RunAnalyze(args.Skip(1).ToArray());
+    case "report":
+        return RunReport(args.Skip(1).ToArray());
     case "advise":
         return RunAdvise();
     case "tools" when args.Length >= 2 && args[1] == "install-presentmon":
@@ -387,6 +389,64 @@ static int RunAnalyze(string[] args)
     static string OnOff(bool? v) => v switch { true => "attivo", false => "disattivo", null => "sconosciuto" };
 }
 
+static int RunReport(string[] args)
+{
+    string outPath = "wpep-report.html";
+    string? noiseDir = null;
+    string? baselineDir = null;
+    string? postDir = null;
+
+    for (int i = 0; i < args.Length; i++)
+    {
+        switch (args[i])
+        {
+            case "--out" or "-o" when i + 1 < args.Length:
+                outPath = args[++i];
+                break;
+            case "--runs" when i + 1 < args.Length:
+                noiseDir = args[++i];
+                break;
+            case "--baseline" or "-b" when i + 1 < args.Length:
+                baselineDir = args[++i];
+                break;
+            case "--post" or "-p" when i + 1 < args.Length:
+                postDir = args[++i];
+                break;
+            default:
+                Console.Error.WriteLine($"Argomento sconosciuto: {args[i]}");
+                return 2;
+        }
+    }
+
+    try
+    {
+        var entries = WPEP.KnowledgeBase.KnowledgeBaseLoader.Load();
+        var snapshot = WPEP.SystemAnalyzer.SnapshotBuilder.Build(DateTimeOffset.UtcNow);
+        var recommendations = WPEP.Advisor.AdvisorEngine.Advise(snapshot, entries);
+
+        WPEP.Statistics.NoiseFloorAnalyzer.NoiseReport? noise = null;
+        if (noiseDir is not null)
+            noise = WPEP.Statistics.NoiseFloorAnalyzer.Analyze(BenchmarkRunStore.LoadDirectory(noiseDir));
+
+        WPEP.Statistics.ComparisonEngine.ComparisonReport? comparison = null;
+        if (baselineDir is not null && postDir is not null)
+            comparison = WPEP.Statistics.ComparisonEngine.Compare(
+                BenchmarkRunStore.LoadDirectory(baselineDir),
+                BenchmarkRunStore.LoadDirectory(postDir));
+
+        var html = WPEP.Reporting.ReportBuilder.BuildHtml(new WPEP.Reporting.ReportData(
+            DateTimeOffset.UtcNow, snapshot, recommendations, noise, comparison));
+        File.WriteAllText(outPath, html);
+        Console.WriteLine($"Report scritto: {Path.GetFullPath(outPath)}");
+        return 0;
+    }
+    catch (Exception ex)
+    {
+        Console.Error.WriteLine($"Report fallito: {ex.Message}");
+        return 1;
+    }
+}
+
 static int RunAdvise()
 {
     IReadOnlyList<WPEP.KnowledgeBase.TweakEntry> entries;
@@ -613,6 +673,10 @@ static void PrintUsage()
           wpep kb [show <id>]
               Knowledge base dei tweak: grading di evidenza con fonti primarie,
               passi manuali e rollback. Include i placebo, spiegando perché.
+
+          wpep report [--out file.html] [--runs dir] [--baseline dir --post dir]
+              Report HTML (tema scuro) con snapshot + advisor; opzionalmente
+              noise floor e confronto statistico. Condivisibile.
 
           wpep tools install-presentmon
               Scarica PresentMon (Intel, MIT) nella cartella tools di WPEP.
