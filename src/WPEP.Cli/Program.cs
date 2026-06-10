@@ -21,6 +21,8 @@ switch (args[0])
         return await RunBench(args.Skip(1).ToArray());
     case "compare":
         return RunCompare(args.Skip(1).ToArray());
+    case "noise":
+        return RunNoise(args.Skip(1).ToArray());
     case "tools" when args.Length >= 2 && args[1] == "install-presentmon":
         return await InstallPresentMon();
     default:
@@ -278,6 +280,67 @@ static int RunCompare(string[] args)
     return 0;
 }
 
+static int RunNoise(string[] args)
+{
+    string? dir = null;
+    for (int i = 0; i < args.Length; i++)
+    {
+        switch (args[i])
+        {
+            case "--dir" or "-d" when i + 1 < args.Length:
+                dir = args[++i];
+                break;
+            default:
+                Console.Error.WriteLine($"Argomento sconosciuto: {args[i]}");
+                return 2;
+        }
+    }
+
+    if (dir is null)
+    {
+        Console.Error.WriteLine("Manca --dir <cartella> (run ripetute della STESSA configurazione).");
+        return 2;
+    }
+
+    WPEP.Statistics.NoiseFloorAnalyzer.NoiseReport report;
+    try
+    {
+        report = WPEP.Statistics.NoiseFloorAnalyzer.Analyze(BenchmarkRunStore.LoadDirectory(dir));
+    }
+    catch (Exception ex)
+    {
+        Console.Error.WriteLine($"Analisi fallita: {ex.Message}");
+        return 1;
+    }
+
+    Console.WriteLine($"Noise floor da {report.Runs} run della stessa configurazione");
+    if (!report.Reliable)
+        Console.WriteLine(
+            $"⚠ Meno di {WPEP.Statistics.NoiseFloorAnalyzer.MinRunsForEstimate} run: stima poco affidabile.");
+    Console.WriteLine();
+    Console.WriteLine($"{"Metrica",-26} {"Mediana",9} {"Min",9} {"Max",9} {"Range",9} {"Range%",8}");
+    Console.WriteLine(new string('-', 75));
+    foreach (var m in report.Metrics)
+    {
+        Console.WriteLine(
+            $"{m.Metric,-26} {m.Median,9:F2} {m.Min,9:F2} {m.Max,9:F2} {m.Range,9:F2} {m.RangePercent,7:F1}%");
+    }
+
+    Console.WriteLine();
+    var worst = report.Metrics.MaxBy(m => m.RangePercent)!;
+    Console.WriteLine(
+        $"""
+        Come leggerlo:
+        - Questo è quanto il sistema varia DA SOLO, senza cambiare nulla.
+        - Qualsiasi "miglioramento" più piccolo di questi range è rumore, punto (spec §6).
+        - Range% alto (>10-15%) = scenario poco ripetibile: i confronti rileveranno
+          solo effetti enormi. Peggiore qui: {worst.Metric} ({worst.RangePercent:F0}%).
+          Per abbassarlo: stesso percorso/scenario per ogni run (replay, mappa privata,
+          benchmark integrato), niente partite live mescolate.
+        """);
+    return 0;
+}
+
 static async Task<int> InstallPresentMon()
 {
     try
@@ -361,6 +424,10 @@ static void PrintUsage()
           wpep compare --baseline <dir> --post <dir>
               Confronto statistico onesto tra due set di run (Mann–Whitney +
               bootstrap CI). Se il delta è dentro la varianza, lo dice.
+
+          wpep noise --dir <dir>
+              Misura la varianza naturale run-to-run da run ripetute della
+              stessa configurazione. Sotto questa soglia è tutto rumore.
 
           wpep tools install-presentmon
               Scarica PresentMon (Intel, MIT) nella cartella tools di WPEP.
