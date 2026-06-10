@@ -25,6 +25,10 @@ switch (args[0])
         return RunNoise(args.Skip(1).ToArray());
     case "kb":
         return RunKb(args.Skip(1).ToArray());
+    case "analyze":
+        return RunAnalyze(args.Skip(1).ToArray());
+    case "advise":
+        return RunAdvise();
     case "tools" when args.Length >= 2 && args[1] == "install-presentmon":
         return await InstallPresentMon();
     default:
@@ -343,6 +347,92 @@ static int RunNoise(string[] args)
     return 0;
 }
 
+static int RunAnalyze(string[] args)
+{
+    string? jsonPath = null;
+    for (int i = 0; i < args.Length; i++)
+    {
+        if (args[i] == "--json" && i + 1 < args.Length)
+            jsonPath = args[++i];
+    }
+
+    var s = WPEP.SystemAnalyzer.SnapshotBuilder.Build(DateTimeOffset.UtcNow);
+
+    Console.WriteLine("System snapshot (read-only)\n");
+    Console.WriteLine($"CPU         : {Unknown(s.CpuName)}  ({s.CpuCores?.ToString() ?? "?"}C/{s.CpuThreads?.ToString() ?? "?"}T{(s.CpuIsX3D ? ", X3D" : "")})");
+    Console.WriteLine($"GPU         : {Unknown(s.GpuName)}  driver {Unknown(s.GpuDriverVersion)}");
+    Console.WriteLine($"RAM         : {(s.RamTotalGb?.ToString("F0") ?? "?")} GB @ {(s.RamSpeedMtps?.ToString() ?? "?")} MT/s");
+    Console.WriteLine($"Chassis     : {(s.IsDesktop switch { true => "desktop", false => "portatile", null => "sconosciuto" })}");
+    Console.WriteLine($"Monitor     : {(s.MonitorCurrentHz?.ToString() ?? "?")}Hz attivi / max {(s.MonitorMaxHz?.ToString() ?? "?")}Hz alla risoluzione corrente");
+    Console.WriteLine($"Power plan  : {Unknown(s.PowerPlanName)}");
+    Console.WriteLine($"HAGS        : {OnOff(s.HagsEnabled)}");
+    Console.WriteLine($"Game Mode   : {OnOff(s.GameModeEnabled)}");
+    Console.WriteLine($"Mem.Integrity (HVCI): {OnOff(s.HvciEnabled)}");
+    Console.WriteLine($"Pointer precision   : {OnOff(s.PointerPrecisionEnabled)}");
+
+    if (jsonPath is not null)
+    {
+        File.WriteAllText(jsonPath, JsonSerializer.Serialize(s,
+            new JsonSerializerOptions { WriteIndented = true }));
+        Console.WriteLine($"\nSnapshot JSON: {jsonPath}");
+    }
+    return 0;
+
+    static string Unknown(string v) => v.Length == 0 ? "sconosciuto" : v;
+    static string OnOff(bool? v) => v switch { true => "attivo", false => "disattivo", null => "sconosciuto" };
+}
+
+static int RunAdvise()
+{
+    IReadOnlyList<WPEP.KnowledgeBase.TweakEntry> entries;
+    try
+    {
+        entries = WPEP.KnowledgeBase.KnowledgeBaseLoader.Load();
+    }
+    catch (Exception ex)
+    {
+        Console.Error.WriteLine($"Caricamento KB fallito: {ex.Message}");
+        return 1;
+    }
+
+    var snapshot = WPEP.SystemAnalyzer.SnapshotBuilder.Build(DateTimeOffset.UtcNow);
+    var recommendations = WPEP.Advisor.AdvisorEngine.Advise(snapshot, entries);
+
+    Console.WriteLine($"Advisor — {recommendations.Count} voci valutate su questo sistema");
+    Console.WriteLine($"({snapshot.CpuName}, {snapshot.GpuName})\n");
+
+    foreach (var group in recommendations.GroupBy(r => r.Classification))
+    {
+        Console.WriteLine($"== {ClassificationLabel(group.Key)} ==");
+        foreach (var r in group)
+        {
+            Console.WriteLine($"  {r.Entry.Id,-42} {r.StateNote}");
+        }
+        Console.WriteLine();
+    }
+
+    Console.WriteLine(
+        """
+        Per ogni voce: 'wpep kb show <id>' → descrizione, fonti, passi manuali, rollback.
+        Prima di applicare qualcosa: baseline con 'wpep bench' (5+ run, scenario ripetibile),
+        UNA modifica alla volta, poi 'wpep compare'. Senza misura non è un miglioramento,
+        è una speranza.
+        """);
+    return 0;
+}
+
+static string ClassificationLabel(WPEP.Advisor.Classification c) => c switch
+{
+    WPEP.Advisor.Classification.Recommended => "CONSIGLIATO (evidenza forte)",
+    WPEP.Advisor.Classification.Optional => "OPZIONALE (plausibile, da misurare)",
+    WPEP.Advisor.Classification.OptionalWithWarning => "OPZIONALE CON RISERVA (evidenza controversa)",
+    WPEP.Advisor.Classification.Placebo => "PLACEBO — non lo tocchiamo",
+    WPEP.Advisor.Classification.NotRecommended => "SCONSIGLIATO (rischio reale)",
+    WPEP.Advisor.Classification.AlreadyActive => "GIÀ A POSTO",
+    WPEP.Advisor.Classification.NotApplicable => "NON APPLICABILE A QUESTO SISTEMA",
+    _ => c.ToString(),
+};
+
 static int RunKb(string[] args)
 {
     IReadOnlyList<WPEP.KnowledgeBase.TweakEntry> entries;
@@ -506,6 +596,14 @@ static void PrintUsage()
           wpep noise --dir <dir>
               Misura la varianza naturale run-to-run da run ripetute della
               stessa configurazione. Sotto questa soglia è tutto rumore.
+
+          wpep analyze [--json file.json]
+              Snapshot read-only di hardware e config rilevante (CPU, GPU,
+              monitor, power plan, HAGS, Game Mode, HVCI, pointer precision).
+
+          wpep advise
+              Incrocia lo snapshot con la knowledge base: cosa è già a posto,
+              cosa è consigliato, cosa è placebo, cosa è rischioso — su QUESTO pc.
 
           wpep kb [show <id>]
               Knowledge base dei tweak: grading di evidenza con fonti primarie,

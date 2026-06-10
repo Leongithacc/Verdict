@@ -1,0 +1,6 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <ProjectReference Include="..\WPEP.Core\WPEP.Core.csproj" />
+    <ProjectReference Include="..\WPEP.KnowledgeBase\WPEP.KnowledgeBase.csproj" />
+  </ItemGroup>
+</Project>

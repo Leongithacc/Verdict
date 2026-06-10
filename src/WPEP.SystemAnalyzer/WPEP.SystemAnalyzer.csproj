@@ -1,0 +1,6 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <PackageReference Include="System.Management" Version="9.*" />
+    <ProjectReference Include="..\WPEP.Core\WPEP.Core.csproj" />
+  </ItemGroup>
+</Project>

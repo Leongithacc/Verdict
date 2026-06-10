@@ -1,0 +1,231 @@
+using System.Diagnostics;
+using System.Management;
+using System.Runtime.InteropServices;
+using Microsoft.Win32;
+using WPEP.Core.SystemInfo;
+
+namespace WPEP.SystemAnalyzer;
+
+/// <summary>
+/// Builds a SystemSnapshot from WMI, registry and display APIs. Read-only, no
+/// admin required. Every probe degrades to null on failure instead of crashing:
+/// "sconosciuto" is an acceptable answer, a crash is not.
+/// </summary>
+public static class SnapshotBuilder
+{
+    public static SystemSnapshot Build(DateTimeOffset nowUtc)
+    {
+        var (cpuName, cores, threads) = Probe(ReadCpu, ("", (int?)null, (int?)null));
+        var (gpuName, gpuDriver, currentHz) = Probe(ReadGpu, ("", "", (int?)null));
+        var (ramGb, ramSpeed) = Probe(ReadRam, ((double?)null, (int?)null));
+        var (planGuid, planName) = Probe(ReadPowerPlan, ("", ""));
+
+        return new SystemSnapshot
+        {
+            CapturedAtUtc = nowUtc,
+            CpuName = cpuName,
+            CpuCores = cores,
+            CpuThreads = threads,
+            CpuIsX3D = cpuName.Contains("X3D", StringComparison.OrdinalIgnoreCase),
+            GpuName = gpuName,
+            GpuDriverVersion = gpuDriver,
+            RamTotalGb = ramGb,
+            RamSpeedMtps = ramSpeed,
+            IsDesktop = Probe(ReadIsDesktop, (bool?)null),
+            MonitorCurrentHz = currentHz,
+            MonitorMaxHz = Probe(ReadMaxRefreshRate, (int?)null),
+            PowerPlanGuid = planGuid,
+            PowerPlanName = planName,
+            HagsEnabled = Probe(ReadHags, (bool?)null),
+            GameModeEnabled = Probe(ReadGameMode, (bool?)null),
+            HvciEnabled = Probe(ReadHvci, (bool?)null),
+            PointerPrecisionEnabled = Probe(ReadPointerPrecision, (bool?)null),
+        };
+    }
+
+    private static T Probe<T>(Func<T> read, T fallback)
+    {
+        try { return read(); }
+        catch { return fallback; }
+    }
+
+    private static (string, int?, int?) ReadCpu()
+    {
+        using var searcher = new ManagementObjectSearcher(
+            "SELECT Name, NumberOfCores, NumberOfLogicalProcessors FROM Win32_Processor");
+        foreach (var cpu in searcher.Get())
+        {
+            return (
+                (cpu["Name"] as string ?? "").Trim(),
+                Convert.ToInt32(cpu["NumberOfCores"]),
+                Convert.ToInt32(cpu["NumberOfLogicalProcessors"]));
+        }
+        return ("", null, null);
+    }
+
+    private static (string, string, int?) ReadGpu()
+    {
+        using var searcher = new ManagementObjectSearcher(
+            "SELECT Name, DriverVersion, CurrentRefreshRate FROM Win32_VideoController");
+        // Prefer the controller actually driving a display (has a refresh rate).
+        (string, string, int?) best = ("", "", null);
+        foreach (var gpu in searcher.Get())
+        {
+            var entry = (
+                gpu["Name"] as string ?? "",
+                gpu["DriverVersion"] as string ?? "",
+                gpu["CurrentRefreshRate"] is null ? (int?)null : Convert.ToInt32(gpu["CurrentRefreshRate"]));
+            if (entry.Item3 is > 0)
+                return entry;
+            if (best.Item1.Length == 0)
+                best = entry;
+        }
+        return best;
+    }
+
+    private static (double?, int?) ReadRam()
+    {
+        using var searcher = new ManagementObjectSearcher(
+            "SELECT Capacity, ConfiguredClockSpeed FROM Win32_PhysicalMemory");
+        ulong totalBytes = 0;
+        int speed = 0;
+        foreach (var stick in searcher.Get())
+        {
+            totalBytes += Convert.ToUInt64(stick["Capacity"]);
+            if (stick["ConfiguredClockSpeed"] is not null)
+                speed = Math.Max(speed, Convert.ToInt32(stick["ConfiguredClockSpeed"]));
+        }
+        return (totalBytes == 0 ? null : Math.Round(totalBytes / 1073741824.0, 1),
+                speed == 0 ? null : speed);
+    }
+
+    private static bool? ReadIsDesktop()
+    {
+        using var searcher = new ManagementObjectSearcher(
+            "SELECT ChassisTypes FROM Win32_SystemEnclosure");
+        foreach (var enclosure in searcher.Get())
+        {
+            if (enclosure["ChassisTypes"] is ushort[] types && types.Length > 0)
+            {
+                // 8..14, 30..32 = portatili/tablet; 3..7, 15..17, 23, 24 = desktop/tower.
+                int t = types[0];
+                if (t is >= 8 and <= 14 or >= 30 and <= 32)
+                    return false;
+                if (t is >= 3 and <= 7 or >= 15 and <= 17 or 23 or 24)
+                    return true;
+            }
+        }
+        return null;
+    }
+
+    private static (string, string) ReadPowerPlan()
+    {
+        var psi = new ProcessStartInfo("powercfg", "/getactivescheme")
+        {
+            UseShellExecute = false,
+            RedirectStandardOutput = true,
+            CreateNoWindow = true,
+        };
+        using var process = Process.Start(psi)!;
+        string output = process.StandardOutput.ReadToEnd();
+        process.WaitForExit(5000);
+
+        // Output: "GUID schema risparmio energia: <guid>  (<nome>)"
+        var guidMatch = System.Text.RegularExpressions.Regex.Match(
+            output, @"([0-9a-fA-F]{8}-[0-9a-fA-F-]{27})");
+        var nameMatch = System.Text.RegularExpressions.Regex.Match(output, @"\(([^)]+)\)");
+        return (
+            guidMatch.Success ? guidMatch.Groups[1].Value.ToLowerInvariant() : "",
+            nameMatch.Success ? nameMatch.Groups[1].Value : "");
+    }
+
+    private static bool? ReadHags()
+    {
+        using var key = Registry.LocalMachine.OpenSubKey(
+            @"SYSTEM\CurrentControlSet\Control\GraphicsDrivers");
+        return key?.GetValue("HwSchMode") switch
+        {
+            2 => true,
+            1 => false,
+            _ => null, // assente = non supportato o stato non determinabile
+        };
+    }
+
+    private static bool? ReadGameMode()
+    {
+        using var key = Registry.CurrentUser.OpenSubKey(@"Software\Microsoft\GameBar");
+        // Assente = default = attivo su Win10/11.
+        return key?.GetValue("AutoGameModeEnabled") switch
+        {
+            0 => false,
+            _ => true,
+        };
+    }
+
+    private static bool? ReadHvci()
+    {
+        using var key = Registry.LocalMachine.OpenSubKey(
+            @"SYSTEM\CurrentControlSet\Control\DeviceGuard\Scenarios\HypervisorEnforcedCodeIntegrity");
+        return key?.GetValue("Enabled") switch
+        {
+            1 => true,
+            0 => false,
+            _ => null,
+        };
+    }
+
+    private static bool? ReadPointerPrecision()
+    {
+        using var key = Registry.CurrentUser.OpenSubKey(@"Control Panel\Mouse");
+        return (key?.GetValue("MouseSpeed") as string) switch
+        {
+            "0" => false,
+            "1" or "2" => true,
+            _ => null,
+        };
+    }
+
+    private static int? ReadMaxRefreshRate()
+    {
+        var current = new DEVMODEW { dmSize = (ushort)Marshal.SizeOf<DEVMODEW>() };
+        if (!EnumDisplaySettingsW(null, ENUM_CURRENT_SETTINGS, ref current))
+            return null;
+
+        int max = 0;
+        var mode = new DEVMODEW { dmSize = (ushort)Marshal.SizeOf<DEVMODEW>() };
+        for (int i = 0; EnumDisplaySettingsW(null, i, ref mode); i++)
+        {
+            // Same resolution as current: the refresh the user could actually pick.
+            if (mode.dmPelsWidth == current.dmPelsWidth &&
+                mode.dmPelsHeight == current.dmPelsHeight &&
+                (int)mode.dmDisplayFrequency > max)
+            {
+                max = (int)mode.dmDisplayFrequency;
+            }
+        }
+        return max > 0 ? max : null;
+    }
+
+    private const int ENUM_CURRENT_SETTINGS = -1;
+
+    [DllImport("user32.dll", CharSet = CharSet.Unicode)]
+    private static extern bool EnumDisplaySettingsW(
+        string? lpszDeviceName, int iModeNum, ref DEVMODEW lpDevMode);
+
+    [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
+    private struct DEVMODEW
+    {
+        [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 32)] public string dmDeviceName;
+        public ushort dmSpecVersion, dmDriverVersion, dmSize, dmDriverExtra;
+        public uint dmFields;
+        public int dmPositionX, dmPositionY;
+        public uint dmDisplayOrientation, dmDisplayFixedOutput;
+        public short dmColor, dmDuplex, dmYResolution, dmTTOption, dmCollate;
+        [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 32)] public string dmFormName;
+        public ushort dmLogPixels;
+        public uint dmBitsPerPel, dmPelsWidth, dmPelsHeight;
+        public uint dmDisplayFlags, dmDisplayFrequency;
+        public uint dmICMMethod, dmICMIntent, dmMediaType, dmDitherType;
+        public uint dmReserved1, dmReserved2, dmPanningWidth, dmPanningHeight;
+    }
+}
