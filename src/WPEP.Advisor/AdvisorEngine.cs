@@ -88,6 +88,24 @@ public static class AdvisorEngine
                         return false;
                     }
                     break;
+                case "gpu:nvidia":
+                    if (s.GpuName.Length > 0 &&
+                        !s.GpuName.Contains("NVIDIA", StringComparison.OrdinalIgnoreCase) &&
+                        !s.GpuName.Contains("GeForce", StringComparison.OrdinalIgnoreCase))
+                    {
+                        note = $"Richiede GPU NVIDIA (rilevata: {s.GpuName}).";
+                        return false;
+                    }
+                    break;
+                case "cpu:amd":
+                    if (s.CpuName.Length > 0 &&
+                        !s.CpuName.Contains("AMD", StringComparison.OrdinalIgnoreCase) &&
+                        !s.CpuName.Contains("Ryzen", StringComparison.OrdinalIgnoreCase))
+                    {
+                        note = $"Richiede CPU AMD (rilevata: {s.CpuName}).";
+                        return false;
+                    }
+                    break;
             }
         }
         note = "";
@@ -135,6 +153,78 @@ public static class AdvisorEngine
             cur >= max
                 ? (true, $"Refresh corretto: {cur}Hz (max {max}Hz). Resta da verificare il cap FPS in-game.")
                 : (false, $"Monitor a {cur}Hz ma supporta {max}Hz: correzione gratuita e immediata."),
+
+        "xmp-expo-enable" when s.RamSpeedMtps is int conf && s.RamRatedMtps is int rated =>
+            conf >= rated
+                ? (true, $"RAM a {conf} MT/s (profilo attivo o velocità dichiarata raggiunta).")
+                : (false, $"RAM configurata a {conf} MT/s ma dichiarata {rated} MT/s: profilo probabilmente NON attivo."),
+
+        "ethernet-over-wifi" => s.ActiveNicIsWifi switch
+        {
+            false => (true, "Connessione attiva già cablata."),
+            true => (false, "Connessione attiva su Wi-Fi."),
+            null => (null, "Tipo di connessione non rilevato."),
+        },
+
+        "disable-gamedvr-background-recording" => s.GameDvrEnabled switch
+        {
+            false => (true, "Registrazione in background già disattivata."),
+            true => (false, "Registrazione in background ATTIVA (Game DVR)."),
+            null => (null, "Stato non rilevato."),
+        },
+
+        "sysmain-superfetch-disable" => s.SysMainRunning switch
+        {
+            false => (true, "SysMain già disattivato (nessuna evidenza che serva, comunque)."),
+            true => (false, "SysMain attivo (stato di default, va bene così)."),
+            null => (null, "Stato non rilevato."),
+        },
+
+        "visual-effects-transparency-off" => s.TransparencyEnabled switch
+        {
+            false => (true, "Trasparenze già disattivate (per gli FPS in gioco era comunque irrilevante)."),
+            true => (false, "Trasparenze attive (irrilevante per gli FPS in gioco)."),
+            null => (null, "Stato non rilevato."),
+        },
+
+        "fast-startup-disable" => s.FastStartupEnabled switch
+        {
+            false => (true, "Avvio rapido già disattivato: ogni boot è pulito."),
+            true => (false, "Avvio rapido attivo: lo stato dei driver sopravvive agli spegnimenti."),
+            null => (null, "Stato non rilevato."),
+        },
+
+        "mpo-disable" => s.MpoDisabled switch
+        {
+            true => (true, "MPO già disattivato via OverlayTestMode (valuta se serve ancora)."),
+            false => (false, "MPO attivo (default corretto: toccare solo per troubleshooting)."),
+            null => (null, "Stato non determinabile (valore OverlayTestMode anomalo)."),
+        },
+
+        "pagefile-disable" => s.PagefileAutomatic switch
+        {
+            true => (false, "Pagefile gestito automaticamente (configurazione corretta: NON disattivarlo)."),
+            false => (null, "Pagefile in gestione manuale: verificare che esista e sia adeguato."),
+            null => (null, "Stato non rilevato."),
+        },
+
+        "network-throttling-index" => s.NetworkThrottlingIndex switch
+        {
+            null => (false, "Valore di default (assente): throttling standard attivo."),
+            int v when (uint)v == 0xFFFFFFFF => (true, "Throttling già disattivato (0xFFFFFFFF): valuta il rollback al default."),
+            int v => (null, $"Valore personalizzato: {v}."),
+        },
+
+        "systemresponsiveness-gpupriority-registry" => s.SystemResponsiveness switch
+        {
+            null or 20 => (false, $"SystemResponsiveness al default (20)."),
+            int v => (true, $"SystemResponsiveness modificato: {v} (default 20). Già applicato: valuta rollback."),
+        },
+
+        "disable-startup-bloat" when s.StartupAppsCount is int n =>
+            n <= 5
+                ? (true, $"{n} voci in autostart: situazione pulita.")
+                : (false, $"{n} voci in autostart nel registry (più eventuali task pianificati): da rivedere."),
 
         _ => (null, "Stato non rilevabile automaticamente."),
     };

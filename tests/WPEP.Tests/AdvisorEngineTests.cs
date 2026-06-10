@@ -126,6 +126,64 @@ public class AdvisorEngineTests
     }
 
     [Fact]
+    public void Advise_RamBelowRatedSpeed_XmpExpoIsRecommended()
+    {
+        var snapshot = Snapshot() with { RamSpeedMtps = 4800, RamRatedMtps = 6000 };
+        var r = For(AdvisorEngine.Advise(snapshot, Kb), "xmp-expo-enable");
+        Assert.Equal(Classification.Recommended, r.Classification);
+        Assert.Contains("6000", r.StateNote);
+    }
+
+    [Fact]
+    public void Advise_RamAtRatedSpeed_XmpExpoAlreadyActive()
+    {
+        var snapshot = Snapshot() with { RamSpeedMtps = 6000, RamRatedMtps = 6000 };
+        Assert.Equal(Classification.AlreadyActive,
+            For(AdvisorEngine.Advise(snapshot, Kb), "xmp-expo-enable").Classification);
+    }
+
+    [Fact]
+    public void Advise_OnWifi_EthernetIsSuggested()
+    {
+        var snapshot = Snapshot() with { ActiveNicIsWifi = true };
+        var r = For(AdvisorEngine.Advise(snapshot, Kb), "ethernet-over-wifi");
+        Assert.NotEqual(Classification.AlreadyActive, r.Classification);
+        Assert.NotEqual(Classification.NotApplicable, r.Classification);
+    }
+
+    [Fact]
+    public void Advise_OnEthernet_WifiTweakAlreadyActive()
+    {
+        var snapshot = Snapshot() with { ActiveNicIsWifi = false };
+        Assert.Equal(Classification.AlreadyActive,
+            For(AdvisorEngine.Advise(snapshot, Kb), "ethernet-over-wifi").Classification);
+    }
+
+    [Fact]
+    public void Advise_IntelCpu_AmdOnlyTweaksNotApplicable()
+    {
+        var snapshot = Snapshot() with { CpuName = "Intel Core i9-14900K" };
+        Assert.Equal(Classification.NotApplicable,
+            For(AdvisorEngine.Advise(snapshot, Kb), "amd-ftpm-bios-update").Classification);
+    }
+
+    [Fact]
+    public void Advise_AmdGpu_NvidiaOnlyTweaksNotApplicable()
+    {
+        var snapshot = Snapshot() with { GpuName = "AMD Radeon RX 9070 XT" };
+        Assert.Equal(Classification.NotApplicable,
+            For(AdvisorEngine.Advise(snapshot, Kb), "enable-nvidia-reflex").Classification);
+    }
+
+    [Fact]
+    public void Advise_NvidiaGpu_ReflexIsRecommended()
+    {
+        var snapshot = Snapshot() with { GpuName = "NVIDIA GeForce RTX 5080" };
+        Assert.Equal(Classification.Recommended,
+            For(AdvisorEngine.Advise(snapshot, Kb), "enable-nvidia-reflex").Classification);
+    }
+
+    [Fact]
     public void Advise_UnknownStates_NeverBecomeAlreadyActive()
     {
         // Snapshot with everything undetectable: the engine must not guess.

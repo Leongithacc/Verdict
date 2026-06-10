@@ -18,6 +18,7 @@ public sealed record SystemSnapshot
     public string GpuDriverVersion { get; init; } = "";
     public double? RamTotalGb { get; init; }
     public int? RamSpeedMtps { get; init; }
+    public int? RamRatedMtps { get; init; }
     public bool? IsDesktop { get; init; }
 
     // Monitor
@@ -31,4 +32,14 @@ public sealed record SystemSnapshot
     public bool? GameModeEnabled { get; init; }
     public bool? HvciEnabled { get; init; }
     public bool? PointerPrecisionEnabled { get; init; }
+    public bool? GameDvrEnabled { get; init; }
+    public bool? ActiveNicIsWifi { get; init; }
+    public bool? SysMainRunning { get; init; }
+    public bool? TransparencyEnabled { get; init; }
+    public bool? FastStartupEnabled { get; init; }
+    public bool? MpoDisabled { get; init; }
+    public bool? PagefileAutomatic { get; init; }
+    public int? NetworkThrottlingIndex { get; init; }
+    public int? SystemResponsiveness { get; init; }
+    public int? StartupAppsCount { get; init; }
 }

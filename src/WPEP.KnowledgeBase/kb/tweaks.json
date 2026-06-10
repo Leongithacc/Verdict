@@ -4,7 +4,9 @@
     "name": "Power Plan: High/Ultimate Performance",
     "category": "power",
     "description": "Imposta il piano energetico su High/Ultimate Performance. Disabilita lo scaling dinamico delle prestazioni: i P-state restano alti invece di salire/scendere col carico. Il turbo boost è attivo anche sul piano Balanced, quindi il guadagno riguarda solo la rapidità di risposta ai carichi bursty, non il clock massimo.",
-    "hardware_prerequisites": ["desktop"],
+    "hardware_prerequisites": [
+      "desktop"
+    ],
     "expected_impact": "Riduce core parking e downclock sotto carichi intermittenti. Su CPU moderne ben raffreddate (es. X3D) con piano Balanced aggiornato il delta in gioco è tipicamente entro la varianza. Consumo a vuoto più alto.",
     "evidence_level": "plausible",
     "sources": [
@@ -59,7 +61,9 @@
     "name": "Hardware-Accelerated GPU Scheduling (HAGS)",
     "category": "gpu",
     "description": "Sposta la schedulazione delle code GPU dalla CPU a un processore dedicato sulla GPU (WDDM 2.7+). Microsoft stessa, nel blog DirectX di annuncio, dichiara che l'utente tipico non noterà differenze. È però REQUISITO per DLSS Frame Generation su NVIDIA.",
-    "hardware_prerequisites": ["gpu:wddm2.7+"],
+    "hardware_prerequisites": [
+      "gpu:wddm2.7+"
+    ],
     "expected_impact": "Neutro o marginale sugli FPS nella maggior parte dei casi; piccole differenze positive o negative a seconda di gioco e driver. Necessario per DLSS FG. Da misurare per-sistema.",
     "evidence_level": "controversial",
     "sources": [
@@ -77,7 +81,9 @@
     "name": "Forza MSI mode sulla GPU",
     "category": "gpu",
     "description": "Gli interrupt Message-Signaled (PCI 2.2+) sono il meccanismo moderno alternativo agli interrupt line-based, documentato da Microsoft. La community li forza via registry su dispositivi che risultano in modalità legacy. I driver GPU NVIDIA/AMD recenti usano già MSI di default, quindi nella maggior parte dei sistemi moderni questo tweak non cambia nulla.",
-    "hardware_prerequisites": ["gpu:any"],
+    "hardware_prerequisites": [
+      "gpu:any"
+    ],
     "expected_impact": "Nullo se la GPU è già in MSI mode (caso tipico su driver moderni). Nessuna fonte primaria dimostra benefici di latenza nel forzarlo dove non è già attivo.",
     "evidence_level": "controversial",
     "sources": [
@@ -134,7 +140,9 @@
     "name": "Disattiva core parking",
     "category": "power",
     "description": "Il core parking è documentato da Microsoft: il PPM e lo scheduler riducono dinamicamente i core attivi; i core parcheggiati processano comunque interrupt, DPC e lavoro affinitizzato. I piani moderni e i driver chipset (es. AMD per X3D) gestiscono già il parking in modo adeguato per il gaming; nessuna fonte primaria dimostra benefici nel forzarlo a 100% unparked su sistemi recenti.",
-    "hardware_prerequisites": ["desktop"],
+    "hardware_prerequisites": [
+      "desktop"
+    ],
     "expected_impact": "Tipicamente nullo su Windows 11 con driver chipset aggiornati. Possibile micro-beneficio su configurazioni con parking aggressivo e carichi molto bursty; consumo idle più alto.",
     "evidence_level": "controversial",
     "sources": [
@@ -145,7 +153,9 @@
     "risk_notes": "Consumo e temperature idle più alti. Su X3D dual-CCD può interferire con il driver AMD che gestisce il parking del secondo CCD.",
     "rollback": "Riportare 'Processor performance core parking min cores' al valore precedente (default 0%) o ripristinare il piano energetico.",
     "manual_steps": "powercfg -attributes SUB_PROCESSOR 0cc5b647-c1df-4637-891a-dec35c318583 -ATTRIB_HIDE per esporre l'opzione, poi nel piano avanzato: 'Numero minimo di core non parcheggiati' → 100%. In alternativa, High Performance plan lo fa già.",
-    "conflicts_with": ["power-plan-high-performance"],
+    "conflicts_with": [
+      "power-plan-high-performance"
+    ],
     "measurable": true
   },
   {
@@ -260,7 +270,9 @@
     "name": "Refresh rate corretto + FPS cap sensato",
     "category": "gpu",
     "description": "Due errori di configurazione frequentissimi e gratuiti da correggere: (1) monitor ad alto refresh lasciato a 60Hz in Windows; (2) frame rate non gestito che satura la GPU aumentando la latenza. La guida NVIDIA alla system latency documenta che con G-SYNC/VRR un cap pochi FPS sotto il refresh (o Reflex, che lo fa da solo) evita la coda di rendering e il backpressure del VSync, riducendo la latenza misurata.",
-    "hardware_prerequisites": ["monitor:high-refresh"],
+    "hardware_prerequisites": [
+      "monitor:high-refresh"
+    ],
     "expected_impact": "Refresh sbagliato: differenza enorme e immediata. Cap corretto con VRR: riduzione di latenza documentata dal vendor e consistenza del frame pacing. Tra i pochi tweak con beneficio grande, gratuito e misurabile.",
     "evidence_level": "evidence_strong",
     "sources": [
@@ -271,6 +283,445 @@
     "rollback": "Riportare refresh/limitatore ai valori precedenti.",
     "manual_steps": "1) Impostazioni → Sistema → Schermo → Schermo avanzato → verifica che la frequenza sia il massimo del monitor. 2) Se il gioco supporta Reflex: attivalo. Altrimenti con G-SYNC: cap in-game ~3-5 FPS sotto il refresh. 3) Verifica con wpep bench che il frametime sia stabile al cap.",
     "conflicts_with": [],
+    "measurable": true
+  },
+  {
+    "id": "xmp-expo-enable",
+    "name": "Attiva XMP/EXPO (profilo RAM)",
+    "category": "power",
+    "description": "Senza profilo attivo la RAM gira alla frequenza JEDEC base, non a quella per cui hai pagato. AMD EXPO (AM5) e Intel XMP sono i profili ufficiali dei vendor per portare la memoria alla velocità dichiarata. Su CPU AMD X3D l'effetto è attenuato dalla cache 3D, ma resta uno dei pochi 'tweak' con guadagno reale a costo zero.",
+    "hardware_prerequisites": [
+      "desktop"
+    ],
+    "expected_impact": "Da JEDEC (es. 4800) a profilo (es. 6000): guadagno FPS reale e misurabile nella maggior parte dei giochi CPU-bound. Tra le prime cose da verificare su qualsiasi build.",
+    "evidence_level": "evidence_strong",
+    "sources": [
+      "https://www.amd.com/en/products/processors/technologies/expo.html"
+    ],
+    "risk": "low",
+    "risk_notes": "È overclock ufficiale ma pur sempre overclock: in rari casi instabilità → test memoria dopo l'attivazione. AMD nota che l'utente si assume i rischi.",
+    "rollback": "BIOS → profilo memoria → Disabled/Auto.",
+    "manual_steps": "Riavvia nel BIOS (Canc/F2) → sezione memoria/OC → attiva EXPO (AMD) o XMP (Intel) profilo 1 → salva e riavvia. Verifica con 'wpep analyze' che la velocità configurata corrisponda a quella dichiarata.",
+    "conflicts_with": [],
+    "measurable": true
+  },
+  {
+    "id": "amd-ftpm-bios-update",
+    "name": "Stutter fTPM AMD: aggiorna il BIOS",
+    "category": "scheduler",
+    "description": "AMD ha riconosciuto ufficialmente (KB PA-410) che su alcune configurazioni Ryzen l'fTPM esegue transazioni verso la flash SPI della scheda madre causando pause intermittenti di sistema (stutter). Il fix ufficiale è l'aggiornamento BIOS con AGESA 1.2.0.7 o successivo.",
+    "hardware_prerequisites": [
+      "cpu:amd"
+    ],
+    "expected_impact": "Se il sistema soffre del problema: eliminazione di stutter periodici evidenti. Su BIOS recenti il fix è già incluso e non c'è nulla da fare.",
+    "evidence_level": "evidence_strong",
+    "sources": [
+      "https://www.amd.com/en/resources/support-articles/faqs/PA-410.html"
+    ],
+    "risk": "medium",
+    "risk_notes": "L'aggiornamento BIOS è un'operazione delicata: interruzione di corrente durante il flash può brickare la scheda. Seguire la procedura del produttore.",
+    "rollback": "I BIOS moderni permettono downgrade; alcuni produttori lo bloccano. Verificare prima.",
+    "manual_steps": "Identifica scheda madre e versione BIOS attuale → sito del produttore → scarica l'ultimo BIOS stabile (AGESA ≥1.2.0.7, ormai qualsiasi BIOS 2023+) → flash via utility ufficiale (es. EZ Flash/Q-Flash) → riconfigura EXPO dopo il flash.",
+    "conflicts_with": [],
+    "measurable": true
+  },
+  {
+    "id": "enable-nvidia-reflex",
+    "name": "Attiva NVIDIA Reflex nei giochi che lo supportano",
+    "category": "gpu",
+    "description": "Reflex è l'SDK NVIDIA integrato nei giochi che allinea il lavoro del game engine al rendering, eliminando la coda di render e riducendo la latenza di sistema (documentazione e misure ufficiali NVIDIA). Supportato da oltre 100 giochi, inclusi Valorant, Fortnite e CS2 (in beta).",
+    "hardware_prerequisites": [
+      "gpu:nvidia"
+    ],
+    "expected_impact": "Riduzione della latenza click-to-display documentata dal vendor, più evidente quando si è GPU-bound. È l'opzione di latenza con la migliore evidenza disponibile.",
+    "evidence_level": "evidence_strong",
+    "sources": [
+      "https://www.nvidia.com/en-us/geforce/technologies/reflex/",
+      "https://www.nvidia.com/en-us/geforce/guides/gfecnt/202010/system-latency-optimization-guide/"
+    ],
+    "risk": "none",
+    "risk_notes": "",
+    "rollback": "Stessa impostazione in-game → Off.",
+    "manual_steps": "Nelle impostazioni grafiche del gioco: NVIDIA Reflex Low Latency → On (oppure On+Boost se non sei mai CPU-bound). Va attivato per-gioco.",
+    "conflicts_with": [],
+    "measurable": false
+  },
+  {
+    "id": "enable-gsync-vrr",
+    "name": "Attiva G-SYNC/VRR con la combo corretta",
+    "category": "gpu",
+    "description": "La guida ufficiale NVIDIA alla system latency documenta la configurazione a latenza minima senza tearing: G-SYNC attivo + VSync ON nel pannello driver + Reflex (o cap FPS pochi frame sotto il refresh). Evita il backpressure del VSync tradizionale e il tearing.",
+    "hardware_prerequisites": [
+      "gpu:nvidia",
+      "monitor:high-refresh"
+    ],
+    "expected_impact": "Frame pacing visivamente più stabile e latenza contenuta rispetto a VSync classico. Con monitor VRR è la configurazione di riferimento documentata dal vendor.",
+    "evidence_level": "evidence_strong",
+    "sources": [
+      "https://www.nvidia.com/en-us/geforce/guides/gfecnt/202010/system-latency-optimization-guide/"
+    ],
+    "risk": "none",
+    "risk_notes": "",
+    "rollback": "Pannello NVIDIA → ripristina le impostazioni precedenti.",
+    "manual_steps": "Pannello di controllo NVIDIA → Configura G-SYNC → abilita per schermo intero → Gestisci impostazioni 3D → Sincronizzazione verticale: On → nel gioco: Reflex On (o cap FPS ~3-5 sotto il refresh) e VSync in-game Off.",
+    "conflicts_with": [],
+    "measurable": false
+  },
+  {
+    "id": "nvidia-ultra-low-latency-mode",
+    "name": "NVIDIA Ultra Low Latency Mode (driver)",
+    "category": "gpu",
+    "description": "Limita la coda di frame nel driver per i giochi DX11 senza Reflex. La guida NVIDIA lo documenta come fallback: dove Reflex è disponibile, Reflex è superiore e questo setting viene ignorato. Non funziona su DX12/Vulkan (lì la coda la gestisce il gioco).",
+    "hardware_prerequisites": [
+      "gpu:nvidia"
+    ],
+    "expected_impact": "Riduzione di latenza nei titoli DX11 GPU-bound senza Reflex. Nullo su DX12/Vulkan e nei giochi con Reflex attivo.",
+    "evidence_level": "plausible",
+    "sources": [
+      "https://www.nvidia.com/en-us/geforce/guides/gfecnt/202010/system-latency-optimization-guide/"
+    ],
+    "risk": "low",
+    "risk_notes": "In rari casi DX11 può costare qualche FPS medio in cambio della latenza.",
+    "rollback": "Pannello NVIDIA → Modalità bassa latenza → Off.",
+    "manual_steps": "Pannello di controllo NVIDIA → Gestisci impostazioni 3D → Modalità bassa latenza → Ultra (globale o per-gioco sui soli titoli DX11 senza Reflex).",
+    "conflicts_with": [],
+    "measurable": false
+  },
+  {
+    "id": "nvidia-prefer-max-performance",
+    "name": "Power mode GPU: Prefer Maximum Performance (per-gioco)",
+    "category": "gpu",
+    "description": "Impedisce alla GPU di scendere di clock nei momenti di basso carico, evitando la latenza di risalita del boost. Sensato per-gioco nei titoli competitivi con carico altalenante; inutile globale (tiene i clock alti anche sul desktop, consumo e calore per niente).",
+    "hardware_prerequisites": [
+      "gpu:nvidia"
+    ],
+    "expected_impact": "Marginale: evita micro-ritardi di boost in scenari a basso carico. Tipicamente entro la varianza nei giochi che tengono la GPU carica.",
+    "evidence_level": "plausible",
+    "sources": [
+      "https://www.nvidia.com/en-us/geforce/guides/gfecnt/202010/system-latency-optimization-guide/"
+    ],
+    "risk": "low",
+    "risk_notes": "Consumo e temperatura più alti se applicato globalmente. Applicare per-gioco.",
+    "rollback": "Pannello NVIDIA → Modalità di gestione alimentazione → Normale.",
+    "manual_steps": "Pannello di controllo NVIDIA → Gestisci impostazioni 3D → Impostazioni di programma → seleziona il gioco → Modalità di gestione dell'alimentazione → Preferisci prestazioni massime.",
+    "conflicts_with": [],
+    "measurable": true
+  },
+  {
+    "id": "resizable-bar-enable",
+    "name": "Resizable BAR / Smart Access Memory",
+    "category": "gpu",
+    "description": "Feature PCIe che permette alla CPU di accedere all'intero framebuffer della GPU. NVIDIA documenta guadagni da pochi punti percentuali fino al ~12% MA solo nei giochi in whitelist (il driver lo attiva solo dove aiuta, perché in alcuni titoli peggiora). Su AMD si chiama Smart Access Memory.",
+    "hardware_prerequisites": [
+      "desktop"
+    ],
+    "expected_impact": "Variabile per gioco: da nullo a ~+10% nei titoli in whitelist NVIDIA. Il driver gestisce già dove applicarlo: il tuo compito è solo avere la feature attiva nel BIOS.",
+    "evidence_level": "plausible",
+    "sources": [
+      "https://www.nvidia.com/en-us/geforce/news/geforce-rtx-30-series-resizable-bar-support/"
+    ],
+    "risk": "low",
+    "risk_notes": "Richiede BIOS UEFI + CSM disattivato. Su sistemi vecchi può richiedere conversione disco MBR→GPT.",
+    "rollback": "BIOS → Resizable BAR / Above 4G Decoding → Disabled.",
+    "manual_steps": "BIOS → abilita 'Above 4G Decoding' e 'Resizable BAR Support' (spesso sotto PCI/PCIe settings) → salva. Verifica nel pannello NVIDIA → Informazioni di sistema → Resizable BAR: Sì.",
+    "conflicts_with": [],
+    "measurable": true
+  },
+  {
+    "id": "ethernet-over-wifi",
+    "name": "Ethernet invece di Wi-Fi per il gioco online",
+    "category": "network",
+    "description": "Il Wi-Fi è un mezzo condiviso: contesa del canale, ritrasmissioni e interferenze producono jitter e spike di latenza che il cavo non ha. Il ragionamento è fisico e la differenza è direttamente misurabile (ping -t verso il gateway durante il gioco). Per il competitivo online il cavo è la singola scelta di rete con più impatto.",
+    "hardware_prerequisites": [],
+    "expected_impact": "Riduzione di jitter e packet loss, spesso percepibile in gioco. Non cambia gli FPS: cambia la consistenza della connessione.",
+    "evidence_level": "plausible",
+    "sources": [
+      "https://learn.microsoft.com/en-us/windows-server/networking/technologies/network-subsystem/net-sub-performance-tuning-nics"
+    ],
+    "risk": "none",
+    "risk_notes": "",
+    "rollback": "Riconnetti il Wi-Fi.",
+    "manual_steps": "Collega un cavo ethernet (Cat5e+ basta) dal router al PC. Disattiva il Wi-Fi per evitare che Windows lo preferisca. Verifica con 'wpep analyze' che la connessione attiva risulti cablata.",
+    "conflicts_with": [],
+    "measurable": false
+  },
+  {
+    "id": "disable-gamedvr-background-recording",
+    "name": "Disattiva la registrazione in background (Game DVR)",
+    "category": "background",
+    "description": "La registrazione in background della Game Bar tiene l'encoder occupato e scrive su disco in continuazione mentre giochi. Se non usi la funzione 'registra ultimi 30 secondi', è lavoro sprecato a ogni frame.",
+    "hardware_prerequisites": [],
+    "expected_impact": "Piccolo ma reale su sistemi encoder/IO-limitati; tipicamente entro la varianza su hardware potente. A costo zero se non usi la funzione.",
+    "evidence_level": "plausible",
+    "sources": [
+      "https://support.microsoft.com/en-us/help/4026387/windows-10-keyboard-shortcuts-for-game-bar"
+    ],
+    "risk": "none",
+    "risk_notes": "",
+    "rollback": "Stessa impostazione → riattiva.",
+    "manual_steps": "Impostazioni → Giochi → Acquisizioni → 'Registra cosa è successo' → Disattivato.",
+    "conflicts_with": [],
+    "measurable": true
+  },
+  {
+    "id": "disable-startup-bloat",
+    "name": "Riduci i programmi in avvio automatico",
+    "category": "background",
+    "description": "Ogni programma in autostart è CPU, RAM e a volte driver/overlay residenti che competono col gioco. La pulizia dell'autostart è la versione misurabile del 'debloating': si vede in wpep diag (DPC di software residenti) e nella RAM libera.",
+    "hardware_prerequisites": [],
+    "expected_impact": "Variabile col livello di bloat: da nullo (sistema già pulito) a significativo (decine di residenti). Beneficio certo: boot più rapido e meno rumore di fondo nelle misure.",
+    "evidence_level": "plausible",
+    "sources": [
+      "https://learn.microsoft.com/en-us/sysinternals/downloads/autoruns"
+    ],
+    "risk": "low",
+    "risk_notes": "Non disattivare software di sistema/sicurezza o servizi del produttore necessari (es. driver audio).",
+    "rollback": "Gestione attività → Avvio → riattiva le voci.",
+    "manual_steps": "Gestione attività (Ctrl+Shift+Esc) → scheda App di avvio → disattiva ciò che non serve all'avvio (launcher di giochi, updater, software RGB se non usato). Per analisi approfondita: Sysinternals Autoruns.",
+    "conflicts_with": [],
+    "measurable": true
+  },
+  {
+    "id": "keep-gpu-driver-updated",
+    "name": "Driver GPU aggiornato (Game Ready/Adrenalin)",
+    "category": "gpu",
+    "description": "I driver recenti includono ottimizzazioni per-gioco, fix di stutter e supporto a feature di latenza (Reflex, frame gen). NVIDIA raccomanda l'ultimo Game Ready driver nella guida alla latenza. Non è garanzia di più FPS in ogni titolo, ma restare molte versioni indietro accumula bug noti già risolti.",
+    "hardware_prerequisites": [],
+    "expected_impact": "Variabile: da nullo a fix sostanziali per giochi specifici (le release notes dicono cosa). Igiene di base più che tweak.",
+    "evidence_level": "plausible",
+    "sources": [
+      "https://www.nvidia.com/en-us/geforce/guides/gfecnt/202010/system-latency-optimization-guide/"
+    ],
+    "risk": "low",
+    "risk_notes": "Occasionalmente una release introduce regressioni: se il sistema è stabile e una release nuova ha problemi noti, aspettare la successiva è legittimo.",
+    "rollback": "Installare la versione precedente del driver dal sito del vendor.",
+    "manual_steps": "NVIDIA App (o nvidia.com/drivers) → verifica aggiornamenti → installazione pulita se si arriva da molte versioni indietro. Leggere le release notes per fix rilevanti ai propri giochi.",
+    "conflicts_with": [],
+    "measurable": true
+  },
+  {
+    "id": "network-throttling-index",
+    "name": "NetworkThrottlingIndex registry",
+    "category": "network",
+    "description": "Windows limita il processing dei pacchetti di rete a ~10 per ms quando c'è traffico multimediale, per proteggere audio/video da DPC di rete (meccanismo documentato dal blog tecnico Microsoft di Russinovich). Il tweak lo disattiva (0xFFFFFFFF). Per il gaming UDP a basso bitrate il limite di default non viene quasi mai raggiunto.",
+    "hardware_prerequisites": [],
+    "expected_impact": "Tipicamente nullo per il gaming (i giochi non saturano 10 pacchetti/ms). Rilevante solo per workload di rete ad altissimo throughput in concomitanza con multimedia.",
+    "evidence_level": "controversial",
+    "sources": [
+      "https://learn.microsoft.com/en-us/archive/blogs/markrussinovich/vista-multimedia-playback-and-network-throughput",
+      "https://learn.microsoft.com/en-us/windows/win32/procthread/multimedia-class-scheduler-service"
+    ],
+    "risk": "low",
+    "risk_notes": "Disattivarlo rimuove una protezione anti-glitch audio durante traffico di rete pesante.",
+    "rollback": "Ripristinare NetworkThrottlingIndex=10 (default) o eliminare il valore in HKLM\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Multimedia\\SystemProfile.",
+    "manual_steps": "Sconsigliato senza misura. Per test: SystemProfile → NetworkThrottlingIndex → 0xFFFFFFFF → riavvio → misura → rollback se entro il noise floor.",
+    "conflicts_with": [
+      "systemresponsiveness-gpupriority-registry"
+    ],
+    "measurable": true
+  },
+  {
+    "id": "nic-interrupt-moderation-off",
+    "name": "Interrupt Moderation NIC: off per latenza minima",
+    "category": "network",
+    "description": "L'interrupt moderation fa accumulare pacchetti prima di generare un interrupt, risparmiando CPU al costo di latenza per-pacchetto. Microsoft documenta esplicitamente il trade-off: 'disabilitare quando serve la latenza più bassa possibile, al costo di più CPU'. Parliamo di microsecondi-pochi ms per pacchetto: percepibilità in gioco dubbia, meccanismo reale.",
+    "hardware_prerequisites": [],
+    "expected_impact": "Riduzione documentata della latenza per-pacchetto (ordine di grandezza: µs→basse unità di ms), aumento di interrupt/DPC del NIC. In gioco l'effetto percepito è tipicamente sotto soglia; il costo CPU è visibile in wpep diag.",
+    "evidence_level": "plausible",
+    "sources": [
+      "https://learn.microsoft.com/en-us/windows-server/networking/technologies/network-subsystem/net-sub-performance-tuning-nics",
+      "https://learn.microsoft.com/en-us/windows-hardware/drivers/network/interrupt-moderation"
+    ],
+    "risk": "low",
+    "risk_notes": "Più interrupt = più carico CPU/DPC dal driver di rete: su sistemi tirati può peggiorare lo stutter. Misurare con wpep diag before/after.",
+    "rollback": "Gestione dispositivi → scheda di rete → Avanzate → Interrupt Moderation → Enabled (default).",
+    "manual_steps": "Gestione dispositivi → Schede di rete → la tua NIC → Proprietà → Avanzate → 'Interrupt Moderation' → Disabled (e/o 'Interrupt Moderation Rate' → Off). Solo su ethernet cablata, solo se il ping/jitter conta più del carico CPU.",
+    "conflicts_with": [],
+    "measurable": true
+  },
+  {
+    "id": "mpo-disable",
+    "name": "Disattiva Multi-Plane Overlay (MPO)",
+    "category": "gpu",
+    "description": "MPO compone alcuni contenuti direttamente nell'hardware di scansione del display per risparmiare lavoro a DWM/GPU. Su alcune combinazioni driver/monitor (specie con VRR) è associato a flickering, black screen e stutter segnalati in massa. NON esiste documentazione primaria del workaround (OverlayTestMode=5 è un valore non documentato da Microsoft): è un fix da troubleshooting, non un tweak da applicare a priori.",
+    "hardware_prerequisites": [],
+    "expected_impact": "Se soffri di flicker/stutter da MPO: risoluzione del sintomo. Altrimenti: nessun beneficio e si perde un'ottimizzazione di composizione legittima.",
+    "evidence_level": "controversial",
+    "sources": [
+      "https://learn.microsoft.com/en-us/answers/questions/4170375/lags-with-mpo-(multi-plane-overlay)"
+    ],
+    "risk": "medium",
+    "risk_notes": "Valore registry non documentato ufficialmente; su 24H2+ il metodo può non bastare. Applicare solo come diagnosi di un problema concreto, mai preventivamente.",
+    "rollback": "Eliminare OverlayTestMode da HKLM\\SOFTWARE\\Microsoft\\Windows\\Dwm → riavvio.",
+    "manual_steps": "Solo se hai flicker/stutter riconducibili a MPO: HKLM\\SOFTWARE\\Microsoft\\Windows\\Dwm → DWORD OverlayTestMode=5 → riavvio → verifica se il sintomo sparisce. Se non sparisce, rollback immediato.",
+    "conflicts_with": [],
+    "measurable": true
+  },
+  {
+    "id": "fast-startup-disable",
+    "name": "Disattiva Avvio rapido (Fast Startup)",
+    "category": "power",
+    "description": "L'avvio rapido è un'ibernazione parziale del kernel documentata da Microsoft: lo stato di kernel e driver sopravvive tra gli 'spegnimenti'. Driver in stato sporco possono trascinarsi problemi per giorni. Disattivarlo garantisce che ogni boot sia pulito. È igiene diagnostica, non un tweak FPS.",
+    "hardware_prerequisites": [],
+    "expected_impact": "Zero FPS. Beneficio: riproducibilità (ogni boot è davvero un boot) e fine dei problemi 'che spariscono solo col riavvio ma non con lo spegnimento'. Boot pochi secondi più lento.",
+    "evidence_level": "controversial",
+    "sources": [
+      "https://learn.microsoft.com/en-us/windows-hardware/drivers/kernel/distinguishing-fast-startup-from-wake-from-hibernation"
+    ],
+    "risk": "none",
+    "risk_notes": "",
+    "rollback": "Stessa finestra → rispunta 'Attiva avvio rapido'.",
+    "manual_steps": "Pannello di controllo → Opzioni risparmio energia → Specifica comportamento pulsanti → Modifica impostazioni attualmente non disponibili → togli spunta 'Attiva avvio rapido' → Salva.",
+    "conflicts_with": [],
+    "measurable": false
+  },
+  {
+    "id": "sysmain-superfetch-disable",
+    "name": "Disattiva SysMain (Superfetch)",
+    "category": "background",
+    "description": "Consiglio dell'era dei dischi meccanici: SysMain precarica in RAM le app usate spesso. Su SSD NVMe il precaricamento costa poco e aiuta i tempi di avvio delle app; non c'è alcuna evidenza che disattivarlo migliori FPS o latenza in gioco su sistemi moderni. Windows lo gestisce e ne riduce l'attività da solo sotto carico.",
+    "hardware_prerequisites": [],
+    "expected_impact": "Nessun effetto misurabile sul gaming su sistemi con SSD. Possibile peggioramento dei tempi di avvio delle applicazioni.",
+    "evidence_level": "placebo",
+    "sources": [],
+    "risk": "none",
+    "risk_notes": "",
+    "rollback": "services.msc → SysMain → Avvio: Automatico → Avvia.",
+    "manual_steps": "Non farlo: nessuna evidenza di beneficio su SSD. Se proprio vuoi testarlo: services.msc → SysMain → Disabilitato → riavvio → misura con wpep bench/compare → tirane le conclusioni con i numeri.",
+    "conflicts_with": [],
+    "measurable": true
+  },
+  {
+    "id": "visual-effects-transparency-off",
+    "name": "Disattiva trasparenze/animazioni per gli FPS in gioco",
+    "category": "background",
+    "description": "Le trasparenze e le animazioni di Windows sono effetti del desktop, composti da DWM. Quando un gioco è a schermo intero con flip model moderno (independent flip), i suoi frame bypassano la composizione desktop: gli effetti del desktop non sono nel percorso di rendering del gioco. Possono alleggerire PC molto deboli nell'uso desktop, ma venderli come tweak FPS è scorretto.",
+    "hardware_prerequisites": [],
+    "expected_impact": "Sugli FPS in gioco a schermo intero: nessun effetto misurabile per design del present path. Sull'uso desktop di hardware datato: leggerezza percepibile.",
+    "evidence_level": "placebo",
+    "sources": [
+      "https://devblogs.microsoft.com/directx/dxgi-flip-model/"
+    ],
+    "risk": "none",
+    "risk_notes": "",
+    "rollback": "Impostazioni → Accessibilità → Effetti visivi → riattiva.",
+    "manual_steps": "Non necessario per il gaming. Per il desktop su hardware debole: Impostazioni → Accessibilità → Effetti visivi → Effetti di trasparenza e Animazioni → Disattivati.",
+    "conflicts_with": [],
+    "measurable": false
+  },
+  {
+    "id": "hpet-platformclock-myth",
+    "name": "Il mito di 'disattivare HPET' (useplatformclock)",
+    "category": "scheduler",
+    "description": "Tweak circolante in due varianti, entrambe sbagliate: (1) 'bcdedit /deletevalue useplatformclock' su un sistema default non cambia nulla, perché il valore di default NON è impostato — si sta 'rimuovendo' qualcosa che non c'è; (2) forzare useplatformclock o disattivare HPET in BIOS altera la sorgente timer del kernel, e la documentazione bcdedit colloca questi parametri tra le opzioni di test/debug, non di tuning.",
+    "hardware_prerequisites": [],
+    "expected_impact": "Variante (1): zero per definizione. Variante (2): nessuna evidenza di beneficio, possibili problemi di timing.",
+    "evidence_level": "placebo",
+    "sources": [
+      "https://learn.microsoft.com/en-us/windows-hardware/drivers/devtest/bcdedit--set"
+    ],
+    "risk": "none",
+    "risk_notes": "",
+    "rollback": "bcdedit /deletevalue useplatformclock (se era stato forzato) → riavvio.",
+    "manual_steps": "Verifica lo stato: 'bcdedit /enum {current}' da admin — se useplatformclock non compare, il sistema è già nello stato di default e non c'è niente da fare.",
+    "conflicts_with": [
+      "disable-dynamic-tick"
+    ],
+    "measurable": false
+  },
+  {
+    "id": "pagefile-disable",
+    "name": "Disattiva il pagefile (con 32+ GB di RAM)",
+    "category": "background",
+    "description": "Microsoft documenta che il pagefile estende la memoria committabile e serve ai crash dump. Disattivarlo non rende la RAM 'più veloce': Windows non pagina ciò che non serve paginare. Alcuni giochi committano molta più memoria di quella che usano: senza pagefile vanno in crash da out-of-commit anche con RAM libera.",
+    "hardware_prerequisites": [],
+    "expected_impact": "Nessun guadagno FPS documentato. Rischio concreto: crash di giochi che committano aggressivamente, niente crash dump per diagnosi.",
+    "evidence_level": "risky",
+    "sources": [
+      "https://learn.microsoft.com/en-us/troubleshoot/windows-client/performance/introduction-to-the-page-file"
+    ],
+    "risk": "medium",
+    "risk_notes": "Crash da commit esaurito con alcuni titoli; perdita dei crash dump. Il consiglio onesto è lasciarlo gestito dal sistema.",
+    "rollback": "Impostazioni prestazioni → Memoria virtuale → 'Gestisci automaticamente' → riavvio.",
+    "manual_steps": "Sconsigliato. Lasciare 'Gestisci automaticamente dimensioni file di paging'. Se è stato disattivato in passato, riattivarlo.",
+    "conflicts_with": [],
+    "measurable": false
+  },
+  {
+    "id": "defender-game-exclusions",
+    "name": "Esclusioni Defender per le cartelle dei giochi",
+    "category": "security",
+    "description": "Escludere le cartelle dei giochi dalla scansione real-time riduce l'overhead di I/O ai caricamenti. Microsoft documenta però che ogni esclusione è un buco di protezione: le cartelle giochi (con mod, trainer, exe scaricati) sono esattamente dove arriva la roba sporca. Il guadagno è sui load time, non sugli FPS.",
+    "hardware_prerequisites": [],
+    "expected_impact": "Caricamenti marginalmente più rapidi, specie al primo avvio. FPS in gioco: invariati (Defender non scansiona ciò che non fa I/O).",
+    "evidence_level": "risky",
+    "sources": [
+      "https://learn.microsoft.com/en-us/defender-endpoint/configure-exclusions-microsoft-defender-antivirus",
+      "https://learn.microsoft.com/en-us/defender-endpoint/common-exclusion-mistakes-microsoft-defender-antivirus"
+    ],
+    "risk": "high",
+    "risk_notes": "Costo di sicurezza documentato da Microsoft: ciò che è escluso non viene ispezionato. Mai escludere cartelle dove scarichi mod/file da internet.",
+    "rollback": "Sicurezza di Windows → Impostazioni protezione da virus → Esclusioni → rimuovi.",
+    "manual_steps": "Sconsigliato come default. Se accetti il rischio per una libreria Steam pulita: Sicurezza di Windows → Protezione da virus e minacce → Gestisci impostazioni → Esclusioni → Aggiungi cartella.",
+    "conflicts_with": [],
+    "measurable": true
+  },
+  {
+    "id": "high-priority-process",
+    "name": "Priorità Alta/Realtime al processo del gioco",
+    "category": "scheduler",
+    "description": "Windows gestisce già il boost di priorità del processo in foreground (meccanismo documentato). Forzare Alta raramente cambia qualcosa perché il gioco non sta competendo per CPU con processi alla stessa priorità; Realtime è pericoloso (può affamare input/audio di sistema). Game Mode fa già la parte sensata di questo lavoro.",
+    "hardware_prerequisites": [],
+    "expected_impact": "Tipicamente entro la varianza su sistemi con CPU adeguata. Realtime: rischio concreto di peggiorare tutto.",
+    "evidence_level": "controversial",
+    "sources": [
+      "https://learn.microsoft.com/en-us/windows/win32/procthread/priority-boosts"
+    ],
+    "risk": "low",
+    "risk_notes": "Realtime può bloccare audio/input. Eventuali tool di terze parti per gestire priorità sono software residente in più.",
+    "rollback": "Gestione attività → Dettagli → processo → Imposta priorità → Normale (o riavvio del gioco).",
+    "manual_steps": "Sconsigliato come default. Per test: Gestione attività → Dettagli → exe del gioco → Imposta priorità → Alta (MAI Realtime) → misura con wpep bench/compare.",
+    "conflicts_with": [],
+    "measurable": true
+  },
+  {
+    "id": "usb-selective-suspend-off",
+    "name": "Disattiva USB Selective Suspend",
+    "category": "input",
+    "description": "Il selective suspend mette in sospensione le porte USB inattive per risparmiare energia (feature documentata nelle impostazioni di alimentazione Windows). Mouse/tastiere da gioco a polling attivo non vengono sospesi durante l'uso: il tweak previene semmai i rari casi di periferiche che si 'addormentano' male, non riduce la latenza di input attiva.",
+    "hardware_prerequisites": [
+      "desktop"
+    ],
+    "expected_impact": "Latenza in gioco: invariata. Risolve eventuali sintomi di periferiche che impiegano un attimo a 'svegliarsi' o si disconnettono. Su desktop il costo energetico è irrilevante.",
+    "evidence_level": "controversial",
+    "sources": [
+      "https://learn.microsoft.com/en-us/windows-hardware/drivers/usbcon/usb-selective-suspend"
+    ],
+    "risk": "none",
+    "risk_notes": "",
+    "rollback": "Stessa impostazione → Attivato.",
+    "manual_steps": "Opzioni risparmio energia → Modifica impostazioni piano → Impostazioni avanzate → Impostazioni USB → Sospensione selettiva USB → Disattivato.",
+    "conflicts_with": [],
+    "measurable": false
+  },
+  {
+    "id": "win11-windowed-optimizations",
+    "name": "Ottimizzazioni per giochi in finestra (Win11)",
+    "category": "gpu",
+    "description": "Feature documentata da Microsoft: aggiorna i giochi DX10/11 in finestra/borderless dal vecchio blt-model al flip model moderno, con latenza ridotta e supporto ad Auto HDR/VRR in finestra. È l'equivalente per il windowed di ciò che FSO fa per il fullscreen.",
+    "hardware_prerequisites": [],
+    "expected_impact": "Latenza ridotta documentata per i giochi DX10/11 giocati in finestra/borderless. Nullo per chi gioca tutto a schermo intero o su DX12 (già flip model).",
+    "evidence_level": "evidence_strong",
+    "sources": [
+      "https://support.microsoft.com/en-us/windows/optimizations-for-windowed-games-in-windows-11-3f006843-2c7e-4ed0-9a5e-f9389e535952"
+    ],
+    "risk": "low",
+    "risk_notes": "Giochi specifici con problemi possono essere esclusi singolarmente dalla stessa impostazione.",
+    "rollback": "Stessa impostazione → Disattivato (globale o per-gioco).",
+    "manual_steps": "Impostazioni → Sistema → Schermo → Grafica → Modifica impostazioni grafiche predefinite → 'Ottimizzazioni per giochi con finestra' → Attivato.",
+    "conflicts_with": [
+      "disable-fullscreen-optimizations"
+    ],
     "measurable": true
   }
 ]

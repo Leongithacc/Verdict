@@ -17,8 +17,9 @@ public static class SnapshotBuilder
     {
         var (cpuName, cores, threads) = Probe(ReadCpu, ("", (int?)null, (int?)null));
         var (gpuName, gpuDriver, currentHz) = Probe(ReadGpu, ("", "", (int?)null));
-        var (ramGb, ramSpeed) = Probe(ReadRam, ((double?)null, (int?)null));
+        var (ramGb, ramSpeed, ramRated) = Probe(ReadRam, ((double?)null, (int?)null, (int?)null));
         var (planGuid, planName) = Probe(ReadPowerPlan, ("", ""));
+        var (throttlingIndex, systemResponsiveness) = Probe(ReadMultimediaProfile, ((int?)null, (int?)null));
 
         return new SystemSnapshot
         {
@@ -31,6 +32,7 @@ public static class SnapshotBuilder
             GpuDriverVersion = gpuDriver,
             RamTotalGb = ramGb,
             RamSpeedMtps = ramSpeed,
+            RamRatedMtps = ramRated,
             IsDesktop = Probe(ReadIsDesktop, (bool?)null),
             MonitorCurrentHz = currentHz,
             MonitorMaxHz = Probe(ReadMaxRefreshRate, (int?)null),
@@ -40,6 +42,16 @@ public static class SnapshotBuilder
             GameModeEnabled = Probe(ReadGameMode, (bool?)null),
             HvciEnabled = Probe(ReadHvci, (bool?)null),
             PointerPrecisionEnabled = Probe(ReadPointerPrecision, (bool?)null),
+            GameDvrEnabled = Probe(ReadGameDvr, (bool?)null),
+            ActiveNicIsWifi = Probe(ReadActiveNicIsWifi, (bool?)null),
+            SysMainRunning = Probe(ReadSysMainRunning, (bool?)null),
+            TransparencyEnabled = Probe(ReadTransparency, (bool?)null),
+            FastStartupEnabled = Probe(ReadFastStartup, (bool?)null),
+            MpoDisabled = Probe(ReadMpoDisabled, (bool?)null),
+            PagefileAutomatic = Probe(ReadPagefileAutomatic, (bool?)null),
+            NetworkThrottlingIndex = throttlingIndex,
+            SystemResponsiveness = systemResponsiveness,
+            StartupAppsCount = Probe(ReadStartupAppsCount, (int?)null),
         };
     }
 
@@ -83,20 +95,24 @@ public static class SnapshotBuilder
         return best;
     }
 
-    private static (double?, int?) ReadRam()
+    private static (double?, int?, int?) ReadRam()
     {
         using var searcher = new ManagementObjectSearcher(
-            "SELECT Capacity, ConfiguredClockSpeed FROM Win32_PhysicalMemory");
+            "SELECT Capacity, ConfiguredClockSpeed, Speed FROM Win32_PhysicalMemory");
         ulong totalBytes = 0;
-        int speed = 0;
+        int configured = 0;
+        int rated = 0;
         foreach (var stick in searcher.Get())
         {
             totalBytes += Convert.ToUInt64(stick["Capacity"]);
             if (stick["ConfiguredClockSpeed"] is not null)
-                speed = Math.Max(speed, Convert.ToInt32(stick["ConfiguredClockSpeed"]));
+                configured = Math.Max(configured, Convert.ToInt32(stick["ConfiguredClockSpeed"]));
+            if (stick["Speed"] is not null)
+                rated = Math.Max(rated, Convert.ToInt32(stick["Speed"]));
         }
         return (totalBytes == 0 ? null : Math.Round(totalBytes / 1073741824.0, 1),
-                speed == 0 ? null : speed);
+                configured == 0 ? null : configured,
+                rated == 0 ? null : rated);
     }
 
     private static bool? ReadIsDesktop()
@@ -183,6 +199,113 @@ public static class SnapshotBuilder
             "1" or "2" => true,
             _ => null,
         };
+    }
+
+    private static bool? ReadGameDvr()
+    {
+        using var key = Registry.CurrentUser.OpenSubKey(
+            @"SOFTWARE\Microsoft\Windows\CurrentVersion\GameDVR");
+        // Assente = default = registrazione in background disponibile/attiva.
+        return key?.GetValue("AppCaptureEnabled") switch
+        {
+            0 => false,
+            _ => true,
+        };
+    }
+
+    private static bool? ReadActiveNicIsWifi()
+    {
+        var active = System.Net.NetworkInformation.NetworkInterface.GetAllNetworkInterfaces()
+            .Where(n => n.OperationalStatus == System.Net.NetworkInformation.OperationalStatus.Up &&
+                        n.NetworkInterfaceType != System.Net.NetworkInformation.NetworkInterfaceType.Loopback &&
+                        n.GetIPProperties().GatewayAddresses.Count > 0)
+            .ToArray();
+        if (active.Length == 0)
+            return null;
+        // Wi-Fi solo se NESSUNA interfaccia attiva con gateway è cablata.
+        return active.All(n =>
+            n.NetworkInterfaceType == System.Net.NetworkInformation.NetworkInterfaceType.Wireless80211);
+    }
+
+    private static bool? ReadSysMainRunning()
+    {
+        using var searcher = new ManagementObjectSearcher(
+            "SELECT State FROM Win32_Service WHERE Name='SysMain'");
+        foreach (var service in searcher.Get())
+            return (service["State"] as string) == "Running";
+        return null;
+    }
+
+    private static bool? ReadTransparency()
+    {
+        using var key = Registry.CurrentUser.OpenSubKey(
+            @"SOFTWARE\Microsoft\Windows\CurrentVersion\Themes\Personalize");
+        return key?.GetValue("EnableTransparency") switch
+        {
+            0 => false,
+            1 => true,
+            _ => null,
+        };
+    }
+
+    private static bool? ReadFastStartup()
+    {
+        using var key = Registry.LocalMachine.OpenSubKey(
+            @"SYSTEM\CurrentControlSet\Control\Session Manager\Power");
+        return key?.GetValue("HiberbootEnabled") switch
+        {
+            1 => true,
+            0 => false,
+            _ => null,
+        };
+    }
+
+    private static bool? ReadMpoDisabled()
+    {
+        using var key = Registry.LocalMachine.OpenSubKey(@"SOFTWARE\Microsoft\Windows\Dwm");
+        // OverlayTestMode=5 è il workaround community per disattivare MPO.
+        return key?.GetValue("OverlayTestMode") switch
+        {
+            5 => true,
+            null => false, // assente = MPO attivo (default)
+            _ => null,
+        };
+    }
+
+    private static bool? ReadPagefileAutomatic()
+    {
+        using var searcher = new ManagementObjectSearcher(
+            "SELECT AutomaticManagedPagefile FROM Win32_ComputerSystem");
+        foreach (var cs in searcher.Get())
+            return cs["AutomaticManagedPagefile"] as bool?;
+        return null;
+    }
+
+    private static (int?, int?) ReadMultimediaProfile()
+    {
+        using var key = Registry.LocalMachine.OpenSubKey(
+            @"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Multimedia\SystemProfile");
+        if (key is null)
+            return (null, null);
+        return (
+            key.GetValue("NetworkThrottlingIndex") is int t ? t : null,
+            key.GetValue("SystemResponsiveness") is int r ? r : null);
+    }
+
+    private static int? ReadStartupAppsCount()
+    {
+        int count = 0;
+        foreach (var (hive, path) in new[]
+        {
+            (Registry.CurrentUser, @"SOFTWARE\Microsoft\Windows\CurrentVersion\Run"),
+            (Registry.LocalMachine, @"SOFTWARE\Microsoft\Windows\CurrentVersion\Run"),
+            (Registry.LocalMachine, @"SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Run"),
+        })
+        {
+            using var key = hive.OpenSubKey(path);
+            count += key?.ValueCount ?? 0;
+        }
+        return count;
     }
 
     private static int? ReadMaxRefreshRate()

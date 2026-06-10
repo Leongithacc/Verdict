@@ -361,7 +361,7 @@ static int RunAnalyze(string[] args)
     Console.WriteLine("System snapshot (read-only)\n");
     Console.WriteLine($"CPU         : {Unknown(s.CpuName)}  ({s.CpuCores?.ToString() ?? "?"}C/{s.CpuThreads?.ToString() ?? "?"}T{(s.CpuIsX3D ? ", X3D" : "")})");
     Console.WriteLine($"GPU         : {Unknown(s.GpuName)}  driver {Unknown(s.GpuDriverVersion)}");
-    Console.WriteLine($"RAM         : {(s.RamTotalGb?.ToString("F0") ?? "?")} GB @ {(s.RamSpeedMtps?.ToString() ?? "?")} MT/s");
+    Console.WriteLine($"RAM         : {(s.RamTotalGb?.ToString("F0") ?? "?")} GB @ {(s.RamSpeedMtps?.ToString() ?? "?")} MT/s (dichiarata: {(s.RamRatedMtps?.ToString() ?? "?")})");
     Console.WriteLine($"Chassis     : {(s.IsDesktop switch { true => "desktop", false => "portatile", null => "sconosciuto" })}");
     Console.WriteLine($"Monitor     : {(s.MonitorCurrentHz?.ToString() ?? "?")}Hz attivi / max {(s.MonitorMaxHz?.ToString() ?? "?")}Hz alla risoluzione corrente");
     Console.WriteLine($"Power plan  : {Unknown(s.PowerPlanName)}");
@@ -369,6 +369,10 @@ static int RunAnalyze(string[] args)
     Console.WriteLine($"Game Mode   : {OnOff(s.GameModeEnabled)}");
     Console.WriteLine($"Mem.Integrity (HVCI): {OnOff(s.HvciEnabled)}");
     Console.WriteLine($"Pointer precision   : {OnOff(s.PointerPrecisionEnabled)}");
+    Console.WriteLine($"Game DVR (registrazione bg): {OnOff(s.GameDvrEnabled)}");
+    Console.WriteLine($"Rete attiva : {(s.ActiveNicIsWifi switch { true => "Wi-Fi", false => "cablata", null => "sconosciuta" })}");
+    Console.WriteLine($"SysMain     : {OnOff(s.SysMainRunning)}    Avvio rapido: {OnOff(s.FastStartupEnabled)}    MPO disattivato: {OnOff(s.MpoDisabled)}");
+    Console.WriteLine($"Pagefile auto: {OnOff(s.PagefileAutomatic)}   Voci autostart (registry): {(s.StartupAppsCount?.ToString() ?? "?")}");
 
     if (jsonPath is not null)
     {
