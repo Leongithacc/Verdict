@@ -36,6 +36,8 @@ public static class SnapshotBuilder
             IsDesktop = Probe(ReadIsDesktop, (bool?)null),
             MonitorCurrentHz = currentHz,
             MonitorMaxHz = Probe(ReadMaxRefreshRate, (int?)null),
+            DisplayWidth = Probe(() => ReadCurrentDisplayMode().width, (int?)null),
+            DisplayHeight = Probe(() => ReadCurrentDisplayMode().height, (int?)null),
             PowerPlanGuid = planGuid,
             PowerPlanName = planName,
             HagsEnabled = Probe(ReadHags, (bool?)null),
@@ -340,6 +342,14 @@ public static class SnapshotBuilder
             count += key?.ValueCount ?? 0;
         }
         return count;
+    }
+
+    private static (int? width, int? height) ReadCurrentDisplayMode()
+    {
+        var current = new DEVMODEW { dmSize = (ushort)Marshal.SizeOf<DEVMODEW>() };
+        if (!EnumDisplaySettingsW(null, ENUM_CURRENT_SETTINGS, ref current))
+            return (null, null);
+        return ((int)current.dmPelsWidth, (int)current.dmPelsHeight);
     }
 
     private static int? ReadMaxRefreshRate()

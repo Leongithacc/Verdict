@@ -21,6 +21,8 @@ switch (args[0])
         return await RunBench(args.Skip(1).ToArray());
     case "compare":
         return RunCompare(args.Skip(1).ToArray());
+    case "validate":
+        return RunValidate(args.Skip(1).ToArray());
     case "noise":
         return RunNoise(args.Skip(1).ToArray());
     case "kb":
@@ -155,16 +157,36 @@ static async Task<int> RunBench(string[] args)
         return 4;
     }
 
+    // F3: fail fast se il processo non esiste, prima di sprecare una cattura.
+    var processBase = Path.GetFileNameWithoutExtension(processName);
+    if (System.Diagnostics.Process.GetProcessesByName(processBase).Length == 0)
+    {
+        Console.Error.WriteLine(
+            $"Nessun processo '{processBase}' trovato. Il gioco è avviato?");
+        return 5;
+    }
+
+    // F10: fotografa l'ambiente e allegalo a ogni run.
+    var envSnapshot = WPEP.SystemAnalyzer.SnapshotBuilder.Build(DateTimeOffset.UtcNow);
+    var environment = new RunEnvironment(
+        envSnapshot.GpuName, envSnapshot.GpuDriverVersion,
+        envSnapshot.DisplayWidth, envSnapshot.DisplayHeight,
+        envSnapshot.MonitorCurrentHz, envSnapshot.PowerPlanGuid);
+
     Directory.CreateDirectory(outDir);
     var runner = new PresentMonRunner(exe);
 
     Console.WriteLine($"Benchmark '{label}': {runs} run da {seconds}s su {processName}");
+    Console.WriteLine(
+        "Warm-up: shader cache e temperature richiedono qualche minuto di gioco\n" +
+        "prima della run 1 — la prima run dopo un cambio driver/patch va scartata.");
     if (runs < 5)
         Console.WriteLine(
             "Nota: con meno di 5 run per configurazione nessun confronto sarà statisticamente\n" +
             "difendibile (spec §6). Va bene per esplorare, non per concludere.");
     Console.WriteLine();
 
+    var collected = new List<BenchmarkRun>(runs);
     Console.WriteLine($"{"Run",-6} {"Frame",8} {"Avg FPS",9} {"Median",8} {"1% low",8} {"0.2% low",9}");
     Console.WriteLine(new string('-', 55));
 
@@ -194,17 +216,35 @@ static async Task<int> RunBench(string[] args)
                 $"       ({m.ExcludedNonApplicationFrames} frame generati (FG) esclusi dalle metriche)");
 
         var run = new BenchmarkRun(
-            label, processName, DateTimeOffset.UtcNow, seconds, m, result.FrameTimesMs);
+            label, processName, DateTimeOffset.UtcNow, seconds, m, result.FrameTimesMs, environment);
         var path = Path.Combine(outDir, $"{label}-{r:D2}.json");
         await File.WriteAllTextAsync(path, JsonSerializer.Serialize(run));
+        collected.Add(run);
     }
 
     Console.WriteLine();
+    // Noise gate preview (HANDOFF_R7 §1): avvisa SUBITO se lo scenario è rumoroso,
+    // prima che l'utente perda tempo col post.
+    if (collected.Count >= 3)
+    {
+        var medians = collected.Select(r => r.Metrics.MedianFrameTimeMs).ToArray();
+        double mde = WPEP.Statistics.Mde.Percent(medians);
+        if (mde > WPEP.Statistics.Mde.DefaultGateThresholdPercent)
+            Console.WriteLine(
+                $"⚠ SCENARIO RUMOROSO: con queste run si rilevano solo effetti ≥{mde:F0}% " +
+                $"(gate: {WPEP.Statistics.Mde.DefaultGateThresholdPercent:F0}%).\n" +
+                "  Un compare su questo scenario NON emetterà verdetti. Usa uno scenario\n" +
+                "  più ripetibile (benchmark integrato, mappa creativa con route fissa).");
+        else
+            Console.WriteLine(
+                $"Scenario utilizzabile: effetto minimo rilevabile ≈ {mde:F1}% sulla mediana.");
+    }
+
     Console.WriteLine(
         $"""
         Run salvate in: {Path.GetFullPath(outDir)}
         Queste sono misure, non conclusioni. Per dire se una modifica ha effetto serve
-        il confronto statistico baseline/post (comando 'compare', milestone R3).
+        il confronto statistico baseline/post (comando 'compare').
         """);
     return 0;
 }
@@ -241,6 +281,17 @@ static int RunCompare(string[] args)
     {
         var baseline = BenchmarkRunStore.LoadDirectory(baselineDir);
         var post = BenchmarkRunStore.LoadDirectory(postDir);
+
+        // F10: verdetto bloccato se l'ambiente è cambiato tra le run.
+        var env = WPEP.Statistics.EnvironmentValidator.Validate(baseline, post);
+        if (env.Warning is not null)
+            Console.WriteLine($"⚠ {env.Warning}");
+        if (!env.Valid)
+        {
+            Console.Error.WriteLine($"VERDETTO BLOCCATO. {env.BlockReason}");
+            return 6;
+        }
+
         report = WPEP.Statistics.ComparisonEngine.Compare(baseline, post);
     }
     catch (Exception ex)
@@ -249,6 +300,12 @@ static int RunCompare(string[] args)
         return 1;
     }
 
+    PrintComparison(report);
+    return report.GateTriggered ? 7 : 0;
+}
+
+static void PrintComparison(WPEP.Statistics.ComparisonEngine.ComparisonReport report)
+{
     Console.WriteLine($"Baseline: {report.BaselineRuns} run   Post: {report.PostRuns} run");
     if (!report.Conclusive)
         Console.WriteLine(
@@ -257,8 +314,8 @@ static int RunCompare(string[] args)
               i numeri sotto sono INDICATIVI, non conclusioni (spec §6).
             """);
     Console.WriteLine();
-    Console.WriteLine($"{"Metrica",-26} {"Base",9} {"Post",9} {"Δ%",7} {"p",7} {"CI 95%",20}  Verdetto");
-    Console.WriteLine(new string('-', 96));
+    Console.WriteLine($"{"Metrica",-26} {"Base",9} {"Post",9} {"Δ%",7} {"p",7} {"MDE%",6} {"CI 95%",20}  Verdetto");
+    Console.WriteLine(new string('-', 104));
 
     foreach (var m in report.Metrics)
     {
@@ -266,26 +323,112 @@ static int RunCompare(string[] args)
         {
             WPEP.Statistics.Verdict.Improvement => "MIGLIORAMENTO",
             WPEP.Statistics.Verdict.Regression => "PEGGIORAMENTO",
-            _ => "nessun effetto misurabile",
+            WPEP.Statistics.Verdict.ScenarioTooNoisy => "— (troppo rumore)",
+            _ => $"nessun effetto (soglia {m.MdePercent:F1}%)",
         };
         Console.WriteLine(
             $"{m.Metric,-26} {m.BaselineMedian,9:F2} {m.PostMedian,9:F2} {m.DeltaPercent,6:+0.0;-0.0;0.0}% " +
-            $"{m.PValue,7:F3} [{m.Ci.Lower,8:F3}, {m.Ci.Upper,8:F3}]  {verdict}");
+            $"{m.PValue,7:F3} {m.MdePercent,5:F1}% [{m.Ci.Lower,8:F3}, {m.Ci.Upper,8:F3}]  {verdict}");
     }
 
     Console.WriteLine();
+    if (report.GateTriggered)
+    {
+        Console.WriteLine(
+            $"""
+            NESSUN VERDETTO. Lo scenario è troppo rumoroso per rilevare effetti sotto il
+            {report.Metrics[0].MdePercent:F0}% (gate: {report.GateThresholdPercent:F0}%). Non è il tweak a essere inutile:
+            è la misura che qui non può vedere niente. Passa a uno scenario ripetibile
+            (benchmark integrato, mappa creativa con route fissa) e rifai baseline + post.
+            """);
+        return;
+    }
     if (report.Metrics.All(m => m.Verdict == WPEP.Statistics.Verdict.NoMeasurableEffect))
-        Console.WriteLine("Conclusione onesta: nessun effetto misurabile su questo sistema.");
+        Console.WriteLine(
+            "Conclusione onesta: nessun effetto misurabile su questo sistema.\n" +
+            "Fai rollback della modifica, salvo altri motivi per tenerla.");
     Console.WriteLine(
         """
         Note di lettura:
         - Frametime: più basso = meglio. Δ% negativo = post più veloce.
+        - MDE% = effetto minimo rilevabile con il rumore di questa baseline.
         - L'unità statistica è la RUN, non il singolo frame: i frame aggregati
           renderebbero "significativo" qualsiasi delta microscopico (placebo).
         - p = Mann–Whitney (permutation test), CI = bootstrap sulla differenza
           delle mediane tra run.
         """);
-    return 0;
+}
+
+static int RunValidate(string[] args)
+{
+    string? dirA = null;
+    string? dirB = null;
+    string expect = "none";
+
+    for (int i = 0; i < args.Length; i++)
+    {
+        switch (args[i])
+        {
+            case "--a" when i + 1 < args.Length:
+                dirA = args[++i];
+                break;
+            case "--b" when i + 1 < args.Length:
+                dirB = args[++i];
+                break;
+            case "--expect" when i + 1 < args.Length:
+                expect = args[++i].ToLowerInvariant();
+                break;
+            default:
+                Console.Error.WriteLine($"Argomento sconosciuto: {args[i]}");
+                return 2;
+        }
+    }
+
+    if (dirA is null || dirB is null || expect is not ("none" or "effect"))
+    {
+        Console.Error.WriteLine(
+            """
+            Uso: wpep validate --a <dir> --b <dir> --expect none|effect
+              --expect none    A/A test: due gruppi raccolti SENZA cambiare nulla.
+                               Atteso: nessun effetto. Se ne trova uno → falso positivo.
+              --expect effect  Known-effect: una modifica garantita e grande (es. DLSS
+                               Quality vs nativo). Atteso: effetto rilevato.
+            La pipeline va certificata così PRIMA di fidarsi dei verdetti sui tweak.
+            """);
+        return 2;
+    }
+
+    try
+    {
+        var a = BenchmarkRunStore.LoadDirectory(dirA);
+        var b = BenchmarkRunStore.LoadDirectory(dirB);
+
+        var env = WPEP.Statistics.EnvironmentValidator.Validate(a, b);
+        if (env.Warning is not null)
+            Console.WriteLine($"⚠ {env.Warning}");
+        if (!env.Valid && expect == "none")
+        {
+            // Per un A/A test l'ambiente DEVE essere identico: se è cambiato,
+            // il test non è un A/A.
+            Console.Error.WriteLine($"VALIDAZIONE IMPOSSIBILE. {env.BlockReason}");
+            return 6;
+        }
+
+        var result = WPEP.Statistics.PipelineValidator.Run(a, b,
+            expect == "none"
+                ? WPEP.Statistics.PipelineValidator.Expectation.None
+                : WPEP.Statistics.PipelineValidator.Expectation.Effect);
+
+        Console.WriteLine(result.Summary);
+        Console.WriteLine();
+        PrintComparison(result.Report);
+        return result.Passed ? 0 : 1;
+    }
+    catch (Exception ex)
+    {
+        Console.Error.WriteLine($"Validazione fallita: {ex.Message}");
+        return 1;
+    }
 }
 
 static int RunNoise(string[] args)
@@ -656,7 +799,14 @@ static void PrintUsage()
 
           wpep compare --baseline <dir> --post <dir>
               Confronto statistico onesto tra due set di run (Mann–Whitney +
-              bootstrap CI). Se il delta è dentro la varianza, lo dice.
+              bootstrap CI + noise gate). Tre esiti: effetto / nessun effetto /
+              scenario troppo rumoroso (= nessun verdetto). Blocca il verdetto
+              se l'ambiente è cambiato tra le run.
+
+          wpep validate --a <dir> --b <dir> --expect none|effect
+              Certifica la pipeline: A/A test (atteso: nessun effetto) e
+              known-effect test (atteso: effetto rilevato). Da fare PRIMA di
+              fidarsi dei verdetti sui tweak.
 
           wpep noise --dir <dir>
               Misura la varianza naturale run-to-run da run ripetute della

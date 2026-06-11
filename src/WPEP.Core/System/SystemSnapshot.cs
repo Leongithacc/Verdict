@@ -24,6 +24,8 @@ public sealed record SystemSnapshot
     // Monitor
     public int? MonitorCurrentHz { get; init; }
     public int? MonitorMaxHz { get; init; }
+    public int? DisplayWidth { get; init; }
+    public int? DisplayHeight { get; init; }
 
     // Config rilevante per la KB
     public string PowerPlanGuid { get; init; } = "";

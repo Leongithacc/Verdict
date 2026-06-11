@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WPEP — UI Reference Mockup (R7)</title>
+<style>
+  :root{
+    --bg:#0F0F14; --surface:#1A1A22; --surface2:#22222C; --line:#2A2A36;
+    --accent:#8B5CF6; --accent-deep:#4A0080;
+    --text:#E8E6F0; --muted:#8A8794;
+    --ok:#34D399; --ok-dim:#1E4D3D; --blue:#60A5FA; --amber:#FBBF24;
+    --grey:#6B7280; --red:#F87171;
+    --mono:"Cascadia Code",Consolas,monospace;
+    --sans:"Segoe UI Variable","Segoe UI",system-ui,sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:#08080C;color:var(--text);font-family:var(--sans);font-size:14px;
+    display:flex;align-items:center;justify-content:center;min-height:100vh;padding:24px}
+  .window{width:1180px;max-width:100%;height:760px;background:var(--bg);border:1px solid var(--line);
+    border-radius:10px;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 24px 80px rgba(0,0,0,.6)}
+  /* titlebar */
+  .titlebar{height:38px;display:flex;align-items:center;padding:0 14px;border-bottom:1px solid var(--line);
+    background:#121218;gap:10px;flex-shrink:0}
+  .logo{width:16px;height:16px;border-radius:4px;background:linear-gradient(135deg,var(--accent),var(--accent-deep))}
+  .titlebar span{font-size:12px;color:var(--muted);letter-spacing:.4px}
+  .titlebar .caps{margin-left:auto;display:flex;gap:14px}
+  .titlebar .caps i{width:11px;height:11px;border-radius:50%;background:#2E2E3A;display:block}
+  .main{flex:1;display:flex;min-height:0}
+  /* sidebar */
+  .side{width:200px;border-right:1px solid var(--line);padding:14px 10px;display:flex;flex-direction:column;gap:2px;flex-shrink:0}
+  .nav{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:7px;color:var(--muted);
+    cursor:pointer;font-size:13.5px;border:none;background:none;text-align:left;width:100%;font-family:var(--sans)}
+  .nav svg{width:16px;height:16px;flex-shrink:0}
+  .nav:hover{background:var(--surface);color:var(--text)}
+  .nav.active{background:var(--surface2);color:var(--text);box-shadow:inset 2px 0 0 var(--accent)}
+  .side .foot{margin-top:auto;padding:10px 12px;font-size:11px;color:var(--muted);line-height:1.5;
+    border-top:1px solid var(--line)}
+  .side .foot b{color:var(--accent);font-weight:600}
+  /* content */
+  .content{flex:1;overflow-y:auto;padding:28px 32px}
+  .screen{display:none}.screen.on{display:block}
+  .eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:1.5px;color:var(--accent);text-transform:uppercase;margin-bottom:10px}
+  h1{font-size:26px;font-weight:600;letter-spacing:-.3px}
+  h1 .m{font-family:var(--mono);color:var(--accent)}
+  .sub{color:var(--muted);font-size:12.5px;margin-top:6px}
+  /* signature: check grid */
+  .checkgrid{display:flex;gap:4px;flex-wrap:wrap;margin:22px 0 6px}
+  .cell{width:30px;height:14px;border-radius:3px;background:var(--ok-dim);position:relative;cursor:default}
+  .cell.act{background:var(--ok)}
+  .cell.skip{background:#3A3A46}
+  .cell.warn{background:var(--amber)}
+  .cell:hover::after{content:attr(data-t);position:absolute;bottom:20px;left:0;background:#000;border:1px solid var(--line);
+    padding:4px 8px;border-radius:5px;font-size:11px;white-space:nowrap;z-index:5;color:var(--text)}
+  .legend{font-family:var(--mono);font-size:10.5px;color:var(--muted);margin-bottom:24px}
+  .legend i{display:inline-block;width:9px;height:9px;border-radius:2px;margin:0 4px 0 14px;vertical-align:-1px}
+  /* cards */
+  .cards{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:26px}
+  .card{background:var(--surface);border:1px solid var(--line);border-radius:9px;padding:16px 18px;cursor:pointer;transition:border-color .15s}
+  .card:hover{border-color:var(--accent)}
+  .card .n{font-family:var(--mono);font-size:30px;font-weight:600}
+  .card .t{font-size:13.5px;font-weight:600;margin-top:2px}
+  .card .d{font-size:11.5px;color:var(--muted);margin-top:4px;line-height:1.45}
+  .card.c1 .n{color:var(--ok)} .card.c2 .n{color:#7BA88F} .card.c3 .n{color:var(--grey)}
+  /* list rows */
+  h2{font-size:13px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin:4px 0 12px}
+  .row{display:flex;align-items:center;gap:12px;background:var(--surface);border:1px solid var(--line);
+    border-radius:8px;padding:12px 16px;margin-bottom:8px}
+  .row .grow{flex:1;min-width:0}
+  .row .name{font-size:13.5px;font-weight:600}
+  .row .why{font-size:11.5px;color:var(--muted);margin-top:2px}
+  .badge{font-family:var(--mono);font-size:10px;letter-spacing:.5px;padding:3px 8px;border-radius:4px;white-space:nowrap}
+  .b-strong{background:rgba(52,211,153,.12);color:var(--ok)}
+  .b-plaus{background:rgba(96,165,250,.12);color:var(--blue)}
+  .b-contr{background:rgba(251,191,36,.12);color:var(--amber)}
+  .b-plac{background:rgba(107,114,128,.18);color:#9CA3AF}
+  .b-risk{background:rgba(248,113,113,.12);color:var(--red)}
+  .btn{font-family:var(--sans);font-size:12px;font-weight:600;padding:7px 14px;border-radius:6px;border:1px solid var(--line);
+    background:var(--surface2);color:var(--text);cursor:pointer}
+  .btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+  .btn:focus-visible,.nav:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+  /* wizard */
+  .steps{display:flex;gap:0;margin:24px 0 28px;font-family:var(--mono);font-size:11px}
+  .step{flex:1;text-align:center;color:var(--muted);position:relative;padding-top:18px}
+  .step::before{content:"";width:10px;height:10px;border-radius:50%;background:#3A3A46;position:absolute;top:0;left:50%;transform:translateX(-50%)}
+  .step::after{content:"";height:2px;background:#3A3A46;position:absolute;top:4px;left:-50%;right:50%;z-index:-1}
+  .step:first-child::after{display:none}
+  .step.done{color:var(--text)} .step.done::before,.step.done::after{background:var(--accent)}
+  .step.cur{color:var(--accent);font-weight:600} .step.cur::before{background:var(--accent);box-shadow:0 0 0 4px rgba(139,92,246,.25)} .step.cur::after{background:var(--accent)}
+  .verdictbox{border-radius:10px;padding:22px 24px;margin-bottom:14px;border:1px solid var(--line);background:var(--surface)}
+  .verdictbox.hero{border-color:var(--accent);background:linear-gradient(180deg,rgba(139,92,246,.10),var(--surface) 60%)}
+  .verdictbox .k{font-family:var(--mono);font-size:11px;letter-spacing:1px;text-transform:uppercase;margin-bottom:8px}
+  .verdictbox .v{font-size:15.5px;line-height:1.55}
+  .verdictbox .v b{font-family:var(--mono)}
+  .vd .k{color:var(--ok)} .vn .k{color:var(--grey)} .vx .k{color:var(--amber)}
+  .mutednote{font-size:11.5px;color:var(--muted);line-height:1.6;margin-top:18px;border-left:2px solid var(--line);padding-left:12px}
+  /* diag table */
+  table{width:100%;border-collapse:collapse;font-size:13px;margin-top:18px}
+  th{font-family:var(--mono);font-size:10.5px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);
+    text-align:left;padding:8px 12px;border-bottom:1px solid var(--line)}
+  td{padding:10px 12px;border-bottom:1px solid #1E1E28}
+  td.mono{font-family:var(--mono)}
+  .bar{height:6px;border-radius:3px;background:var(--surface2);overflow:hidden;width:160px}
+  .bar i{display:block;height:100%;background:var(--accent)}
+  .healthline{margin-top:20px;padding:14px 18px;border-radius:8px;background:rgba(52,211,153,.07);
+    border:1px solid rgba(52,211,153,.25);font-size:13.5px;color:var(--ok)}
+  /* kb */
+  .chips{display:flex;gap:8px;margin:18px 0 18px;flex-wrap:wrap}
+  .chip{font-family:var(--mono);font-size:11px;padding:5px 12px;border-radius:99px;border:1px solid var(--line);
+    color:var(--muted);cursor:pointer;background:none}
+  .chip.on{border-color:var(--accent);color:var(--accent);background:rgba(139,92,246,.08)}
+  .kbfoot{margin-top:18px;font-family:var(--mono);font-size:11px;color:var(--muted);text-align:center;
+    border-top:1px solid var(--line);padding-top:14px}
+  .scanline{font-family:var(--mono);font-size:11px;color:var(--muted);margin-top:26px}
+  .scanline b{color:var(--accent)}
+  @media (prefers-reduced-motion:no-preference){
+    .card,.btn{transition:all .15s ease}
+  }
+  @media (max-width:900px){
+    .window{height:auto}.main{flex-direction:column}.side{width:100%;flex-direction:row;overflow-x:auto}
+    .side .foot{display:none}.cards{grid-template-columns:1fr}
+  }
+</style>
+</head>
+<body>
+<div class="window">
+  <div class="titlebar">
+    <div class="logo"></div><span>WPEP — Windows Performance Engineering Platform</span>
+    <div class="caps"><i></i><i></i><i></i></div>
+  </div>
+  <div class="main">
+    <nav class="side">
+      <button class="nav active" data-s="verdict">◆&nbsp; Verdict</button>
+      <button class="nav" data-s="measure">▥&nbsp; Measure</button>
+      <button class="nav" data-s="diag">∿&nbsp; Diagnostics</button>
+      <button class="nav" data-s="kb">▤&nbsp; Knowledge Base</button>
+      <button class="nav" data-s="report">↧&nbsp; Report</button>
+      <div class="foot"><b>Read-only.</b> WPEP never modifies your system. You stay in control.</div>
+    </nav>
+    <div class="content">
+
+      <!-- VERDICT -->
+      <section class="screen on" id="verdict">
+        <div class="eyebrow">System verdict</div>
+        <h1>Your system: <span class="m">24/28</span> checks optimal</h1>
+        <div class="sub">Last scanned 19:42 · AMD Ryzen 7 9800X3D · GeForce RTX 5080 · 240 Hz</div>
+        <div class="checkgrid" id="grid"></div>
+        <div class="legend">
+          <i style="background:var(--ok)"></i>optimal
+          <i style="background:var(--amber)"></i>action available
+          <i style="background:#3A3A46"></i>not applicable
+        </div>
+        <div class="cards">
+          <div class="card c1"><div class="n">3</div><div class="t">Worth doing</div>
+            <div class="d">Free improvements with real evidence</div></div>
+          <div class="card c2"><div class="n">16</div><div class="t">Already optimal</div>
+            <div class="d">Nothing to do here. That's good news.</div></div>
+          <div class="card c3"><div class="n">9</div><div class="t">Placebo avoided</div>
+            <div class="d">Popular tweaks that don't actually work</div></div>
+        </div>
+        <h2>Worth doing on this PC</h2>
+        <div class="row"><div class="grow"><div class="name">Turn off GameDVR background recording</div>
+          <div class="why">Background capture costs frames you never see. Settings → Gaming → Captures.</div></div>
+          <span class="badge b-strong">STRONG</span><button class="btn">How to</button></div>
+        <div class="row"><div class="grow"><div class="name">Clean up startup apps (16 found)</div>
+          <div class="why">Each one can wake up mid-match. Review and disable what you don't need.</div></div>
+          <span class="badge b-strong">STRONG</span><button class="btn">Review</button></div>
+        <div class="row"><div class="grow"><div class="name">Verify Reflex + G-SYNC combo in-game</div>
+          <div class="why">Right combination matters more than any registry tweak. Per-game check.</div></div>
+          <span class="badge b-plaus">PLAUSIBLE</span><button class="btn">Check</button></div>
+        <div class="scanline">$ wpep advise · completed in <b>2.1s</b> · 28 probes · 0 writes</div>
+      </section>
+
+      <!-- MEASURE -->
+      <section class="screen" id="measure">
+        <div class="eyebrow">Measure · before / after</div>
+        <h1>Did it actually help?</h1>
+        <div class="sub">One change at a time. Statistics decide — not feelings.</div>
+        <div class="steps">
+          <div class="step done">1 · SCENARIO</div>
+          <div class="step done">2 · BASELINE ×5</div>
+          <div class="step done">3 · APPLY ONE CHANGE</div>
+          <div class="step done">4 · POST ×5</div>
+          <div class="step cur">5 · VERDICT</div>
+        </div>
+        <div class="verdictbox hero vn">
+          <div class="k">No measurable effect</div>
+          <div class="v">No measurable effect on this system (detection threshold: <b>4.2%</b>).<br>
+          Roll it back unless you have another reason to keep it.</div>
+        </div>
+        <div class="verdictbox vd">
+          <div class="k">Example · effect detected</div>
+          <div class="v">Detected: <b>0.2% low</b> improved by <b>+11.3%</b> (CI 6.1–16.8%). This one's real.</div>
+        </div>
+        <div class="verdictbox vx">
+          <div class="k">Example · no verdict</div>
+          <div class="v">This scenario is too noisy to detect effects below <b>28%</b>.
+          Switch to a repeatable scenario and try again.</div>
+        </div>
+        <div class="mutednote">Warm up before run 1: shader caches and temperatures need a few minutes of play.
+        Network and input tweaks can't be tested in replays — replays skip networking and player input.</div>
+      </section>
+
+      <!-- DIAGNOSTICS -->
+      <section class="screen" id="diag">
+        <div class="eyebrow">Diagnostics · kernel trace</div>
+        <h1>Who's stealing your frames?</h1>
+        <div class="sub">30-second ETW capture during gameplay · requires administrator (asked only when you start)</div>
+        <table>
+          <tr><th>Driver</th><th>Subsystem</th><th>Max DPC</th><th></th><th>Spikes &gt; 500 µs</th></tr>
+          <tr><td class="mono">nvlddmkm.sys</td><td>NVIDIA display</td><td class="mono">277 µs</td>
+            <td><div class="bar"><i style="width:55%"></i></div></td><td class="mono">0</td></tr>
+          <tr><td class="mono">dxgkrnl.sys</td><td>DirectX kernel</td><td class="mono">231 µs</td>
+            <td><div class="bar"><i style="width:46%"></i></div></td><td class="mono">0</td></tr>
+          <tr><td class="mono">ndis.sys</td><td>Network</td><td class="mono">118 µs</td>
+            <td><div class="bar"><i style="width:24%"></i></div></td><td class="mono">0</td></tr>
+          <tr><td class="mono">storport.sys</td><td>Storage</td><td class="mono">74 µs</td>
+            <td><div class="bar"><i style="width:15%"></i></div></td><td class="mono">0</td></tr>
+        </table>
+        <div class="healthline">✓ No DPC offender found. Your driver stack is healthy — stutter, if any, is coming from the game itself.</div>
+        <div class="scanline">$ wpep diag --seconds 30 · 412,094 events · elevated session closed</div>
+      </section>
+
+      <!-- KB -->
+      <section class="screen" id="kb">
+        <div class="eyebrow">Knowledge base</div>
+        <h1>51 tweaks. <span class="m">Sourced.</span> Graded.</h1>
+        <div class="sub">Including the ones that don't work — especially those.</div>
+        <div class="chips">
+          <button class="chip on">All</button><button class="chip">Strong evidence</button>
+          <button class="chip">Plausible</button><button class="chip">Controversial</button>
+          <button class="chip">Placebo</button><button class="chip">Risky</button>
+        </div>
+        <div class="row"><div class="grow"><div class="name">NVIDIA Reflex (On + Boost)</div>
+          <div class="why">Vendor-documented latency reduction in supported games. Source: NVIDIA.</div></div>
+          <span class="badge b-strong">STRONG</span></div>
+        <div class="row"><div class="grow"><div class="name">Frame cap: Unlimited vs below refresh</div>
+          <div class="why">Epic's own guide and latency practice disagree. We show both sides.</div></div>
+          <span class="badge b-contr">CONTROVERSIAL</span></div>
+        <div class="row"><div class="grow"><div class="name">Custom DNS for lower ping</div>
+          <div class="why">DNS resolves names once. It does nothing for in-game latency. Skip it.</div></div>
+          <span class="badge b-plac">PLACEBO</span></div>
+        <div class="row"><div class="grow"><div class="name">Disable Memory Integrity (VBS)</div>
+          <div class="why">Real performance gain — paid for with real security. Read before touching.</div></div>
+          <span class="badge b-risk">RISKY</span></div>
+        <div class="kbfoot">Every entry cites a primary source. No source, no recommendation.</div>
+      </section>
+
+      <!-- REPORT -->
+      <section class="screen" id="report">
+        <div class="eyebrow">Report</div>
+        <h1>Proof you can share</h1>
+        <div class="sub">A single dark-themed HTML file: verdict, measurements, sources. No install needed to view it.</div>
+        <div style="margin-top:24px;display:flex;gap:10px">
+          <button class="btn primary">Generate report</button>
+          <button class="btn">Open last report</button>
+        </div>
+        <div class="mutednote">Includes what was tested and found useless — honesty is the product.</div>
+      </section>
+
+    </div>
+  </div>
+</div>
+<script>
+  // nav
+  document.querySelectorAll('.nav').forEach(b=>b.addEventListener('click',()=>{
+    document.querySelectorAll('.nav').forEach(x=>x.classList.remove('active'));
+    document.querySelectorAll('.screen').forEach(x=>x.classList.remove('on'));
+    b.classList.add('active');
+    document.getElementById(b.dataset.s).classList.add('on');
+  }));
+  // check grid: 28 cells — 24 ok, 3 actionable, 1 n/a (example data)
+  const g=document.getElementById('grid');
+  const cells=[
+    ...Array(24).fill(['act','optimal']),
+    ['warn','GameDVR — action available'],['warn','Startup apps — action available'],
+    ['warn','Reflex/G-SYNC — verify'],['skip','Laptop battery probe — not applicable']
+  ];
+  // interleave a bit so it doesn't look sorted
+  const order=[0,1,24,2,3,4,5,25,6,7,8,9,10,11,26,12,13,14,15,16,17,27,18,19,20,21,22,23];
+  order.forEach(i=>{const[c,t]=cells[i];const d=document.createElement('div');
+    d.className='cell '+c; d.setAttribute('data-t', t==='optimal'?'check #'+(i+1)+' — optimal':t);
+    g.appendChild(d);});
+</script>
+</body>
+</html>

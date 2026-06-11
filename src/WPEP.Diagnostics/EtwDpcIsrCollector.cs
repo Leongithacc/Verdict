@@ -29,6 +29,18 @@ public sealed class EtwDpcIsrCollector
             throw new UnauthorizedAccessException(
                 "Le sessioni ETW kernel richiedono un terminale elevato (admin).");
 
+        // PORTABILITY: chiudi eventuali sessioni orfane di un'istanza precedente
+        // morta male — le sessioni ETW kernel sopravvivono al processo.
+        try
+        {
+            if (TraceEventSession.GetActiveSessionNames().Contains(SessionName))
+            {
+                TraceEventSession.GetActiveSession(SessionName)?.Stop(noThrow: true);
+                progress?.Invoke("Sessione ETW orfana precedente chiusa.");
+            }
+        }
+        catch { /* best effort: la creazione sotto prende comunque il nome */ }
+
         var modules = new List<DriverModule>(KernelDriverEnumerator.Enumerate());
         progress?.Invoke($"Driver caricati rilevati: {modules.Count}");
 

@@ -94,13 +94,15 @@ public static class ReportBuilder
                 {
                     Verdict.Improvement => "good",
                     Verdict.Regression => "bad",
+                    Verdict.ScenarioTooNoisy => "warn",
                     _ => "dim",
                 };
                 string verdict = m.Verdict switch
                 {
                     Verdict.Improvement => "MIGLIORAMENTO",
                     Verdict.Regression => "PEGGIORAMENTO",
-                    _ => "nessun effetto misurabile",
+                    Verdict.ScenarioTooNoisy => $"nessun verdetto: scenario troppo rumoroso (MDE {m.MdePercent:F0}%)",
+                    _ => $"nessun effetto misurabile (soglia {m.MdePercent:F1}%)",
                 };
                 sb.Append($"<tr><td>{Esc(m.Metric)}</td><td>{m.BaselineMedian:F2}</td><td>{m.PostMedian:F2}</td>" +
                           $"<td>{m.DeltaPercent:+0.0;-0.0;0.0}%</td><td>{m.PValue:F3}</td>" +

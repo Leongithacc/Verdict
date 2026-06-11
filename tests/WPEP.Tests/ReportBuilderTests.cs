@@ -74,10 +74,12 @@ public class ReportBuilderTests
     public void BuildHtml_WithComparison_RendersVerdicts()
     {
         var comparison = new ComparisonEngine.ComparisonReport(5, 5, Conclusive: true,
+            GateThresholdPercent: 10,
         [
             new ComparisonEngine.MetricComparison(
                 "Median frametime (ms)", 10, 9, -1, -10,
-                PValue: 0.008, new Bootstrap.Interval(-1, -1.4, -0.6), Verdict.Improvement),
+                PValue: 0.008, new Bootstrap.Interval(-1, -1.4, -0.6),
+                MdePercent: 2.5, Verdict.Improvement),
         ]);
 
         var html = ReportBuilder.BuildHtml(Data(comparison: comparison));

@@ -14,9 +14,18 @@ public static class BenchmarkRunStore
         var runs = new List<BenchmarkRun>();
         foreach (var file in Directory.EnumerateFiles(directory, "*.json").Order())
         {
-            var run = JsonSerializer.Deserialize<BenchmarkRun>(File.ReadAllText(file))
-                ?? throw new InvalidDataException($"Run non leggibile: {file}");
-            runs.Add(run);
+            try
+            {
+                var run = JsonSerializer.Deserialize<BenchmarkRun>(File.ReadAllText(file))
+                    ?? throw new InvalidDataException($"Run non leggibile: {file}");
+                runs.Add(run);
+            }
+            catch (JsonException)
+            {
+                // F9: niente verdetti su dati rotti, e l'errore dice QUALE file.
+                throw new InvalidDataException(
+                    $"{Path.GetFileName(file)} è incompleto o corrotto — rimuovilo o rigenera la run.");
+            }
         }
         return runs;
     }

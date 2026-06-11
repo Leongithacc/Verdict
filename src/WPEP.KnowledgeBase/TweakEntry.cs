@@ -38,4 +38,26 @@ public sealed record TweakEntry
     [JsonPropertyName("manual_steps")] public required string ManualSteps { get; init; }
     [JsonPropertyName("conflicts_with")] public IReadOnlyList<string> ConflictsWith { get; init; } = [];
     [JsonPropertyName("measurable")] public required bool Measurable { get; init; }
+
+    /// <summary>V2 Execution Engine spec (EXECUTION_ENGINE_V2 §3): how to apply
+    /// this tweak programmatically. Null in V1 — the field exists now so the
+    /// schema never needs a migration. Entries that can only be applied by hand
+    /// (in-game settings, BIOS) stay gui-only forever.</summary>
+    [JsonPropertyName("apply")] public ApplySpec? Apply { get; init; }
+}
+
+public sealed record ApplySpec
+{
+    [JsonPropertyName("method")] public required string Method { get; init; } // registry|powercfg|bcdedit|service|gui-only
+    [JsonPropertyName("operations")] public IReadOnlyList<ApplyOperation> Operations { get; init; } = [];
+    [JsonPropertyName("requires_reboot")] public bool RequiresReboot { get; init; }
+    [JsonPropertyName("undo")] public string Undo { get; init; } = "auto-journal";
+    [JsonPropertyName("gui_only_reason")] public string? GuiOnlyReason { get; init; }
+}
+
+public sealed record ApplyOperation
+{
+    [JsonPropertyName("path")] public required string Path { get; init; }
+    [JsonPropertyName("value_after")] public string? ValueAfter { get; init; }
+    [JsonPropertyName("verify")] public string? Verify { get; init; }
 }
