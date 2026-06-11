@@ -1,0 +1,159 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+  <!-- ============ TOKENS (DESIGN_DIRECTION: tutti i colori vivono qui) ============ -->
+  <!-- Accent swappa coi preset; i SEMANTICI (Ok/Warn/Danger/badge) non cambiano mai. -->
+  <Color x:Key="C.Bg">#0F0F14</Color>
+  <Color x:Key="C.Surface">#1A1A22</Color>
+  <Color x:Key="C.Surface2">#22222C</Color>
+  <Color x:Key="C.Line">#2A2A38</Color>
+  <Color x:Key="C.Accent">#8B5CF6</Color>
+  <Color x:Key="C.AccentDeep">#4A0080</Color>
+  <Color x:Key="C.Text">#E6E6EC</Color>
+  <Color x:Key="C.TextMuted">#8A8A96</Color>
+  <Color x:Key="C.Ok">#34D399</Color>
+  <Color x:Key="C.OkDim">#1F7A58</Color>
+  <Color x:Key="C.Info">#60A5FA</Color>
+  <Color x:Key="C.Warn">#FBBF24</Color>
+  <Color x:Key="C.Danger">#F87171</Color>
+  <Color x:Key="C.Neutral">#6B7280</Color>
+
+  <SolidColorBrush x:Key="Bg" Color="{DynamicResource C.Bg}" />
+  <SolidColorBrush x:Key="Surface" Color="{DynamicResource C.Surface}" />
+  <SolidColorBrush x:Key="Surface2" Color="{DynamicResource C.Surface2}" />
+  <SolidColorBrush x:Key="Line" Color="{DynamicResource C.Line}" />
+  <SolidColorBrush x:Key="Accent" Color="{DynamicResource C.Accent}" />
+  <SolidColorBrush x:Key="AccentDeep" Color="{DynamicResource C.AccentDeep}" />
+  <SolidColorBrush x:Key="Text" Color="{DynamicResource C.Text}" />
+  <SolidColorBrush x:Key="TextMuted" Color="{DynamicResource C.TextMuted}" />
+  <SolidColorBrush x:Key="Ok" Color="{DynamicResource C.Ok}" />
+  <SolidColorBrush x:Key="OkDim" Color="{DynamicResource C.OkDim}" />
+  <SolidColorBrush x:Key="Info" Color="{DynamicResource C.Info}" />
+  <SolidColorBrush x:Key="Warn" Color="{DynamicResource C.Warn}" />
+  <SolidColorBrush x:Key="Danger" Color="{DynamicResource C.Danger}" />
+  <SolidColorBrush x:Key="Neutral" Color="{DynamicResource C.Neutral}" />
+
+  <FontFamily x:Key="UiFont">Segoe UI Variable Display, Segoe UI</FontFamily>
+  <FontFamily x:Key="MonoFont">Cascadia Code, Cascadia Mono, Consolas</FontFamily>
+
+  <!-- ============ TYPE SCALE (11/12.5/14/16/20/26) ============ -->
+  <Style x:Key="H1" TargetType="TextBlock">
+    <Setter Property="FontFamily" Value="{StaticResource UiFont}" />
+    <Setter Property="FontSize" Value="26" />
+    <Setter Property="FontWeight" Value="SemiBold" />
+    <Setter Property="Foreground" Value="{DynamicResource Text}" />
+  </Style>
+  <Style x:Key="H2" TargetType="TextBlock">
+    <Setter Property="FontFamily" Value="{StaticResource UiFont}" />
+    <Setter Property="FontSize" Value="16" />
+    <Setter Property="FontWeight" Value="SemiBold" />
+    <Setter Property="Foreground" Value="{DynamicResource Text}" />
+  </Style>
+  <Style x:Key="Body" TargetType="TextBlock">
+    <Setter Property="FontFamily" Value="{StaticResource UiFont}" />
+    <Setter Property="FontSize" Value="14" />
+    <Setter Property="Foreground" Value="{DynamicResource Text}" />
+    <Setter Property="TextWrapping" Value="Wrap" />
+  </Style>
+  <Style x:Key="Muted" TargetType="TextBlock" BasedOn="{StaticResource Body}">
+    <Setter Property="Foreground" Value="{DynamicResource TextMuted}" />
+    <Setter Property="FontSize" Value="12.5" />
+  </Style>
+  <Style x:Key="Mono" TargetType="TextBlock">
+    <Setter Property="FontFamily" Value="{StaticResource MonoFont}" />
+    <Setter Property="FontSize" Value="12.5" />
+    <Setter Property="Foreground" Value="{DynamicResource Text}" />
+  </Style>
+
+  <!-- ============ CONTROLS ============ -->
+  <Style x:Key="Card" TargetType="Border">
+    <Setter Property="Background" Value="{DynamicResource Surface}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource Line}" />
+    <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="CornerRadius" Value="10" />
+    <Setter Property="Padding" Value="16" />
+  </Style>
+
+  <Style x:Key="PrimaryButton" TargetType="Button">
+    <Setter Property="FontFamily" Value="{StaticResource UiFont}" />
+    <Setter Property="FontSize" Value="14" />
+    <Setter Property="Foreground" Value="White" />
+    <Setter Property="Background" Value="{DynamicResource Accent}" />
+    <Setter Property="BorderThickness" Value="0" />
+    <Setter Property="Padding" Value="16,8" />
+    <Setter Property="Cursor" Value="Hand" />
+    <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+    <Setter Property="Template">
+      <Setter.Value>
+        <ControlTemplate TargetType="Button">
+          <Border x:Name="bd" Background="{TemplateBinding Background}" CornerRadius="6"
+                  Padding="{TemplateBinding Padding}">
+            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+          </Border>
+          <ControlTemplate.Triggers>
+            <Trigger Property="IsMouseOver" Value="True">
+              <Setter TargetName="bd" Property="Opacity" Value="0.9" />
+            </Trigger>
+            <Trigger Property="IsPressed" Value="True">
+              <Setter TargetName="bd" Property="Opacity" Value="0.8" />
+            </Trigger>
+            <Trigger Property="IsKeyboardFocused" Value="True">
+              <Setter TargetName="bd" Property="BorderBrush" Value="{DynamicResource Text}" />
+              <Setter TargetName="bd" Property="BorderThickness" Value="1" />
+            </Trigger>
+            <Trigger Property="IsEnabled" Value="False">
+              <Setter TargetName="bd" Property="Opacity" Value="0.4" />
+            </Trigger>
+          </ControlTemplate.Triggers>
+        </ControlTemplate>
+      </Setter.Value>
+    </Setter>
+  </Style>
+
+  <Style x:Key="GhostButton" TargetType="Button" BasedOn="{StaticResource PrimaryButton}">
+    <Setter Property="Background" Value="{DynamicResource Surface2}" />
+    <Setter Property="Foreground" Value="{DynamicResource Text}" />
+  </Style>
+
+  <Style x:Key="NavButton" TargetType="RadioButton">
+    <Setter Property="FontFamily" Value="{StaticResource UiFont}" />
+    <Setter Property="FontSize" Value="14" />
+    <Setter Property="Foreground" Value="{DynamicResource TextMuted}" />
+    <Setter Property="Cursor" Value="Hand" />
+    <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+    <Setter Property="Template">
+      <Setter.Value>
+        <ControlTemplate TargetType="RadioButton">
+          <Border x:Name="bd" CornerRadius="6" Padding="12,8" Margin="8,2" Background="Transparent">
+            <ContentPresenter VerticalAlignment="Center" />
+          </Border>
+          <ControlTemplate.Triggers>
+            <Trigger Property="IsMouseOver" Value="True">
+              <Setter TargetName="bd" Property="Background" Value="{DynamicResource Surface2}" />
+            </Trigger>
+            <Trigger Property="IsChecked" Value="True">
+              <Setter TargetName="bd" Property="Background" Value="{DynamicResource Surface2}" />
+              <Setter Property="Foreground" Value="{DynamicResource Text}" />
+            </Trigger>
+            <Trigger Property="IsKeyboardFocused" Value="True">
+              <Setter TargetName="bd" Property="BorderBrush" Value="{DynamicResource Accent}" />
+              <Setter TargetName="bd" Property="BorderThickness" Value="1" />
+            </Trigger>
+          </ControlTemplate.Triggers>
+        </ControlTemplate>
+      </Setter.Value>
+    </Setter>
+  </Style>
+
+  <Style x:Key="Badge" TargetType="Border">
+    <Setter Property="CornerRadius" Value="6" />
+    <Setter Property="Padding" Value="8,2" />
+    <Setter Property="VerticalAlignment" Value="Center" />
+  </Style>
+
+  <Style TargetType="ToolTip">
+    <Setter Property="Background" Value="{DynamicResource Surface2}" />
+    <Setter Property="Foreground" Value="{DynamicResource Text}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource Line}" />
+  </Style>
+</ResourceDictionary>
