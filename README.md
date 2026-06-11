@@ -17,7 +17,8 @@ parte dei "gaming tweak" la risposta onesta è "nessun effetto misurabile" — e
 | R4 — KnowledgeBase con fonti primarie | ✅ 51 voci verificate e graduate ([ricerca](docs/KB_RESEARCH.md)) |
 | R5 — Advisor + SystemAnalyzer | ✅ analyze + advise, 70 test, validato live |
 | R6 — Reporting | ✅ `wpep report` → HTML scuro/viola, 81 test |
-| R7 — UI WPF (tema scuro/viola) | ⬜ |
+| R7 — UI WPF (tema scuro/viola) | 🟡 prima iterazione: verdict-first, theming, EN copy (manca wizard Misura + first-run) |
+| Handoff design 2026-06-11 | ✅ noise gate 3 stati + validate + F10 env + portable + apply field ([docs](docs/WPEP_docs_handoff/00_CHAT_HANDOFF_README.md)) |
 
 Documenti: [BUILDSPEC_V1.1.md](BUILDSPEC_V1.1.md) (decisioni correnti).
 
