@@ -1,0 +1,25 @@
+WPEP — Quick start (portable)
+=============================
+
+1. Unzip this folder anywhere (Desktop is fine). No installer.
+2. Run WPEP.exe
+   - Windows SmartScreen will warn about an unknown publisher: this is
+     expected for an unsigned open-source tool. Click "More info" →
+     "Run anyway". Verify the zip's SHA256 against the published hash
+     if you want certainty.
+3. First launch shows a welcome screen. Click "Scan my system" — the scan
+   is read-only and needs no administrator.
+4. To MEASURE (frametime benchmarks) or run DIAGNOSTICS (DPC/ISR):
+   - click "Relaunch as administrator" when prompted (ETW is admin-only
+     by Windows design)
+   - Measure will offer to download Intel PresentMon (~10 MB, pinned
+     version, SHA256-verified). Nothing is downloaded without your click.
+   - On a laptop: plug in the charger. Benchmarks on battery are blocked
+     (power throttling makes them meaningless).
+5. Everything WPEP saves (runs, reports, settings) stays in this folder.
+   Uninstall = delete the folder.
+
+WPEP never modifies your system. It measures, diagnoses and recommends —
+and tells you honestly when a tweak does nothing.
+
+CLI for advanced users: wpep-cli.exe (run from a terminal).
