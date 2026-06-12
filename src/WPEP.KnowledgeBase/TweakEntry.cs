@@ -39,6 +39,10 @@ public sealed record TweakEntry
     [JsonPropertyName("conflicts_with")] public IReadOnlyList<string> ConflictsWith { get; init; } = [];
     [JsonPropertyName("measurable")] public required bool Measurable { get; init; }
 
+    /// <summary>Null = system-wide. Set (e.g. "fortnite") for per-game entries:
+    /// shown in their own section, excluded from the system Verdict counts.</summary>
+    [JsonPropertyName("game")] public string? Game { get; init; }
+
     /// <summary>V2 Execution Engine spec (EXECUTION_ENGINE_V2 §3): how to apply
     /// this tweak programmatically. Null in V1 — the field exists now so the
     /// schema never needs a migration. Entries that can only be applied by hand

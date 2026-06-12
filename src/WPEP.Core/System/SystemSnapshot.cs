@@ -47,4 +47,9 @@ public sealed record SystemSnapshot
     public bool? Ipv6Disabled { get; init; }
     public bool? SearchIndexingRunning { get; init; }
     public bool? AnyHddPresent { get; init; }
+
+    /// <summary>Domain-joined or MDM-enrolled (PORTABILITY §3): running
+    /// third-party diagnostic tools may violate the org's IT policy — the
+    /// user must see a notice, in app and in reports.</summary>
+    public bool? IsManagedDevice { get; init; }
 }

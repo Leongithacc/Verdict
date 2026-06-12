@@ -49,6 +49,17 @@ public static class ReportBuilder
             read-only: questo tool non ha modificato nulla.</p>
             """);
 
+        if (s.IsManagedDevice == true)
+        {
+            // PORTABILITY §3: the notice is always visible in reports from managed machines.
+            sb.Append("""
+                <div class="panel" style="border-color:#fbbf24"><p class="warn">
+                This report was generated on what looks like a company-managed device.
+                Running third-party diagnostic tools may violate the organization's IT policy.
+                </p></div>
+                """);
+        }
+
         // — Snapshot —
         sb.Append("<h2>Sistema</h2><div class=\"panel\"><table>");
         Row(sb, "CPU", $"{Esc(s.CpuName)} ({s.CpuCores?.ToString() ?? "?"}C/{s.CpuThreads?.ToString() ?? "?"}T{(s.CpuIsX3D ? ", X3D" : "")})");

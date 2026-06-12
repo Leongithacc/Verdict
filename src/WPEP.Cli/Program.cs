@@ -604,9 +604,11 @@ static int RunAdvise()
     }
 
     var snapshot = WPEP.SystemAnalyzer.SnapshotBuilder.Build(DateTimeOffset.UtcNow);
-    var recommendations = WPEP.Advisor.AdvisorEngine.Advise(snapshot, entries);
+    var all = WPEP.Advisor.AdvisorEngine.Advise(snapshot, entries);
+    var recommendations = all.Where(r => r.Entry.Game is null).ToArray();
+    var gameSpecific = all.Where(r => r.Entry.Game is not null).ToArray();
 
-    Console.WriteLine($"Advisor — {recommendations.Count} voci valutate su questo sistema");
+    Console.WriteLine($"Advisor — {recommendations.Length} voci di sistema valutate");
     Console.WriteLine($"({snapshot.CpuName}, {snapshot.GpuName})\n");
 
     foreach (var group in recommendations.GroupBy(r => r.Classification))
@@ -615,6 +617,16 @@ static int RunAdvise()
         foreach (var r in group)
         {
             Console.WriteLine($"  {r.Entry.Id,-42} {r.StateNote}");
+        }
+        Console.WriteLine();
+    }
+
+    foreach (var gameGroup in gameSpecific.GroupBy(r => r.Entry.Game!))
+    {
+        Console.WriteLine($"== PER-GIOCO: {gameGroup.Key.ToUpperInvariant()} (impostazioni in-game, fuori dal conteggio sistema) ==");
+        foreach (var r in gameGroup.OrderBy(r => r.Entry.EvidenceLevel).ThenBy(r => r.Entry.Id))
+        {
+            Console.WriteLine($"  {r.Entry.Id,-42} [{EvidenceLabel(r.Entry.EvidenceLevel)}]");
         }
         Console.WriteLine();
     }

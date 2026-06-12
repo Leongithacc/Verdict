@@ -966,5 +966,193 @@
     "manual_steps": "Impostazioni del gioco → Mouse/Input → 'Raw Input' → On (es. CS2: m_rawinput 1, già default).",
     "conflicts_with": [],
     "measurable": false
+  },
+  {
+    "id": "fn-rendering-performance-mode",
+    "name": "Fortnite: Rendering Mode → Performance",
+    "category": "gpu",
+    "game": "fortnite",
+    "description": "Documentato da Epic: la modalità Performance gira su DX12 e disabilita la maggior parte delle feature di rendering per alleggerire CPU e GPU. È il singolo cambio con l'effetto più grande del gioco. Su hardware top la domanda interessante non è l'FPS medio (che avanza comunque) ma se migliora la CONSISTENZA (0.2% low) — nessuna fonte lo misura seriamente: candidato perfetto per il primo esperimento WPEP.",
+    "hardware_prerequisites": [],
+    "expected_impact": "Su hardware medio: FPS drasticamente più alti (fonti terze: +20-50% vs DX12 pieno). Su hardware top: da misurare se il guadagno è in consistenza o solo in FPS medi già abbondanti. Costo: grafica molto semplificata.",
+    "evidence_level": "evidence_strong",
+    "sources": [
+      "https://www.epicgames.com/help/en-US/fortnite-battle-royale-c-202300000001636/technical-support-c-202300000001719/how-do-i-enable-performance-mode-in-fortnite-a202300000013270"
+    ],
+    "risk": "none",
+    "risk_notes": "",
+    "rollback": "Impostazioni → Schermo → Modalità rendering → DirectX 12 → Applica → riavvio del gioco.",
+    "manual_steps": "Impostazioni → Schermo → Modalità rendering → Performance → Applica → riavvia Fortnite. Opzionale: rimuovere le texture ad alta risoluzione (~15 GB liberati) dalle opzioni di installazione.",
+    "conflicts_with": [
+      "fn-tsr-vs-dlss"
+    ],
+    "measurable": true
+  },
+  {
+    "id": "fn-reflex-on-boost",
+    "name": "Fortnite: NVIDIA Reflex On (+Boost)",
+    "category": "gpu",
+    "game": "fortnite",
+    "description": "NVIDIA documenta riduzioni di latenza fino al ~46-54% in Fortnite con Reflex attivo. Si attiva in Video → Grafica avanzata → NVIDIA Reflex Low Latency. 'On+Boost' tiene i clock GPU alti anche a basso carico: utile se non si è mai CPU-bound, altrimenti On basta.",
+    "hardware_prerequisites": [
+      "gpu:nvidia"
+    ],
+    "expected_impact": "Riduzione di latenza documentata dal vendor, più evidente in scenari GPU-bound. La singola opzione di latenza con la migliore evidenza nel gioco.",
+    "evidence_level": "evidence_strong",
+    "sources": [
+      "https://www.nvidia.com/en-us/geforce/news/reflex-available-now-in-over-150-games/",
+      "https://www.nvidia.com/en-us/geforce/news/reflex-low-latency-platform/"
+    ],
+    "risk": "none",
+    "risk_notes": "",
+    "rollback": "Stessa impostazione → Off.",
+    "manual_steps": "Fortnite → Impostazioni → Video → Grafica avanzata → NVIDIA Reflex Low Latency → On (o On+Boost se la GPU non è mai il collo di bottiglia).",
+    "conflicts_with": [],
+    "measurable": false
+  },
+  {
+    "id": "fn-reflex-vs-ullm-no-stack",
+    "name": "Fortnite: Reflex in-game, NON sommare ULLM driver",
+    "category": "gpu",
+    "game": "fortnite",
+    "description": "La guida NVIDIA documenta che quando un gioco ha Reflex integrato, Reflex prende il controllo della coda di rendering e la Ultra Low Latency Mode del driver non si applica più: impostarli entrambi non somma i benefici. Configurazione corretta: Reflex On nel gioco, ULLM lasciata al default nel pannello driver.",
+    "hardware_prerequisites": [
+      "gpu:nvidia"
+    ],
+    "expected_impact": "Nessun guadagno nello 'stacking'; la voce serve a evitare configurazioni confuse e debug inutili di frame pacing.",
+    "evidence_level": "evidence_strong",
+    "sources": [
+      "https://www.nvidia.com/en-us/geforce/guides/gfecnt/202010/system-latency-optimization-guide/"
+    ],
+    "risk": "none",
+    "risk_notes": "",
+    "rollback": "Pannello NVIDIA → Modalità bassa latenza → valore precedente.",
+    "manual_steps": "Nel gioco: Reflex On. Nel pannello NVIDIA, per Fortnite: Modalità bassa latenza → lasciare il default (il gioco ha Reflex, la gestisce lui).",
+    "conflicts_with": [],
+    "measurable": false
+  },
+  {
+    "id": "fn-frame-cap-vs-unlimited",
+    "name": "Fortnite: limite FPS — il caso delle fonti in disaccordo",
+    "category": "gpu",
+    "game": "fortnite",
+    "description": "CONFLITTO DOCUMENTATO, voce da manuale per come WPEP tratta le fonti in disaccordo: la guida competitiva ufficiale Epic suggerisce frame rate 'Unlimited', mentre la pratica di latenza documentata da NVIDIA (per setup G-SYNC) è il cap pochi FPS sotto il refresh — con Reflex+G-SYNC il cap viene gestito automaticamente. Chi ha ragione dipende dal setup: senza VRR, uncapped minimizza la latenza al costo di tearing e frametime irregolari; con G-SYNC+Reflex, il cap automatico è la configurazione a latenza minima senza tearing.",
+    "hardware_prerequisites": [
+      "monitor:high-refresh"
+    ],
+    "expected_impact": "Dipende dal setup. Con G-SYNC+Reflex: lasciar gestire a Reflex. Senza VRR: Unlimited per latenza minima, cap se i frametime irregolari disturbano più del ritardo.",
+    "evidence_level": "controversial",
+    "sources": [
+      "https://store.epicgames.com/en-US/news/fortnite-on-pc-best-settings-for-competitive-play-in-2026",
+      "https://www.nvidia.com/en-us/geforce/guides/gfecnt/202010/system-latency-optimization-guide/"
+    ],
+    "risk": "none",
+    "risk_notes": "",
+    "rollback": "Impostazioni → Video → Limite frame rate → valore precedente.",
+    "manual_steps": "Con G-SYNC + Reflex On: limite in-game su Unlimited o sul refresh (Reflex cappa da solo sotto il refresh). Senza VRR: prova entrambe e misura con wpep bench quale dà frametime più stabili.",
+    "conflicts_with": [],
+    "measurable": true
+  },
+  {
+    "id": "fn-vsync-off",
+    "name": "Fortnite: V-Sync Off",
+    "category": "gpu",
+    "game": "fortnite",
+    "description": "La guida competitiva Epic raccomanda V-Sync disattivato in-game per l'input lag; il tearing si gestisce con G-SYNC/FreeSync a livello monitor (e VSync nel pannello driver per la combo documentata da NVIDIA). V-Sync IN-GAME attivo = coda di frame = latenza.",
+    "hardware_prerequisites": [],
+    "expected_impact": "Latenza più bassa rispetto a V-Sync in-game attivo. Con monitor VRR: zero svantaggi.",
+    "evidence_level": "evidence_strong",
+    "sources": [
+      "https://store.epicgames.com/en-US/news/fortnite-on-pc-best-settings-for-competitive-play-in-2026",
+      "https://www.nvidia.com/en-us/geforce/guides/gfecnt/202010/system-latency-optimization-guide/"
+    ],
+    "risk": "none",
+    "risk_notes": "",
+    "rollback": "Stessa impostazione → On.",
+    "manual_steps": "Fortnite → Impostazioni → Video → V-Sync → Off. Con G-SYNC: VSync On nel PANNELLO driver (non in-game) per la combo a latenza minima senza tearing.",
+    "conflicts_with": [],
+    "measurable": false
+  },
+  {
+    "id": "fn-nanite-lumen-off",
+    "name": "Fortnite: Nanite/Lumen/ombre virtuali Off per il competitivo",
+    "category": "gpu",
+    "game": "fortnite",
+    "description": "Le feature UE5 di qualità (Nanite, Lumen GI/riflessi, Virtual Shadow Maps) hanno costi di rendering pesanti e nel competitivo non danno alcun vantaggio informativo. La guida competitiva Epic le tiene basse/spente. È un trade-off visivo dichiarato, non un tweak gratis.",
+    "hardware_prerequisites": [],
+    "expected_impact": "FPS e frametime molto più stabili nei fight rispetto a preset Epic/High con UE5 features attive. Costo: il gioco è visivamente molto più piatto.",
+    "evidence_level": "evidence_strong",
+    "sources": [
+      "https://store.epicgames.com/en-US/news/fortnite-on-pc-best-settings-for-competitive-play-in-2026"
+    ],
+    "risk": "none",
+    "risk_notes": "",
+    "rollback": "Riportare le impostazioni di qualità al preset precedente.",
+    "manual_steps": "Impostazioni → Video: Nanite Off (richiede DX12), Illuminazione globale Off/Ambient Occlusion, Riflessi Off, Ombre basse. In Performance Mode è tutto già disattivato per design.",
+    "conflicts_with": [
+      "fn-rendering-performance-mode"
+    ],
+    "measurable": true
+  },
+  {
+    "id": "fn-multithreaded-rendering",
+    "name": "Fortnite: Multithreaded Rendering On",
+    "category": "gpu",
+    "game": "fortnite",
+    "description": "Opzione presente nelle impostazioni video che distribuisce il lavoro di rendering su più core. Con CPU moderne (6+ core) è la scelta attesa e di default; la documentazione Epic la cita nel troubleshooting FPS. Se attivarla peggiora (configurazioni vecchie), si torna indietro.",
+    "hardware_prerequisites": [],
+    "expected_impact": "Su CPU multi-core: frametime più stabili, specie in build fight. Tipicamente già attiva.",
+    "evidence_level": "plausible",
+    "sources": [
+      "https://www.epicgames.com/help/en-US/fortnite-battle-royale-c-202300000001636/technical-support-c-202300000001719/troubleshooting-low-frame-rate-fps-in-fortnite-a202300000013603"
+    ],
+    "risk": "none",
+    "risk_notes": "",
+    "rollback": "Stessa impostazione → Off.",
+    "manual_steps": "Impostazioni → Video → Grafica avanzata → Rendering multithread → On (verifica che non sia stato disattivato da config esterne).",
+    "conflicts_with": [],
+    "measurable": true
+  },
+  {
+    "id": "fn-tsr-vs-dlss",
+    "name": "Fortnite: DLSS invece di TSR (su RTX)",
+    "category": "gpu",
+    "game": "fortnite",
+    "description": "In modalità DX12, Fortnite offre sia TSR (upscaler UE5, gira sugli shader) sia DLSS (hardware Tensor su RTX). Su GPU RTX, DLSS offre tipicamente qualità pari o migliore a costo inferiore, liberando shader per il rendering. Dipende dal target visivo: a risoluzione nativa con FPS già al cap non serve nessuno dei due.",
+    "hardware_prerequisites": [
+      "gpu:nvidia"
+    ],
+    "expected_impact": "A parità di qualità percepita, più FPS rispetto a TSR. Irrilevante in Performance Mode (non disponibile) o se si è già al cap.",
+    "evidence_level": "plausible",
+    "sources": [
+      "https://www.nvidia.com/en-us/geforce/technologies/dlss/"
+    ],
+    "risk": "none",
+    "risk_notes": "",
+    "rollback": "Impostazioni → Video → metodo di upscaling precedente.",
+    "manual_steps": "In DX12: Impostazioni → Video → Qualità → Super Resolution → DLSS (Quality per iniziare). Confronta con TSR usando wpep bench se vuoi il verdetto sul tuo hardware.",
+    "conflicts_with": [
+      "fn-rendering-performance-mode"
+    ],
+    "measurable": true
+  },
+  {
+    "id": "fn-shader-warmup-before-judging",
+    "name": "Fortnite/UE5: warm-up shader prima di giudicare (nota metodologica)",
+    "category": "gpu",
+    "game": "fortnite",
+    "description": "Non è un tweak: è una regola di misura. Epic documenta che la compilazione di un PSO on-demand costa 100+ ms — un hitch visibile — e che il gioco accumula una cache (PSO precaching) con l'uso. Dopo una patch, un cambio di driver o un cambio di rendering mode, le prime partite stutterano per compilazione shader: NON giudicare (né misurare) tweak in quella finestra.",
+    "hardware_prerequisites": [],
+    "expected_impact": "Evita falsi positivi/negativi nelle misure e giudizi ingiusti sul sistema ('ho cambiato X e ora stuttera' — no, stanno compilando gli shader).",
+    "evidence_level": "evidence_strong",
+    "sources": [
+      "https://dev.epicgames.com/documentation/en-us/unreal-engine/pso-precaching-for-unreal-engine"
+    ],
+    "risk": "none",
+    "risk_notes": "",
+    "rollback": "n/a (regola di metodo, non modifica).",
+    "manual_steps": "Dopo patch/driver/rendering mode nuovi: 5-10 minuti di gioco di warm-up prima di qualsiasi run di benchmark; la prima run dopo il cambio va scartata (wpep bench lo ricorda).",
+    "conflicts_with": [],
+    "measurable": false
   }
 ]

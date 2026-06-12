@@ -57,7 +57,37 @@ public static class SnapshotBuilder
             Ipv6Disabled = Probe(ReadIpv6Disabled, (bool?)null),
             SearchIndexingRunning = Probe(() => ReadServiceRunning("WSearch"), (bool?)null),
             AnyHddPresent = Probe(ReadAnyHddPresent, (bool?)null),
+            IsManagedDevice = Probe(ReadIsManagedDevice, (bool?)null),
         };
+    }
+
+    private static bool? ReadIsManagedDevice()
+    {
+        using (var searcher = new ManagementObjectSearcher(
+            "SELECT PartOfDomain FROM Win32_ComputerSystem"))
+        {
+            foreach (var cs in searcher.Get())
+            {
+                if (cs["PartOfDomain"] is true)
+                    return true;
+            }
+        }
+
+        // MDM/Intune enrollment leaves per-enrollment keys here.
+        using var enrollments = Registry.LocalMachine.OpenSubKey(
+            @"SOFTWARE\Microsoft\Enrollments");
+        if (enrollments is not null)
+        {
+            foreach (var name in enrollments.GetSubKeyNames())
+            {
+                using var key = enrollments.OpenSubKey(name);
+                if (key?.GetValue("EnrollmentState") is int state and > 0 &&
+                    key.GetValue("ProviderID") is string provider && provider.Length > 0)
+                    return true;
+            }
+        }
+
+        return false;
     }
 
     private static T Probe<T>(Func<T> read, T fallback)

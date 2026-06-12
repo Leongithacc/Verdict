@@ -19,7 +19,7 @@ public sealed class MainViewModel : ViewModelBase
 
     public AppSettings Settings { get; }
     public VerdictViewModel Verdict { get; }
-    public MeasureViewModel Measure { get; }
+    public MeasureWizardViewModel Measure { get; }
     public DiagnosticsViewModel Diagnostics { get; }
     public KbViewModel Kb { get; }
     public ReportViewModel Report { get; }
@@ -32,7 +32,8 @@ public sealed class MainViewModel : ViewModelBase
     {
         Settings = AppSettings.Load();
         Verdict = new VerdictViewModel(this);
-        Measure = new MeasureViewModel(Settings);
+        Measure = new MeasureWizardViewModel(this, Settings);
+        Measure.RefreshProcesses();
         Diagnostics = new DiagnosticsViewModel(this);
         Kb = new KbViewModel();
         Report = new ReportViewModel(this);
@@ -99,8 +100,13 @@ public sealed class VerdictViewModel(MainViewModel main) : ViewModelBase
         }
     }
 
-    private void Apply(SystemSnapshot snapshot, IReadOnlyList<Recommendation> recommendations)
+    private void Apply(SystemSnapshot snapshot, IReadOnlyList<Recommendation> allRecommendations)
     {
+        // Game-specific entries live in their own section and never count toward
+        // the system verdict header (R7_COPY_AND_KB3 open question, resolved).
+        var recommendations = allRecommendations.Where(r => r.Entry.Game is null).ToArray();
+        var gameSpecific = allRecommendations.Where(r => r.Entry.Game is not null).ToArray();
+
         Groups.Clear();
         var groupDefs = new (Classification[] Classes, string Label, string Color)[]
         {
@@ -121,6 +127,14 @@ public sealed class VerdictViewModel(MainViewModel main) : ViewModelBase
                 Groups.Add(group);
         }
 
+        foreach (var gameGroup in gameSpecific.GroupBy(r => r.Entry.Game!))
+        {
+            var group = new VerdictGroup($"Game-specific — {gameGroup.Key}", "Accent");
+            foreach (var r in gameGroup.OrderBy(r => r.Entry.EvidenceLevel))
+                group.Items.Add(new VerdictItem(r.Entry.Id, r.Entry.Name, r.StateNote));
+            Groups.Add(group);
+        }
+
         int optimal = recommendations.Count(r => r.Classification == Classification.AlreadyActive);
         int actionable = recommendations.Count(r => r.Classification
             is Classification.AlreadyActive or Classification.Recommended
@@ -135,33 +149,10 @@ public sealed class VerdictViewModel(MainViewModel main) : ViewModelBase
             : $"Your system: {optimal}/{actionable} checks optimal";
         SubHeader = $"Last scanned {DateTime.Now:HH:mm} · {snapshot.CpuName} · {snapshot.GpuName} · " +
                     "Read-only — WPEP never modifies your system";
+        if (snapshot.IsManagedDevice == true)
+            SubHeader += "\n⚠ This looks like a company-managed device. Running third-party " +
+                         "diagnostic tools may violate your organization's IT policy. Get IT approval first.";
     }
-}
-
-// ============================== MEASURE ==============================
-
-public sealed class MeasureViewModel(AppSettings settings) : ViewModelBase
-{
-    public string Title => "Measure";
-    public IReadOnlyList<(string Step, string Helper)> Steps { get; } =
-    [
-        ("1 · Pick your game & scenario",
-         "Live matches are too noisy to measure anything. Use a repeatable scenario — we'll check it for you."),
-        ($"2 · Baseline — {settings.DefaultBenchmarkRuns} runs",
-         "Don't change anything yet. Warm up first: shader caches and temperatures need a few minutes of play before run 1."),
-        ("3 · Apply ONE change",
-         "One change at a time, or you won't know what did what."),
-        ($"4 · Post — {settings.DefaultBenchmarkRuns} runs", ""),
-        ("5 · Verdict",
-         "Three outcomes: real effect · no measurable effect · scenario too noisy (no verdict)."),
-    ];
-
-    public string CliHint =>
-        "The guided wizard lands in the next build. The engine is ready today via CLI:\n" +
-        $"  wpep bench --process game.exe --seconds 60 --runs {settings.DefaultBenchmarkRuns} --label baseline --out runs\\baseline\n" +
-        "  (apply ONE change)\n" +
-        $"  wpep bench --process game.exe --seconds 60 --runs {settings.DefaultBenchmarkRuns} --label post --out runs\\post\n" +
-        "  wpep compare --baseline runs\\baseline --post runs\\post";
 }
 
 // ============================== DIAGNOSTICS ==============================

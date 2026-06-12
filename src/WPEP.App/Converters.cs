@@ -22,8 +22,16 @@ public sealed class BoolToVisibilityConverter : IValueConverter
 {
     public bool Invert { get; set; }
 
-    public object Convert(object? value, Type _, object? __, CultureInfo ___) =>
-        (value is true) ^ Invert ? Visibility.Visible : Visibility.Collapsed;
+    public object Convert(object? value, Type _, object? __, CultureInfo ___)
+    {
+        bool truthy = value switch
+        {
+            bool b => b,
+            int i => i > 0,
+            _ => false,
+        };
+        return truthy ^ Invert ? Visibility.Visible : Visibility.Collapsed;
+    }
 
     public object ConvertBack(object? v, Type t, object? p, CultureInfo c) =>
         throw new NotSupportedException();

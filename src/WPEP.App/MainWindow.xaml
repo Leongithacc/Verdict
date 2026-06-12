@@ -92,28 +92,89 @@
       </ScrollViewer>
     </DataTemplate>
 
-    <!-- ============ MEASURE ============ -->
-    <DataTemplate DataType="{x:Type local:MeasureViewModel}">
-      <StackPanel Margin="32,24" MaxWidth="780" HorizontalAlignment="Left">
-        <TextBlock Style="{StaticResource H1}" Text="Measure" />
-        <TextBlock Style="{StaticResource Muted}" Margin="0,4,0,16"
-                   Text="Baseline → ONE change → post → verdict. The method is the product." />
-        <ItemsControl ItemsSource="{Binding Steps}">
-          <ItemsControl.ItemTemplate>
-            <DataTemplate>
-              <Border Style="{StaticResource Card}" Margin="0,0,0,8" Padding="16,12">
-                <StackPanel>
-                  <TextBlock Style="{StaticResource H2}" Text="{Binding Step}" />
-                  <TextBlock Style="{StaticResource Muted}" Text="{Binding Helper}" Margin="0,4,0,0" />
-                </StackPanel>
-              </Border>
-            </DataTemplate>
-          </ItemsControl.ItemTemplate>
-        </ItemsControl>
-        <Border Style="{StaticResource Card}" Margin="0,8,0,0" Background="{DynamicResource Surface2}">
-          <TextBlock Style="{StaticResource Mono}" Text="{Binding CliHint}" TextWrapping="Wrap" />
-        </Border>
-      </StackPanel>
+    <!-- ============ MEASURE (wizard) ============ -->
+    <DataTemplate DataType="{x:Type local:MeasureWizardViewModel}">
+      <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <StackPanel Margin="32,24" MaxWidth="820" HorizontalAlignment="Left">
+          <TextBlock Style="{StaticResource H1}" Text="Measure" />
+          <TextBlock Style="{StaticResource Muted}" Margin="0,4,0,16"
+                     Text="Baseline → ONE change → post → verdict. The method is the product." />
+
+          <!-- Blockers (F1/F2) -->
+          <Border Style="{StaticResource Card}" Margin="0,0,0,12"
+                  Visibility="{Binding CanMeasure, Converter={StaticResource BoolToVisInverted}}">
+            <StackPanel>
+              <TextBlock Style="{StaticResource Body}" Text="{Binding BlockerText}" />
+              <Button Style="{StaticResource PrimaryButton}" Content="Download PresentMon (10 MB, verified)"
+                      Command="{Binding InstallPresentMonCommand}" Margin="0,12,0,0" HorizontalAlignment="Left"
+                      Visibility="{Binding IsElevated, Converter={StaticResource BoolToVis}}" />
+              <TextBlock Style="{StaticResource Muted}" Text="{Binding Status}" Margin="0,8,0,0" />
+            </StackPanel>
+          </Border>
+
+          <!-- Step 1: pick -->
+          <Border Style="{StaticResource Card}" Margin="0,0,0,12"
+                  Visibility="{Binding IsStepPick, Converter={StaticResource BoolToVis}}">
+            <StackPanel IsEnabled="{Binding CanMeasure}">
+              <TextBlock Style="{StaticResource H2}" Text="1 · Pick your game &amp; scenario" />
+              <TextBlock Style="{StaticResource Muted}" Margin="0,4,0,12"
+                         Text="Live matches are too noisy to measure anything. Use a repeatable scenario — we'll check it for you." />
+              <DockPanel>
+                <Button DockPanel.Dock="Right" Style="{StaticResource GhostButton}" Content="Refresh"
+                        Command="{Binding RefreshProcessesCommand}" Margin="8,0,0,0" />
+                <ComboBox ItemsSource="{Binding Processes}" SelectedItem="{Binding Target}"
+                          DisplayMemberPath="Display" />
+              </DockPanel>
+              <StackPanel Orientation="Horizontal" Margin="0,12,0,0">
+                <TextBlock Style="{StaticResource Body}" Text="Seconds per run" Width="160" VerticalAlignment="Center" />
+                <TextBox Text="{Binding Seconds, UpdateSourceTrigger=LostFocus}" Width="64" />
+                <TextBlock Style="{StaticResource Muted}" Margin="16,0,0,0" VerticalAlignment="Center">
+                  <Run Text="Runs per group: " /><Run Text="{Binding Runs, Mode=OneWay}" />
+                  <Run Text=" (Settings)" />
+                </TextBlock>
+              </StackPanel>
+              <Button Style="{StaticResource PrimaryButton}" Content="Start baseline"
+                      Command="{Binding StartBaselineCommand}" Margin="0,16,0,0" HorizontalAlignment="Left" />
+            </StackPanel>
+          </Border>
+
+          <!-- Step 3: apply ONE change -->
+          <Border Style="{StaticResource Card}" Margin="0,0,0,12"
+                  Visibility="{Binding IsStepApplyChange, Converter={StaticResource BoolToVis}}">
+            <StackPanel>
+              <TextBlock Style="{StaticResource H2}" Text="3 · Apply ONE change" />
+              <TextBlock Style="{StaticResource Body}" Margin="0,8,0,0"
+                         Text="One change at a time, or you won't know what did what. Apply it now (by hand — WPEP never writes), then come back." />
+              <Button Style="{StaticResource PrimaryButton}" Content="I applied ONE change — run post"
+                      Command="{Binding StartPostCommand}" Margin="0,16,0,0" HorizontalAlignment="Left" />
+            </StackPanel>
+          </Border>
+
+          <!-- Verdict -->
+          <Border Style="{StaticResource Card}" Margin="0,0,0,12"
+                  Visibility="{Binding IsStepVerdict, Converter={StaticResource BoolToVis}}">
+            <StackPanel>
+              <TextBlock Style="{StaticResource H2}" Text="5 · Verdict" />
+              <TextBlock Style="{StaticResource Mono}" Margin="0,12,0,0" TextWrapping="Wrap"
+                         Text="{Binding VerdictText}" />
+              <Button Style="{StaticResource GhostButton}" Content="Start over"
+                      Command="{Binding RestartCommand}" Margin="0,16,0,0" HorizontalAlignment="Left" />
+            </StackPanel>
+          </Border>
+
+          <!-- Run log -->
+          <Border Style="{StaticResource Card}" Background="{DynamicResource Surface2}"
+                  Visibility="{Binding RunLog.Count, Converter={StaticResource BoolToVis}}">
+            <ItemsControl ItemsSource="{Binding RunLog}">
+              <ItemsControl.ItemTemplate>
+                <DataTemplate>
+                  <TextBlock Style="{StaticResource Mono}" Text="{Binding}" TextWrapping="Wrap" Margin="0,1" />
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+          </Border>
+        </StackPanel>
+      </ScrollViewer>
     </DataTemplate>
 
     <!-- ============ DIAGNOSTICS ============ -->
