@@ -130,6 +130,13 @@
                 <ComboBox ItemsSource="{Binding Processes}" SelectedItem="{Binding Target}"
                           DisplayMemberPath="Display" />
               </DockPanel>
+              <TextBlock Style="{StaticResource H2}" FontSize="13" Text="Scenario protocol" Margin="0,16,0,4" />
+              <ComboBox ItemsSource="{Binding Scenarios}" SelectedItem="{Binding Scenario}"
+                        DisplayMemberPath="Name" />
+              <Border Background="{DynamicResource Surface2}" CornerRadius="6" Padding="12" Margin="0,8,0,0">
+                <TextBlock Style="{StaticResource Body}" FontSize="12.5"
+                           Text="{Binding Scenario.Instructions}" TextWrapping="Wrap" />
+              </Border>
               <StackPanel Orientation="Horizontal" Margin="0,12,0,0">
                 <TextBlock Style="{StaticResource Body}" Text="Seconds per run" Width="160" VerticalAlignment="Center" />
                 <TextBox Text="{Binding Seconds, UpdateSourceTrigger=LostFocus}" Width="64" />

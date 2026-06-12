@@ -11,6 +11,37 @@ namespace WPEP.App;
 
 public enum WizardStep { Pick, Baseline, ApplyChange, Post, Verdict }
 
+/// <summary>A measurement protocol: exact instructions that make runs
+/// repeatable. The map codes are community benchmark islands, picked because
+/// they remove human variance (automated camera) or minimize it (AFK).</summary>
+public sealed record ScenarioPreset(string Name, string Instructions)
+{
+    public static readonly IReadOnlyList<ScenarioPreset> All =
+    [
+        new("Fortnite — benchmark map, automated (recommended)",
+            "Creative map code 4135-2210-3629 (\"BENCHMARK\" by DweEroz). Open it in a " +
+            "PRIVATE session, press the launch button in the map, then DON'T touch mouse " +
+            "or keyboard — the camera sequence is fully automated. Run the sequence once " +
+            "as warm-up before run 1. Start each capture right as the sequence starts, " +
+            "and restart the sequence for every run."),
+        new("Fortnite — AFK at spawn (simplest)",
+            "Any Creative island in a PRIVATE session (no other players). Walk to a fixed " +
+            "spot, frame the same view, then stand completely still — hands off mouse and " +
+            "keyboard for the whole capture. Same island, same spot, same view, every run."),
+        new("Fortnite — fixed route on foot",
+            "PRIVATE Creative island. Walk the same route at the same pace for the whole " +
+            "capture, same direction every run. More game-like than AFK but noisier: check " +
+            "that the baseline MDE stays under the gate before judging any tweak."),
+        new("Cyberpunk 2077 — integrated benchmark",
+            "Settings → Graphics → Benchmark, on a CLEAN install (no mods/CET — they alter " +
+            "frametimes). Run the benchmark once as warm-up, then start one capture per " +
+            "benchmark run."),
+        new("Custom / live match",
+            "Measure whatever you want — numbers always come out. Live matches usually " +
+            "exceed the noise gate though: expect data, not a verdict."),
+    ];
+}
+
 public sealed record ProcessChoice(string ProcessName, string WindowTitle)
 {
     public string Display => $"{ProcessName} — {WindowTitle}";
@@ -43,6 +74,10 @@ public sealed class MeasureWizardViewModel(MainViewModel main, AppSettings setti
 
     public ObservableCollection<ProcessChoice> Processes { get; } = [];
     public ObservableCollection<string> RunLog { get; } = [];
+
+    public IReadOnlyList<ScenarioPreset> Scenarios => ScenarioPreset.All;
+    private ScenarioPreset _scenario = ScenarioPreset.All[0];
+    public ScenarioPreset Scenario { get => _scenario; set => Set(ref _scenario, value); }
 
     public ProcessChoice? Target { get => _target; set => Set(ref _target, value); }
     public int Seconds { get => _seconds; set => Set(ref _seconds, Math.Clamp(value, 10, 600)); }
@@ -150,8 +185,11 @@ public sealed class MeasureWizardViewModel(MainViewModel main, AppSettings setti
         {
             _sessionDir = Path.Combine(AppContext.BaseDirectory, "runs",
                 $"wizard-{DateTime.Now:yyyyMMdd-HHmmss}");
+            RunLog.Add($"PROTOCOL — {Scenario.Name}:");
+            RunLog.Add(Scenario.Instructions);
             RunLog.Add("Warm up first: shader caches and temperatures need a few minutes of play before run 1.");
         }
+        RunLog.Add("Switch to the game NOW — first capture starts in 8 seconds…");
 
         string label = baseline ? "baseline" : "post";
         var dir = Path.Combine(_sessionDir, label);
@@ -207,6 +245,8 @@ public sealed class MeasureWizardViewModel(MainViewModel main, AppSettings setti
             snapshot.DisplayWidth, snapshot.DisplayHeight,
             snapshot.MonitorCurrentHz, snapshot.PowerPlanGuid);
 
+        Thread.Sleep(8000); // time to alt-tab back into the game
+
         var runs = new List<BenchmarkRun>(Runs);
         for (int i = 1; i <= Runs; i++)
         {
@@ -223,7 +263,36 @@ public sealed class MeasureWizardViewModel(MainViewModel main, AppSettings setti
                 $"  {m.FrameCount:N0} frames · avg {m.AvgFps:F1} fps · median {m.MedianFps:F1} · " +
                 $"1% low {m.OnePercentLowFps:F1} · 0.2% low {m.ZeroPointTwoPercentLowFps:F1}"));
         }
+
+        FlagOutliers(runs, label);
         return runs;
+    }
+
+    /// <summary>F5: flag runs that deviate wildly from their group (shader
+    /// compilation, alt-tab, scene change). Never excluded silently — the user
+    /// sees the flag and decides whether to redo the group.</summary>
+    private void FlagOutliers(IReadOnlyList<BenchmarkRun> runs, string label)
+    {
+        if (runs.Count < 4)
+            return;
+        var medians = runs.Select(r => r.Metrics.MedianFrameTimeMs).OrderBy(v => v).ToArray();
+        double q1 = medians[medians.Length / 4];
+        double q3 = medians[3 * medians.Length / 4];
+        double iqr = Math.Max(q3 - q1, 1e-9);
+        double groupMedian = Bootstrap.Median(medians);
+
+        for (int i = 0; i < runs.Count; i++)
+        {
+            double deviation = Math.Abs(runs[i].Metrics.MedianFrameTimeMs - groupMedian);
+            if (deviation > 2 * iqr && deviation / groupMedian > 0.10)
+            {
+                int runNumber = i + 1;
+                App.Current.Dispatcher.Invoke(() => RunLog.Add(
+                    $"⚠ {label} run {runNumber} looks like an outlier (median far from the rest: " +
+                    "scene change, alt-tab or shader compilation?). Consider redoing the group " +
+                    "with the protocol followed strictly."));
+            }
+        }
     }
 
     private void BuildVerdict()
