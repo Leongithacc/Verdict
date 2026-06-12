@@ -60,4 +60,8 @@ public sealed record SystemSnapshot
     public bool? GpuThermalThrottling { get; init; }
     public double? CpuTempC { get; init; }
     public int? CpuLoadPercent { get; init; }
+
+    /// <summary>Null = detection failed (show game sections anyway, honestly).
+    /// False = definitely not installed (hide that game's KB section).</summary>
+    public bool? FortniteInstalled { get; init; }
 }

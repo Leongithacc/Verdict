@@ -63,7 +63,25 @@ public static class SnapshotBuilder
             GpuThermalThrottling = gpuThrottling,
             CpuTempC = Probe(ReadCpuTempAcpi, (double?)null),
             CpuLoadPercent = Probe(ReadCpuLoadPercent, (int?)null),
+            FortniteInstalled = Probe(ReadFortniteInstalled, (bool?)null),
         };
+    }
+
+    /// <summary>Epic Games Launcher keeps one .item manifest per installed
+    /// game. No Epic dir = definitely no Fortnite. Read-only as everything.</summary>
+    private static bool? ReadFortniteInstalled()
+    {
+        var manifests = Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData),
+            "Epic", "EpicGamesLauncher", "Data", "Manifests");
+        if (!Directory.Exists(manifests))
+            return false;
+        foreach (var file in Directory.EnumerateFiles(manifests, "*.item"))
+        {
+            if (File.ReadAllText(file).Contains("Fortnite", StringComparison.OrdinalIgnoreCase))
+                return true;
+        }
+        return false;
     }
 
     /// <summary>PORTABILITY §2: a benchmark on battery is invalid (power
