@@ -318,30 +318,15 @@ public sealed class MeasureWizardViewModel(MainViewModel main, AppSettings setti
         return runs;
     }
 
-    /// <summary>F5: flag runs that deviate wildly from their group (shader
-    /// compilation, alt-tab, scene change). Never excluded silently — the user
-    /// sees the flag and decides whether to redo the group.</summary>
+    /// <summary>F5: shared detector, flagged never silently excluded.</summary>
     private void FlagOutliers(IReadOnlyList<BenchmarkRun> runs, string label)
     {
-        if (runs.Count < 4)
-            return;
-        var medians = runs.Select(r => r.Metrics.MedianFrameTimeMs).OrderBy(v => v).ToArray();
-        double q1 = medians[medians.Length / 4];
-        double q3 = medians[3 * medians.Length / 4];
-        double iqr = Math.Max(q3 - q1, 1e-9);
-        double groupMedian = Bootstrap.Median(medians);
-
-        for (int i = 0; i < runs.Count; i++)
+        foreach (var outlier in OutlierDetector.Find(runs))
         {
-            double deviation = Math.Abs(runs[i].Metrics.MedianFrameTimeMs - groupMedian);
-            if (deviation > 2 * iqr && deviation / groupMedian > 0.10)
-            {
-                int runNumber = i + 1;
-                App.Current.Dispatcher.Invoke(() => RunLog.Add(
-                    $"⚠ {label} run {runNumber} looks like an outlier (median far from the rest: " +
-                    "scene change, alt-tab or shader compilation?). Consider redoing the group " +
-                    "with the protocol followed strictly."));
-            }
+            App.Current.Dispatcher.Invoke(() => RunLog.Add(
+                $"⚠ {label} run {outlier.RunNumber} looks like an outlier (median far from the rest: " +
+                "scene change, alt-tab or shader compilation?). Consider redoing the group " +
+                "with the protocol followed strictly."));
         }
     }
 

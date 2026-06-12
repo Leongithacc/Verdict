@@ -201,9 +201,14 @@
                    Text="Kernel DPC/ISR latency per driver — finds the actual stutter culprit, or tells you there is none." />
         <TextBlock Style="{StaticResource Body}" Text="{Binding Status}" Margin="0,0,0,12" />
         <StackPanel Orientation="Horizontal">
-          <Button Style="{StaticResource PrimaryButton}" Content="Capture 15s"
+          <Button Style="{StaticResource PrimaryButton}" Content="Capture"
                   Command="{Binding CaptureCommand}"
                   Visibility="{Binding IsElevated, Converter={StaticResource BoolToVis}}" />
+          <TextBox Text="{Binding Seconds, UpdateSourceTrigger=LostFocus}" Width="56"
+                   Margin="8,0,0,0" VerticalAlignment="Center"
+                   Visibility="{Binding IsElevated, Converter={StaticResource BoolToVis}}" />
+          <TextBlock Style="{StaticResource Muted}" Text="seconds" Margin="6,0,0,0" VerticalAlignment="Center"
+                     Visibility="{Binding IsElevated, Converter={StaticResource BoolToVis}}" />
           <Button Style="{StaticResource PrimaryButton}" Content="Relaunch as administrator"
                   Command="{Binding RelaunchAsAdminCommand}"
                   Visibility="{Binding IsElevated, Converter={StaticResource BoolToVisInverted}}" />
@@ -251,6 +256,9 @@
           <TextBlock Style="{StaticResource H1}" Text="Knowledge Base" VerticalAlignment="Center" />
           <ComboBox ItemsSource="{Binding Filters}" SelectedItem="{Binding Filter}"
                     Margin="24,0,0,0" Width="180" VerticalAlignment="Center" />
+          <TextBox Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
+                   Width="220" Margin="12,0,0,0" VerticalAlignment="Center"
+                   ToolTip="Search name, id or description" />
         </StackPanel>
         <Grid Grid.Row="1" Margin="0,16,0,0">
           <Grid.ColumnDefinitions>

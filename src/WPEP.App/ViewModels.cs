@@ -194,6 +194,14 @@ public sealed class VerdictViewModel(MainViewModel main) : ViewModelBase
             : $"Your system: {optimal}/{actionable} checks optimal";
         SubHeader = $"Last scanned {DateTime.Now:HH:mm} · {snapshot.CpuName} · {snapshot.GpuName} · " +
                     "Read-only — WPEP never modifies your system";
+        // F8: states the probes couldn't read are counted, never invented.
+        int unknown = recommendations.Count(r =>
+            r.Classification is Classification.Recommended or Classification.Optional
+                or Classification.OptionalWithWarning &&
+            r.StateNote.Contains("non rilev", StringComparison.OrdinalIgnoreCase));
+        if (unknown > 0)
+            SubHeader += $" · {unknown} states not auto-detectable (check by hand via How to)";
+
         if (snapshot.IsManagedDevice == true)
             SubHeader += "\n⚠ This looks like a company-managed device. Running third-party " +
                          "diagnostic tools may violate your organization's IT policy. Get IT approval first.";
@@ -211,7 +219,9 @@ public sealed class DiagnosticsViewModel(MainViewModel main) : ViewModelBase
         : "Diagnostics needs administrator to read kernel events. Everything else works without it.\nRelaunch WPEP as administrator to use this page.";
     private string _verdict = "";
     private bool _isRunning;
+    private int _seconds = 15;
 
+    public int Seconds { get => _seconds; set => Set(ref _seconds, Math.Clamp(value, 5, 120)); }
     public string Status { get => _status; set => Set(ref _status, value); }
     public string VerdictLine { get => _verdict; set => Set(ref _verdict, value); }
     public bool IsRunning { get => _isRunning; set => Set(ref _isRunning, value); }
@@ -224,13 +234,14 @@ public sealed class DiagnosticsViewModel(MainViewModel main) : ViewModelBase
     private async Task CaptureAsync()
     {
         IsRunning = true;
-        Status = "Capturing DPC/ISR for 15 seconds…";
+        int seconds = Seconds;
+        Status = $"Capturing DPC/ISR for {seconds} seconds…";
         Rows.Clear();
         VerdictLine = "";
         try
         {
             var report = await Task.Run(() =>
-                new EtwDpcIsrCollector().Capture(TimeSpan.FromSeconds(15)));
+                new EtwDpcIsrCollector().Capture(TimeSpan.FromSeconds(seconds)));
 
             foreach (var d in report.Drivers.Take(12))
                 Rows.Add(new DpcRow(d.Driver, d.TotalCount.ToString("N0"),
@@ -283,6 +294,7 @@ public sealed class KbViewModel : ViewModelBase
 {
     private readonly IReadOnlyList<KbItemViewModel> _all;
     private string _filter = "All";
+    private string _searchText = "";
     private KbItemViewModel? _selected;
     private string _loadError = "";
 
@@ -314,13 +326,24 @@ public sealed class KbViewModel : ViewModelBase
         set { if (Set(ref _filter, value)) Refresh(); }
     }
 
+    public string SearchText
+    {
+        get => _searchText;
+        set { if (Set(ref _searchText, value)) Refresh(); }
+    }
+
     public KbItemViewModel? Selected { get => _selected; set => Set(ref _selected, value); }
 
     private void Refresh()
     {
         Entries.Clear();
-        foreach (var item in _all.Where(i => _filter == "All" || i.Badge.Label == _filter)
-                     .OrderBy(i => i.Entry.EvidenceLevel).ThenBy(i => i.Id))
+        var query = _all.Where(i => _filter == "All" || i.Badge.Label == _filter);
+        if (_searchText.Trim() is { Length: > 0 } search)
+            query = query.Where(i =>
+                i.Name.Contains(search, StringComparison.OrdinalIgnoreCase) ||
+                i.Id.Contains(search, StringComparison.OrdinalIgnoreCase) ||
+                i.Entry.Description.Contains(search, StringComparison.OrdinalIgnoreCase));
+        foreach (var item in query.OrderBy(i => i.Entry.EvidenceLevel).ThenBy(i => i.Id))
             Entries.Add(item);
         Selected = Entries.FirstOrDefault();
     }

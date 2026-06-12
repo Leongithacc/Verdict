@@ -223,6 +223,13 @@ static async Task<int> RunBench(string[] args)
     }
 
     Console.WriteLine();
+    // F5: outlier flag anche in CLI, mai esclusione silenziosa.
+    foreach (var outlier in WPEP.Statistics.OutlierDetector.Find(collected))
+        Console.WriteLine(
+            $"⚠ Run {outlier.RunNumber} sembra un outlier (mediana {1000 / outlier.MedianMs:F0} fps " +
+            $"contro ~{1000 / outlier.GroupMedianMs:F0} del gruppo): cambio scena, alt-tab o shader? " +
+            "Valuta di rifare il gruppo.");
+
     // Noise gate preview (HANDOFF_R7 §1): avvisa SUBITO se lo scenario è rumoroso,
     // prima che l'utente perda tempo col post.
     if (collected.Count >= 3)
