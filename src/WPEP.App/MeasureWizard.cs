@@ -254,6 +254,18 @@ public sealed class MeasureWizardViewModel(MainViewModel main, AppSettings setti
             snapshot.DisplayWidth, snapshot.DisplayHeight,
             snapshot.MonitorCurrentHz, snapshot.PowerPlanGuid);
 
+        // PORTABILITY §2: thermal throttling makes runs incomparable. Warn,
+        // don't block — the user may be measuring exactly that.
+        if (snapshot.GpuThermalThrottling == true)
+            App.Current.Dispatcher.Invoke(() => RunLog.Add(
+                "⚠ The GPU is thermal-throttling RIGHT NOW. No software tweak fixes this — " +
+                "check case airflow and fan curves. Runs captured while throttling are " +
+                "comparable only with other throttled runs."));
+        else if (snapshot.GpuTempC is > 85)
+            App.Current.Dispatcher.Invoke(() => RunLog.Add(
+                $"⚠ GPU at {snapshot.GpuTempC}°C before the run — close to throttling. " +
+                "Results may drift as heat builds across runs."));
+
         Thread.Sleep(8000); // time to alt-tab back into the game
 
         var runs = new List<BenchmarkRun>(Runs);

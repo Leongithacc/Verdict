@@ -525,6 +525,7 @@ static int RunAnalyze(string[] args)
     Console.WriteLine($"SysMain     : {OnOff(s.SysMainRunning)}    Avvio rapido: {OnOff(s.FastStartupEnabled)}    MPO disattivato: {OnOff(s.MpoDisabled)}");
     Console.WriteLine($"Pagefile auto: {OnOff(s.PagefileAutomatic)}   Voci autostart (registry): {(s.StartupAppsCount?.ToString() ?? "?")}");
     Console.WriteLine($"IPv6 disattivato: {OnOff(s.Ipv6Disabled)}   Win Search: {OnOff(s.SearchIndexingRunning)}   HDD presenti: {OnOff(s.AnyHddPresent)}");
+    Console.WriteLine($"GPU temp    : {(s.GpuTempC?.ToString() ?? "?")}°C (throttling termico: {OnOff(s.GpuThermalThrottling)})   CPU load: {(s.CpuLoadPercent?.ToString() ?? "?")}%   CPU temp (ACPI): {(s.CpuTempC?.ToString("F0") ?? "n/d")}°C");
 
     if (jsonPath is not null)
     {

@@ -20,6 +20,7 @@ public static class SnapshotBuilder
         var (ramGb, ramSpeed, ramRated) = Probe(ReadRam, ((double?)null, (int?)null, (int?)null));
         var (planGuid, planName) = Probe(ReadPowerPlan, ("", ""));
         var (throttlingIndex, systemResponsiveness) = Probe(ReadMultimediaProfile, ((int?)null, (int?)null));
+        var (gpuTempC, gpuThrottling) = Probe(ReadGpuTelemetry, ((int?)null, (bool?)null));
 
         return new SystemSnapshot
         {
@@ -58,6 +59,10 @@ public static class SnapshotBuilder
             SearchIndexingRunning = Probe(() => ReadServiceRunning("WSearch"), (bool?)null),
             AnyHddPresent = Probe(ReadAnyHddPresent, (bool?)null),
             IsManagedDevice = Probe(ReadIsManagedDevice, (bool?)null),
+            GpuTempC = gpuTempC,
+            GpuThermalThrottling = gpuThrottling,
+            CpuTempC = Probe(ReadCpuTempAcpi, (double?)null),
+            CpuLoadPercent = Probe(ReadCpuLoadPercent, (int?)null),
         };
     }
 
@@ -77,6 +82,74 @@ public static class SnapshotBuilder
         {
             return null;
         }
+    }
+
+    /// <summary>GPU temperature and thermal-throttle state via nvidia-smi
+    /// (ships with the NVIDIA driver, no admin, no kernel driver of ours).
+    /// Returns nulls on AMD/Intel GPUs or when nvidia-smi is unavailable.</summary>
+    private static (int? tempC, bool? throttling) ReadGpuTelemetry()
+    {
+        var candidates = new[]
+        {
+            Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.System), "nvidia-smi.exe"),
+            Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles),
+                "NVIDIA Corporation", "NVSMI", "nvidia-smi.exe"),
+        };
+        var exe = candidates.FirstOrDefault(File.Exists);
+        if (exe is null)
+            return (null, null);
+
+        var psi = new ProcessStartInfo(exe,
+            "--query-gpu=temperature.gpu,clocks_throttle_reasons.hw_thermal_slowdown,clocks_throttle_reasons.sw_thermal_slowdown " +
+            "--format=csv,noheader,nounits")
+        {
+            UseShellExecute = false,
+            RedirectStandardOutput = true,
+            CreateNoWindow = true,
+        };
+        using var process = Process.Start(psi)!;
+        string output = process.StandardOutput.ReadToEnd().Trim();
+        process.WaitForExit(5000);
+        if (process.ExitCode != 0 || output.Length == 0)
+            return (null, null);
+
+        var fields = output.Split(',', StringSplitOptions.TrimEntries);
+        int? temp = fields.Length > 0 && int.TryParse(fields[0], out var t) ? t : null;
+        bool? throttling = fields.Length > 2
+            ? fields[1].Contains("Active", StringComparison.OrdinalIgnoreCase) &&
+              !fields[1].Contains("Not", StringComparison.OrdinalIgnoreCase) ||
+              fields[2].Contains("Active", StringComparison.OrdinalIgnoreCase) &&
+              !fields[2].Contains("Not", StringComparison.OrdinalIgnoreCase)
+            : null;
+        return (temp, throttling);
+    }
+
+    /// <summary>Best-effort CPU temperature from the ACPI thermal zone
+    /// (tenths of Kelvin). Many desktop boards don't expose it: null is normal.</summary>
+    private static double? ReadCpuTempAcpi()
+    {
+        using var searcher = new ManagementObjectSearcher(
+            @"root\WMI", "SELECT CurrentTemperature FROM MSAcpi_ThermalZoneTemperature");
+        foreach (var zone in searcher.Get())
+        {
+            double kelvin10 = Convert.ToDouble(zone["CurrentTemperature"]);
+            double celsius = kelvin10 / 10.0 - 273.15;
+            if (celsius is > 0 and < 120)
+                return Math.Round(celsius, 1);
+        }
+        return null;
+    }
+
+    private static int? ReadCpuLoadPercent()
+    {
+        using var searcher = new ManagementObjectSearcher(
+            "SELECT LoadPercentage FROM Win32_Processor");
+        foreach (var cpu in searcher.Get())
+        {
+            if (cpu["LoadPercentage"] is not null)
+                return Convert.ToInt32(cpu["LoadPercentage"]);
+        }
+        return null;
     }
 
     private static bool? ReadIsManagedDevice()

@@ -52,4 +52,12 @@ public sealed record SystemSnapshot
     /// third-party diagnostic tools may violate the org's IT policy — the
     /// user must see a notice, in app and in reports.</summary>
     public bool? IsManagedDevice { get; init; }
+
+    // Thermal/load (PORTABILITY §2) — via nvidia-smi and ACPI, deliberately
+    // NOT LibreHardwareMonitor: its elevated mode loads a kernel driver
+    // (WinRing0), which breaks leave-no-trace and risks AV/anti-cheat flags.
+    public int? GpuTempC { get; init; }
+    public bool? GpuThermalThrottling { get; init; }
+    public double? CpuTempC { get; init; }
+    public int? CpuLoadPercent { get; init; }
 }
