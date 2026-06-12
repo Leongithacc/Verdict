@@ -49,6 +49,10 @@ public sealed class AppSettings
     public static string DataDirectory => Path.Combine(AppContext.BaseDirectory, "data");
     private static string FilePath => Path.Combine(DataDirectory, "settings.json");
 
+    /// <summary>True when no settings file existed at load: first launch.</summary>
+    [System.Text.Json.Serialization.JsonIgnore]
+    public bool IsFirstRun { get; private set; }
+
     public static AppSettings Load()
     {
         try
@@ -57,7 +61,7 @@ public sealed class AppSettings
                 return JsonSerializer.Deserialize<AppSettings>(File.ReadAllText(FilePath)) ?? new();
         }
         catch (Exception ex) when (ex is IOException or JsonException) { }
-        return new();
+        return new() { IsFirstRun = true };
     }
 
     public void Save()

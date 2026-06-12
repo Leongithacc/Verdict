@@ -179,6 +179,15 @@ public sealed class MeasureWizardViewModel(MainViewModel main, AppSettings setti
     {
         if (Target is null)
             return;
+
+        // PORTABILITY §2: benchmark su batteria = invalido, bloccato come F10.
+        if (SnapshotBuilder.IsOnBattery() == true)
+        {
+            RunLog.Add("⚠ BLOCKED: this machine is running on battery. Power throttling makes " +
+                       "every measurement invalid. Plug in the charger and try again.");
+            return;
+        }
+
         IsBusy = true;
         Step = baseline ? WizardStep.Baseline : WizardStep.Post;
         if (baseline)
@@ -248,21 +257,41 @@ public sealed class MeasureWizardViewModel(MainViewModel main, AppSettings setti
         Thread.Sleep(8000); // time to alt-tab back into the game
 
         var runs = new List<BenchmarkRun>(Runs);
+        int invalid = 0;
         for (int i = 1; i <= Runs; i++)
         {
             App.Current.Dispatcher.Invoke(() =>
                 RunLog.Add($"{label} run {i}/{Runs} — capturing {Seconds}s…"));
-            var result = runner.Capture(processName, Seconds);
-            var run = new BenchmarkRun(label, processName, DateTimeOffset.UtcNow,
-                Seconds, result.Metrics, result.FrameTimesMs, environment);
-            File.WriteAllText(Path.Combine(dir, $"{label}-{i:D2}.json"),
-                JsonSerializer.Serialize(run));
-            runs.Add(run);
-            var m = result.Metrics;
-            App.Current.Dispatcher.Invoke(() => RunLog.Add(
-                $"  {m.FrameCount:N0} frames · avg {m.AvgFps:F1} fps · median {m.MedianFps:F1} · " +
-                $"1% low {m.OnePercentLowFps:F1} · 0.2% low {m.ZeroPointTwoPercentLowFps:F1}"));
+            try
+            {
+                var result = runner.Capture(processName, Seconds);
+                var run = new BenchmarkRun(label, processName, DateTimeOffset.UtcNow,
+                    Seconds, result.Metrics, result.FrameTimesMs, environment);
+                File.WriteAllText(Path.Combine(dir, $"{label}-{runs.Count + 1:D2}.json"),
+                    JsonSerializer.Serialize(run));
+                runs.Add(run);
+                var m = result.Metrics;
+                App.Current.Dispatcher.Invoke(() => RunLog.Add(
+                    $"  {m.FrameCount:N0} frames · avg {m.AvgFps:F1} fps · median {m.MedianFps:F1} · " +
+                    $"1% low {m.OnePercentLowFps:F1} · 0.2% low {m.ZeroPointTwoPercentLowFps:F1}"));
+            }
+            catch (Exception ex)
+            {
+                // F4: run marked INVALID, partial data discarded, never counted.
+                invalid++;
+                int runNumber = i;
+                App.Current.Dispatcher.Invoke(() => RunLog.Add(
+                    $"⚠ Run {runNumber} aborted — {ex.Message} " +
+                    $"{runs.Count} of {Runs} valid runs so far."));
+                if (invalid >= 2)
+                    throw new InvalidOperationException(
+                        $"Two runs aborted in a row — is the game still running? " +
+                        $"Captured {runs.Count} valid runs.");
+            }
         }
+
+        if (runs.Count < 2)
+            throw new InvalidOperationException("Not enough valid runs to continue.");
 
         FlagOutliers(runs, label);
         return runs;

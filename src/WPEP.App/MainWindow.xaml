@@ -71,6 +71,7 @@
                             <Grid.ColumnDefinitions>
                               <ColumnDefinition Width="300" />
                               <ColumnDefinition Width="*" />
+                              <ColumnDefinition Width="Auto" />
                             </Grid.ColumnDefinitions>
                             <StackPanel>
                               <TextBlock Style="{StaticResource Body}" Text="{Binding Name}" />
@@ -79,6 +80,9 @@
                             </StackPanel>
                             <TextBlock Grid.Column="1" Style="{StaticResource Muted}"
                                        Text="{Binding StateNote}" VerticalAlignment="Center" Margin="16,0,0,0" />
+                            <Button Grid.Column="2" Style="{StaticResource GhostButton}" Content="How to"
+                                    Padding="10,4" FontSize="12" VerticalAlignment="Center" Margin="8,0,0,0"
+                                    Command="{Binding HowToCommand}" />
                           </Grid>
                         </DataTemplate>
                       </ItemsControl.ItemTemplate>
@@ -357,36 +361,65 @@
     </DataTemplate>
   </Window.Resources>
 
-  <DockPanel>
-    <!-- Terminal line: identity (the CLI underneath) and guarantee (0 writes). -->
-    <Border DockPanel.Dock="Bottom" Background="{DynamicResource Surface}"
-            BorderBrush="{DynamicResource Line}" BorderThickness="0,1,0,0" Padding="16,6">
-      <TextBlock Style="{StaticResource Mono}" Foreground="{DynamicResource TextMuted}"
-                 Text="{Binding TerminalLine}" />
-    </Border>
+  <Grid>
+    <DockPanel>
+      <!-- Terminal line: identity (the CLI underneath) and guarantee (0 writes). -->
+      <Border DockPanel.Dock="Bottom" Background="{DynamicResource Surface}"
+              BorderBrush="{DynamicResource Line}" BorderThickness="0,1,0,0" Padding="16,6">
+        <TextBlock Style="{StaticResource Mono}" Foreground="{DynamicResource TextMuted}"
+                   Text="{Binding TerminalLine}" />
+      </Border>
 
-    <!-- Sidebar -->
-    <Border DockPanel.Dock="Left" Width="208" Background="{DynamicResource Surface}"
-            BorderBrush="{DynamicResource Line}" BorderThickness="0,0,1,0">
-      <DockPanel>
-        <StackPanel DockPanel.Dock="Top" Margin="20,24,20,16">
-          <TextBlock Style="{StaticResource H2}" FontSize="20" Foreground="{DynamicResource Accent}"
-                     Text="WPEP" />
-          <TextBlock Style="{StaticResource Muted}" FontSize="11" TextWrapping="Wrap"
-                     Text="The only optimizer that tells you when to stop optimizing." />
-        </StackPanel>
+      <!-- Sidebar -->
+      <Border DockPanel.Dock="Left" Width="208" Background="{DynamicResource Surface}"
+              BorderBrush="{DynamicResource Line}" BorderThickness="0,0,1,0">
+        <DockPanel>
+          <StackPanel DockPanel.Dock="Top" Margin="20,24,20,16">
+            <TextBlock Style="{StaticResource H2}" FontSize="20" Foreground="{DynamicResource Accent}"
+                       Text="WPEP" />
+            <TextBlock Style="{StaticResource Muted}" FontSize="11" TextWrapping="Wrap"
+                       Text="The only optimizer that tells you when to stop optimizing." />
+          </StackPanel>
+          <StackPanel>
+            <RadioButton x:Name="NavVerdict" Style="{StaticResource NavButton}" Content="Verdict"
+                         IsChecked="True" Checked="OnNavVerdict" />
+            <RadioButton x:Name="NavMeasure" Style="{StaticResource NavButton}" Content="Measure"
+                         Checked="OnNavMeasure" />
+            <RadioButton x:Name="NavDiagnostics" Style="{StaticResource NavButton}" Content="Diagnostics"
+                         Checked="OnNavDiagnostics" />
+            <RadioButton x:Name="NavKb" Style="{StaticResource NavButton}" Content="Knowledge Base"
+                         Checked="OnNavKb" />
+            <RadioButton x:Name="NavReport" Style="{StaticResource NavButton}" Content="Report"
+                         Checked="OnNavReport" />
+            <RadioButton x:Name="NavSettings" Style="{StaticResource NavButton}" Content="Settings"
+                         Checked="OnNavSettings" />
+          </StackPanel>
+        </DockPanel>
+      </Border>
+
+      <ContentControl Content="{Binding CurrentPage}" />
+    </DockPanel>
+
+    <!-- First-run welcome (EDGE_CASES §2): nothing runs until consent. -->
+    <Grid Background="#E00F0F14"
+          Visibility="{Binding ShowWelcome, Converter={StaticResource BoolToVis}}">
+      <Border Style="{StaticResource Card}" MaxWidth="520" VerticalAlignment="Center"
+              HorizontalAlignment="Center" Padding="32">
         <StackPanel>
-          <RadioButton Style="{StaticResource NavButton}" Content="Verdict" IsChecked="True"
-                       Checked="OnNavVerdict" />
-          <RadioButton Style="{StaticResource NavButton}" Content="Measure" Checked="OnNavMeasure" />
-          <RadioButton Style="{StaticResource NavButton}" Content="Diagnostics" Checked="OnNavDiagnostics" />
-          <RadioButton Style="{StaticResource NavButton}" Content="Knowledge Base" Checked="OnNavKb" />
-          <RadioButton Style="{StaticResource NavButton}" Content="Report" Checked="OnNavReport" />
-          <RadioButton Style="{StaticResource NavButton}" Content="Settings" Checked="OnNavSettings" />
+          <TextBlock Style="{StaticResource H1}" Foreground="{DynamicResource Accent}" Text="WPEP" />
+          <TextBlock Style="{StaticResource Body}" Margin="0,12,0,0"
+                     Text="WPEP measures, diagnoses and recommends. It never modifies your system." />
+          <TextBlock Style="{StaticResource Muted}" Margin="0,8,0,0"
+                     Text="The only optimizer that tells you when to stop optimizing." />
+          <TextBlock Style="{StaticResource Muted}" Margin="0,16,0,0" Text="What WPEP will never do:" />
+          <TextBlock Style="{StaticResource Body}" Margin="0,4,0,0"
+                     Text="· Write to your system&#x0a;· Claim to measure end-to-end input latency&#x0a;· Show you an improvement that isn't statistically real" />
+          <Button Style="{StaticResource PrimaryButton}" Content="Scan my system" Margin="0,24,0,0"
+                  HorizontalAlignment="Left" Command="{Binding StartFirstScanCommand}" />
+          <TextBlock Style="{StaticResource Muted}" FontSize="11" Margin="0,8,0,0"
+                     Text="The scan is read-only and needs no administrator." />
         </StackPanel>
-      </DockPanel>
-    </Border>
-
-    <ContentControl Content="{Binding CurrentPage}" />
-  </DockPanel>
+      </Border>
+    </Grid>
+  </Grid>
 </Window>

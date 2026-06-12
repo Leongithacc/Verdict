@@ -61,6 +61,24 @@ public static class SnapshotBuilder
         };
     }
 
+    /// <summary>PORTABILITY §2: a benchmark on battery is invalid (power
+    /// throttling) and must be blocked like F10. Null = no battery (desktop).</summary>
+    public static bool? IsOnBattery()
+    {
+        try
+        {
+            using var searcher = new ManagementObjectSearcher(
+                "SELECT BatteryStatus FROM Win32_Battery");
+            foreach (var battery in searcher.Get())
+                return Convert.ToInt32(battery["BatteryStatus"]) == 1; // 1 = discharging
+            return null; // nessuna batteria: desktop
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
     private static bool? ReadIsManagedDevice()
     {
         using (var searcher = new ManagementObjectSearcher(

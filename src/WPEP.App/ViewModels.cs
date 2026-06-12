@@ -16,6 +16,7 @@ public sealed class MainViewModel : ViewModelBase
 {
     private ViewModelBase _currentPage;
     private string _terminalLine = "$ wpep · ready · 0 writes";
+    private bool _showWelcome;
 
     public AppSettings Settings { get; }
     public VerdictViewModel Verdict { get; }
@@ -27,6 +28,12 @@ public sealed class MainViewModel : ViewModelBase
 
     public ViewModelBase CurrentPage { get => _currentPage; set => Set(ref _currentPage, value); }
     public string TerminalLine { get => _terminalLine; set => Set(ref _terminalLine, value); }
+
+    /// <summary>First-run welcome overlay (EDGE_CASES §2): the moment of trust.
+    /// No scan happens until the user clicks "Scan my system".</summary>
+    public bool ShowWelcome { get => _showWelcome; set => Set(ref _showWelcome, value); }
+
+    public RelayCommand StartFirstScanCommand { get; }
 
     public MainViewModel()
     {
@@ -40,13 +47,44 @@ public sealed class MainViewModel : ViewModelBase
         Report = new ReportViewModel(this);
         SettingsPage = new SettingsViewModel(Settings);
         _currentPage = Verdict;
-        _ = Verdict.ScanAsync();
+
+        StartFirstScanCommand = new(() =>
+        {
+            ShowWelcome = false;
+            Settings.Save(); // creates the settings file: next launch is not first-run
+            _ = Verdict.ScanAsync();
+        });
+
+        if (Settings.IsFirstRun)
+        {
+            ShowWelcome = true;
+            Verdict.SetIdle("Welcome — no scan has run yet.");
+        }
+        else
+        {
+            _ = Verdict.ScanAsync();
+        }
+    }
+
+    /// <summary>Jump to a KB entry from anywhere (Verdict "How to" buttons).</summary>
+    public void ShowKbEntry(string id)
+    {
+        Kb.Filter = "All";
+        Kb.Selected = Kb.Entries.FirstOrDefault(e =>
+            e.Id.Equals(id, StringComparison.OrdinalIgnoreCase));
+        CurrentPage = Kb;
     }
 }
 
 // ============================== VERDICT ==============================
 
-public sealed record VerdictItem(string Id, string Name, string StateNote);
+public sealed class VerdictItem(string id, string name, string stateNote, MainViewModel main)
+{
+    public string Id => id;
+    public string Name => name;
+    public string StateNote => stateNote;
+    public RelayCommand HowToCommand { get; } = new(() => main.ShowKbEntry(id));
+}
 
 public sealed class VerdictGroup(string label, string badgeColorKey)
 {
@@ -72,6 +110,12 @@ public sealed class VerdictViewModel(MainViewModel main) : ViewModelBase
     public ObservableCollection<VerdictGroup> Groups { get; } = [];
 
     public RelayCommand RescanCommand => new(() => _ = ScanAsync());
+
+    public void SetIdle(string header)
+    {
+        Header = header;
+        SubHeader = "Read-only — WPEP never modifies your system";
+    }
 
     public async Task ScanAsync()
     {
@@ -123,7 +167,7 @@ public sealed class VerdictViewModel(MainViewModel main) : ViewModelBase
         {
             var group = new VerdictGroup(label, color);
             foreach (var r in recommendations.Where(r => classes.Contains(r.Classification)))
-                group.Items.Add(new VerdictItem(r.Entry.Id, r.Entry.Name, r.StateNote));
+                group.Items.Add(new VerdictItem(r.Entry.Id, r.Entry.Name, r.StateNote, main));
             if (group.Items.Count > 0)
                 Groups.Add(group);
         }
@@ -132,7 +176,7 @@ public sealed class VerdictViewModel(MainViewModel main) : ViewModelBase
         {
             var group = new VerdictGroup($"Game-specific — {gameGroup.Key}", "Accent");
             foreach (var r in gameGroup.OrderBy(r => r.Entry.EvidenceLevel))
-                group.Items.Add(new VerdictItem(r.Entry.Id, r.Entry.Name, r.StateNote));
+                group.Items.Add(new VerdictItem(r.Entry.Id, r.Entry.Name, r.StateNote, main));
             Groups.Add(group);
         }
 
@@ -201,7 +245,10 @@ public sealed class DiagnosticsViewModel(MainViewModel main) : ViewModelBase
         }
         catch (Exception ex)
         {
-            Status = $"Capture failed: {ex.Message}";
+            // F6: the usual cause of a kernel-session failure is another tracer.
+            Status = $"Capture failed: {ex.Message}\n" +
+                     "If this persists: another kernel trace session may be running " +
+                     "(often LatencyMon, WPR or another capture tool). Close it and retry.";
         }
         finally
         {
