@@ -18,16 +18,25 @@ public sealed record ScenarioPreset(string Name, string Instructions)
 {
     public static readonly IReadOnlyList<ScenarioPreset> All =
     [
-        new("Fortnite — benchmark map, automated (recommended)",
-            "Creative map code 4135-2210-3629 (\"BENCHMARK\" by DweEroz). Open it in a " +
-            "PRIVATE session, press the launch button in the map, then DON'T touch mouse " +
-            "or keyboard — the camera sequence is fully automated. Run the sequence once " +
-            "as warm-up before run 1. Start each capture right as the sequence starts, " +
-            "and restart the sequence for every run."),
-        new("Fortnite — AFK at spawn (simplest)",
-            "Any Creative island in a PRIVATE session (no other players). Walk to a fixed " +
-            "spot, frame the same view, then stand completely still — hands off mouse and " +
-            "keyboard for the whole capture. Same island, same spot, same view, every run."),
+        new("Fortnite — YOUR OWN island, AFK (no unlock needed)",
+            "Creative → CREATE → open your own island (yours is never blocked by " +
+            "parental content ratings). Walk to a fixed spot, frame the same view, then " +
+            "stand completely still — hands off mouse and keyboard for the whole capture. " +
+            "Same spot, same view, every run."),
+        new("Fortnite — benchmark map, automated",
+            "Creative map code 4135-2210-3629 (\"BENCHMARK\" by DweEroz). If parental " +
+            "content ratings block it, try: 5492-6089-6665 (fps test, fixed camera) · " +
+            "5608-7013-5653 · 0240-9716-3198 — or use the own-island AFK preset, which " +
+            "needs no unlock. Private session, press the map's launch button, then DON'T " +
+            "touch anything: the camera sequence is automated. One warm-up pass before " +
+            "run 1, restart the sequence for every run."),
+        new("CS2 — workshop benchmark map",
+            "Steam Workshop → search \"FPS Benchmark\" (uLLeticaL) → Subscribe. In CS2: " +
+            "Play → Workshop Maps → FPS Benchmark → press the start button in the map: " +
+            "the fly-through is fully automated. One warm-up pass, then one capture per pass."),
+        new("HITMAN World of Assassination — integrated benchmark",
+            "Launcher → Options/Benchmark (Dartmoor or Dubai scene): fully automated and " +
+            "extremely repeatable. One warm-up pass, then start one capture per benchmark run."),
         new("Fortnite — fixed route on foot",
             "PRIVATE Creative island. Walk the same route at the same pace for the whole " +
             "capture, same direction every run. More game-like than AFK but noisier: check " +
