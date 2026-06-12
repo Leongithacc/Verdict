@@ -98,5 +98,5 @@ License: MIT · See [CONTRIBUTING.md](CONTRIBUTING.md) — the golden rule:
 | R6 Reporting (HTML) | ✅ |
 | R7 App (verdict-first UI, wizard, first-run, theming) | ✅ first complete iteration |
 | Pipeline certification — A/A test | ✅ passed on machine 1 (MDE 0.8%, no false positive) |
-| Pipeline certification — known-effect test | ⏳ pending |
+| Pipeline certification — known-effect test | ✅ passed (frame-cap detected, p=0.008, all metrics) |
 | V2 Execution Engine (apply + undo-journal + re-measure) | 🔒 gated until certification + open source |
