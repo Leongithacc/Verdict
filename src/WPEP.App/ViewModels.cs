@@ -33,6 +33,7 @@ public sealed class MainViewModel : ViewModelBase
         Settings = AppSettings.Load();
         Verdict = new VerdictViewModel(this);
         Measure = new MeasureWizardViewModel(this, Settings);
+        Measure.InitCommands();
         Measure.RefreshProcesses();
         Diagnostics = new DiagnosticsViewModel(this);
         Kb = new KbViewModel();

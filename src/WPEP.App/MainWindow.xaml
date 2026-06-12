@@ -105,9 +105,14 @@
                   Visibility="{Binding CanMeasure, Converter={StaticResource BoolToVisInverted}}">
             <StackPanel>
               <TextBlock Style="{StaticResource Body}" Text="{Binding BlockerText}" />
-              <Button Style="{StaticResource PrimaryButton}" Content="Download PresentMon (10 MB, verified)"
-                      Command="{Binding InstallPresentMonCommand}" Margin="0,12,0,0" HorizontalAlignment="Left"
-                      Visibility="{Binding IsElevated, Converter={StaticResource BoolToVis}}" />
+              <StackPanel Orientation="Horizontal" Margin="0,12,0,0">
+                <Button Style="{StaticResource PrimaryButton}" Content="Relaunch as administrator"
+                        Command="{Binding RelaunchAsAdminCommand}"
+                        Visibility="{Binding IsElevated, Converter={StaticResource BoolToVisInverted}}" />
+                <Button Style="{StaticResource PrimaryButton}" Content="Download PresentMon (10 MB, verified)"
+                        Command="{Binding InstallPresentMonCommand}"
+                        Visibility="{Binding IsElevated, Converter={StaticResource BoolToVis}}" />
+              </StackPanel>
               <TextBlock Style="{StaticResource Muted}" Text="{Binding Status}" Margin="0,8,0,0" />
             </StackPanel>
           </Border>
@@ -118,7 +123,7 @@
             <StackPanel IsEnabled="{Binding CanMeasure}">
               <TextBlock Style="{StaticResource H2}" Text="1 · Pick your game &amp; scenario" />
               <TextBlock Style="{StaticResource Muted}" Margin="0,4,0,12"
-                         Text="Live matches are too noisy to measure anything. Use a repeatable scenario — we'll check it for you." />
+                         Text="You CAN measure live matches — but they're usually too noisy for a verdict. A repeatable scenario means the same in-game situation each run (same Creative map and route, same benchmark), not replaying an old capture. We'll measure either way and tell you honestly what the data can support." />
               <DockPanel>
                 <Button DockPanel.Dock="Right" Style="{StaticResource GhostButton}" Content="Refresh"
                         Command="{Binding RefreshProcessesCommand}" Margin="8,0,0,0" />

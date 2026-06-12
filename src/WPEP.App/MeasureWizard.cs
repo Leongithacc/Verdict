@@ -61,12 +61,41 @@ public sealed class MeasureWizardViewModel(MainViewModel main, AppSettings setti
                 : "";
     public bool CanMeasure => IsElevated && PresentMonAvailable;
 
-    public RelayCommand RefreshProcessesCommand => new(RefreshProcesses);
-    public RelayCommand StartBaselineCommand => new(() => _ = RunGroupAsync(baseline: true), () => Target is not null && !IsBusy);
-    public RelayCommand ChangeAppliedCommand => new(() => Step = WizardStep.Post);
-    public RelayCommand StartPostCommand => new(() => _ = RunGroupAsync(baseline: false), () => !IsBusy);
-    public RelayCommand RestartCommand => new(Reset);
-    public RelayCommand InstallPresentMonCommand => new(() => _ = InstallPresentMonAsync(), () => !IsBusy);
+    public RelayCommand RefreshProcessesCommand { get; private set; } = null!;
+    public RelayCommand StartBaselineCommand { get; private set; } = null!;
+    public RelayCommand StartPostCommand { get; private set; } = null!;
+    public RelayCommand RestartCommand { get; private set; } = null!;
+    public RelayCommand InstallPresentMonCommand { get; private set; } = null!;
+    public RelayCommand RelaunchAsAdminCommand { get; private set; } = null!;
+
+    public void InitCommands()
+    {
+        RefreshProcessesCommand = new(RefreshProcesses);
+        StartBaselineCommand = new(() => _ = RunGroupAsync(baseline: true),
+            () => CanMeasure && Target is not null && !IsBusy);
+        StartPostCommand = new(() => _ = RunGroupAsync(baseline: false), () => !IsBusy);
+        RestartCommand = new(Reset);
+        InstallPresentMonCommand = new(() => _ = InstallPresentMonAsync(), () => !IsBusy);
+        RelaunchAsAdminCommand = new(RelaunchAsAdmin);
+    }
+
+    private void RelaunchAsAdmin()
+    {
+        try
+        {
+            var exe = Environment.ProcessPath!;
+            System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(exe)
+            {
+                UseShellExecute = true,
+                Verb = "runas", // triggers the normal Windows UAC prompt
+            });
+            System.Windows.Application.Current.Shutdown();
+        }
+        catch (System.ComponentModel.Win32Exception)
+        {
+            Status = "Elevation cancelled. The wizard stays disabled without administrator.";
+        }
+    }
 
     public void RefreshProcesses()
     {

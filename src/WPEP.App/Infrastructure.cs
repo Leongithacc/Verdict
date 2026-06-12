@@ -25,11 +25,16 @@ public abstract class ViewModelBase : INotifyPropertyChanged
 
 public sealed class RelayCommand(Action execute, Func<bool>? canExecute = null) : ICommand
 {
-    public event EventHandler? CanExecuteChanged;
+    // CommandManager re-queries CanExecute on every input/focus change: without
+    // this hookup, buttons stay disabled even after their condition becomes true.
+    public event EventHandler? CanExecuteChanged
+    {
+        add => System.Windows.Input.CommandManager.RequerySuggested += value;
+        remove => System.Windows.Input.CommandManager.RequerySuggested -= value;
+    }
+
     public bool CanExecute(object? _) => canExecute?.Invoke() ?? true;
     public void Execute(object? _) => execute();
-    public void RaiseCanExecuteChanged() =>
-        CanExecuteChanged?.Invoke(this, EventArgs.Empty);
 }
 
 /// <summary>Portable settings: a JSON file next to the exe (PORTABILITY:
