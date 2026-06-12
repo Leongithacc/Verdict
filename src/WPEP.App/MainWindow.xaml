@@ -2,7 +2,7 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:local="clr-namespace:WPEP.App"
-        Title="WPEP" Width="1180" Height="760" MinWidth="980" MinHeight="640"
+        Title="Verdict" Width="1180" Height="760" MinWidth="980" MinHeight="640"
         Background="{DynamicResource Bg}"
         FontFamily="{StaticResource UiFont}">
 
@@ -389,7 +389,7 @@
         <DockPanel>
           <StackPanel DockPanel.Dock="Top" Margin="20,24,20,16">
             <TextBlock Style="{StaticResource H2}" FontSize="20" Foreground="{DynamicResource Accent}"
-                       Text="WPEP" />
+                       Text="Verdict" />
             <TextBlock Style="{StaticResource Muted}" FontSize="11" TextWrapping="Wrap"
                        Text="The only optimizer that tells you when to stop optimizing." />
           </StackPanel>
@@ -419,9 +419,9 @@
       <Border Style="{StaticResource Card}" MaxWidth="520" VerticalAlignment="Center"
               HorizontalAlignment="Center" Padding="32">
         <StackPanel>
-          <TextBlock Style="{StaticResource H1}" Foreground="{DynamicResource Accent}" Text="WPEP" />
+          <TextBlock Style="{StaticResource H1}" Foreground="{DynamicResource Accent}" Text="Verdict" />
           <TextBlock Style="{StaticResource Body}" Margin="0,12,0,0"
-                     Text="WPEP measures, diagnoses and recommends. It never modifies your system." />
+                     Text="Verdict measures, diagnoses and recommends. It never modifies your system." />
           <TextBlock Style="{StaticResource Muted}" Margin="0,8,0,0"
                      Text="The only optimizer that tells you when to stop optimizing." />
           <TextBlock Style="{StaticResource Muted}" Margin="0,16,0,0" Text="What WPEP will never do:" />

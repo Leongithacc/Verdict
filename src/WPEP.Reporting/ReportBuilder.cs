@@ -27,7 +27,7 @@ public static class ReportBuilder
         sb.Append($$"""
             <!DOCTYPE html>
             <html lang="it"><head><meta charset="utf-8">
-            <title>WPEP Report</title>
+            <title>Verdict Report</title>
             <style>
               :root { --bg:#0e0e13; --panel:#16161f; --text:#d8d8e0; --dim:#8a8a96;
                       --accent:#8b5cf6; --good:#34d399; --warn:#fbbf24; --bad:#f87171; }
@@ -44,7 +44,7 @@ public static class ReportBuilder
               code { background:#1d1d29; padding:.1rem .4rem; border-radius:4px; }
               footer { color:var(--dim); margin-top:3rem; font-size:.85em; }
             </style></head><body>
-            <h1>WPEP — Report di sistema</h1>
+            <h1>Verdict — Report di sistema</h1>
             <p class="dim">Generato il {{Esc(data.GeneratedAtUtc.ToString("yyyy-MM-dd HH:mm"))}} UTC ·
             read-only: questo tool non ha modificato nulla.</p>
             """);
@@ -129,7 +129,7 @@ public static class ReportBuilder
             senza fonte; nessun miglioramento è dichiarato senza statistica (Mann–Whitney +
             bootstrap, unità = run). L'input latency end-to-end non è misurabile in puro software
             e questo report non finge il contrario.</p>
-            <p>WPEP — Windows Performance Engineering Platform · V1 read-only</p>
+            <p>Verdict · engine: WPEP (Windows Performance Engineering Platform) · V1 read-only</p>
             </footer></body></html>
             """);
 

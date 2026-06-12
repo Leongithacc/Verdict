@@ -492,16 +492,17 @@ public sealed class SettingsViewModel : ViewModelBase
     }
 
     public string About =>
-        "WPEP — the only optimizer that tells you when to stop optimizing.\n\n" +
+        "Verdict — the only optimizer that tells you when to stop optimizing.\n" +
+        "(engine codename: WPEP)\n\n" +
         "What WPEP will never do:\n" +
         "  · Write to your system\n" +
         "  · Claim to measure end-to-end input latency\n" +
         "  · Show you an improvement that isn't statistically real\n\n" +
-        "WPEP never touches your game. No code injection, no process hooks, no game memory " +
+        "Verdict never touches your game. No code injection, no process hooks, no game memory " +
         "access, no overlay. Frame data comes from Windows' own event tracing (ETW) — the same " +
         "passive channel used by Intel PresentMon. We cannot offer formal guarantees on behalf " +
         "of anti-cheat vendors, but WPEP belongs to no category anti-cheat systems target.\n\n" +
         "Portable by design. One folder, no installer, no services, no registry writes. " +
-        "Delete the folder and WPEP was never here.\n\n" +
+        "Delete the folder and Verdict was never here.\n\n" +
         "License: MIT · V1 read-only";
 }

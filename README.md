@@ -1,6 +1,8 @@
-# WPEP — Windows Performance Engineering Platform
+# Verdict
 
 **The only optimizer that tells you when to stop optimizing.**
+
+*(engine codename: WPEP — Windows Performance Engineering Platform)*
 
 WPEP measures, diagnoses and recommends gaming-performance changes on Windows —
 honestly, with statistics, and without ever touching your system. For most popular

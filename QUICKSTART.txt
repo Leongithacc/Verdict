@@ -1,8 +1,8 @@
-WPEP — Quick start (portable)
+Verdict — Quick start (portable)
 =============================
 
 1. Unzip this folder anywhere (Desktop is fine). No installer.
-2. Run WPEP.exe
+2. Run WPEP.exe (the Verdict app)
    - Windows SmartScreen will warn about an unknown publisher: this is
      expected for an unsigned open-source tool. Click "More info" →
      "Run anyway". Verify the zip's SHA256 against the published hash
@@ -16,10 +16,10 @@ WPEP — Quick start (portable)
      version, SHA256-verified). Nothing is downloaded without your click.
    - On a laptop: plug in the charger. Benchmarks on battery are blocked
      (power throttling makes them meaningless).
-5. Everything WPEP saves (runs, reports, settings) stays in this folder.
+5. Everything Verdict saves (runs, reports, settings) stays in this folder.
    Uninstall = delete the folder.
 
-WPEP never modifies your system. It measures, diagnoses and recommends —
+Verdict never modifies your system. It measures, diagnoses and recommends —
 and tells you honestly when a tweak does nothing.
 
 CLI for advanced users: wpep-cli.exe (run from a terminal).
