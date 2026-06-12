@@ -219,6 +219,7 @@ public sealed class DiagnosticsViewModel(MainViewModel main) : ViewModelBase
     public ObservableCollection<DpcRow> Rows { get; } = [];
 
     public RelayCommand CaptureCommand => new(() => _ = CaptureAsync(), () => IsElevated && !IsRunning);
+    public RelayCommand RelaunchAsAdminCommand => new(() => main.Measure.RelaunchAsAdminCommand.Execute(null));
 
     private async Task CaptureAsync()
     {
@@ -353,8 +354,9 @@ public sealed class ReportViewModel(MainViewModel main) : ViewModelBase
                 var snapshot = SnapshotBuilder.Build(DateTimeOffset.UtcNow);
                 var kb = KnowledgeBaseLoader.Load();
                 var recommendations = AdvisorEngine.Advise(snapshot, kb);
+                var (noise, comparison) = LoadLatestWizardSession();
                 var html = Reporting.ReportBuilder.BuildHtml(new Reporting.ReportData(
-                    DateTimeOffset.UtcNow, snapshot, recommendations, null, null));
+                    DateTimeOffset.UtcNow, snapshot, recommendations, noise, comparison));
 
                 var dir = Path.Combine(AppContext.BaseDirectory, "reports");
                 Directory.CreateDirectory(dir);
@@ -373,6 +375,47 @@ public sealed class ReportViewModel(MainViewModel main) : ViewModelBase
         finally
         {
             IsBusy = false;
+        }
+    }
+
+    /// <summary>Pulls the most recent wizard session into the report: noise
+    /// floor from its baseline, comparison when a post group exists. Legacy or
+    /// broken sessions degrade to "not included", never to a failed report.</summary>
+    private (Statistics.NoiseFloorAnalyzer.NoiseReport?, Statistics.ComparisonEngine.ComparisonReport?)
+        LoadLatestWizardSession()
+    {
+        try
+        {
+            var runsRoot = Path.Combine(AppContext.BaseDirectory, "runs");
+            if (!Directory.Exists(runsRoot))
+                return (null, null);
+            var latest = Directory.EnumerateDirectories(runsRoot, "wizard-*")
+                .OrderByDescending(d => d).FirstOrDefault();
+            if (latest is null)
+                return (null, null);
+
+            var baselineDir = Path.Combine(latest, "baseline");
+            if (!Directory.Exists(baselineDir))
+                return (null, null);
+            var baseline = Benchmark.BenchmarkRunStore.LoadDirectory(baselineDir);
+            var noise = baseline.Count >= 2
+                ? Statistics.NoiseFloorAnalyzer.Analyze(baseline) : null;
+
+            var postDir = Path.Combine(latest, "post");
+            Statistics.ComparisonEngine.ComparisonReport? comparison = null;
+            if (Directory.Exists(postDir))
+            {
+                var post = Benchmark.BenchmarkRunStore.LoadDirectory(postDir);
+                if (post.Count > 0 &&
+                    Statistics.EnvironmentValidator.Validate(baseline, post).Valid)
+                    comparison = Statistics.ComparisonEngine.Compare(
+                        baseline, post, main.Settings.NoiseGateThresholdPercent);
+            }
+            return (noise, comparison);
+        }
+        catch
+        {
+            return (null, null);
         }
     }
 }

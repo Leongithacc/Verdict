@@ -253,6 +253,7 @@ static int RunCompare(string[] args)
 {
     string? baselineDir = null;
     string? postDir = null;
+    double gate = WPEP.Statistics.Mde.DefaultGateThresholdPercent;
 
     for (int i = 0; i < args.Length; i++)
     {
@@ -263,6 +264,11 @@ static int RunCompare(string[] args)
                 break;
             case "--post" or "-p" when i + 1 < args.Length:
                 postDir = args[++i];
+                break;
+            case "--gate" when i + 1 < args.Length && double.TryParse(args[i + 1],
+                System.Globalization.CultureInfo.InvariantCulture, out var g):
+                gate = Math.Clamp(g, 1, 50);
+                i++;
                 break;
             default:
                 Console.Error.WriteLine($"Argomento sconosciuto: {args[i]}");
@@ -292,7 +298,7 @@ static int RunCompare(string[] args)
             return 6;
         }
 
-        report = WPEP.Statistics.ComparisonEngine.Compare(baseline, post);
+        report = WPEP.Statistics.ComparisonEngine.Compare(baseline, post, gate);
     }
     catch (Exception ex)
     {

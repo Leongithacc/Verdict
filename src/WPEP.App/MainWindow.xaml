@@ -200,9 +200,14 @@
         <TextBlock Style="{StaticResource Muted}" Margin="0,4,0,16"
                    Text="Kernel DPC/ISR latency per driver — finds the actual stutter culprit, or tells you there is none." />
         <TextBlock Style="{StaticResource Body}" Text="{Binding Status}" Margin="0,0,0,12" />
-        <Button Style="{StaticResource PrimaryButton}" Content="Capture 15s"
-                Command="{Binding CaptureCommand}" HorizontalAlignment="Left"
-                Visibility="{Binding IsElevated, Converter={StaticResource BoolToVis}}" />
+        <StackPanel Orientation="Horizontal">
+          <Button Style="{StaticResource PrimaryButton}" Content="Capture 15s"
+                  Command="{Binding CaptureCommand}"
+                  Visibility="{Binding IsElevated, Converter={StaticResource BoolToVis}}" />
+          <Button Style="{StaticResource PrimaryButton}" Content="Relaunch as administrator"
+                  Command="{Binding RelaunchAsAdminCommand}"
+                  Visibility="{Binding IsElevated, Converter={StaticResource BoolToVisInverted}}" />
+        </StackPanel>
         <TextBlock Style="{StaticResource H2}" Foreground="{DynamicResource Accent}"
                    Text="{Binding VerdictLine}" Margin="0,16,0,8" TextWrapping="Wrap" />
         <Border Style="{StaticResource Card}" Padding="8"
