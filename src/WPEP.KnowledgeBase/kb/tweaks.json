@@ -18,7 +18,20 @@
     "rollback": "Pannello di controllo → Opzioni risparmio energia → seleziona il piano precedente (Balanced).",
     "manual_steps": "Pannello di controllo → Opzioni risparmio energia → Mostra piani aggiuntivi → Prestazioni elevate. Per Ultimate Performance: powercfg -duplicatescheme e9a42b02-d5df-448d-aa00-03f14749eb61 da terminale admin, poi selezionarlo.",
     "conflicts_with": [],
-    "measurable": true
+    "measurable": true,
+    "apply": {
+      "method": "powercfg",
+      "operations": [
+        {
+          "path": "powercfg /setactive 8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c",
+          "value_after": null,
+          "verify": "powercfg /getactivescheme"
+        }
+      ],
+      "requires_reboot": false,
+      "undo": "auto-journal",
+      "gui_only_reason": null
+    }
   },
   {
     "id": "disable-enhance-pointer-precision",
@@ -36,7 +49,30 @@
     "rollback": "Impostazioni → Bluetooth e dispositivi → Mouse → Impostazioni aggiuntive → Opzioni puntatore → rispunta 'Migliora precisione puntatore'.",
     "manual_steps": "Impostazioni → Bluetooth e dispositivi → Mouse → Impostazioni aggiuntive del mouse → scheda Opzioni puntatore → togli la spunta a 'Migliora precisione puntatore' → OK.",
     "conflicts_with": [],
-    "measurable": false
+    "measurable": false,
+    "apply": {
+      "method": "registry",
+      "operations": [
+        {
+          "path": "HKCU\\Control Panel\\Mouse\\MouseSpeed",
+          "value_after": "0",
+          "verify": "0"
+        },
+        {
+          "path": "HKCU\\Control Panel\\Mouse\\MouseThreshold1",
+          "value_after": "0",
+          "verify": "0"
+        },
+        {
+          "path": "HKCU\\Control Panel\\Mouse\\MouseThreshold2",
+          "value_after": "0",
+          "verify": "0"
+        }
+      ],
+      "requires_reboot": false,
+      "undo": "auto-journal",
+      "gui_only_reason": null
+    }
   },
   {
     "id": "disable-background-overlays",
@@ -54,7 +90,14 @@
     "rollback": "Riattiva gli overlay dalle impostazioni delle rispettive app.",
     "manual_steps": "Discord: Impostazioni → Overlay di gioco → off. NVIDIA App: Impostazioni → Overlay → off. Game Bar: Impostazioni Windows → Giochi → Game Bar → off. Software RGB: chiudi o disinstalla quelli non usati; per quelli necessari riduci il polling/effetti dinamici.",
     "conflicts_with": [],
-    "measurable": true
+    "measurable": true,
+    "apply": {
+      "method": "gui-only",
+      "operations": [],
+      "requires_reboot": false,
+      "undo": "manual-steps",
+      "gui_only_reason": "Multiple third-party apps"
+    }
   },
   {
     "id": "hags-hardware-gpu-scheduling",
@@ -95,7 +138,14 @@
     "rollback": "Ripristinare MSISupported=0 nella stessa chiave registry del dispositivo, riavvio.",
     "manual_steps": "Verifica prima se già attivo: HKLM\\SYSTEM\\CurrentControlSet\\Enum\\PCI\\<GPU>\\Device Parameters\\Interrupt Management\\MessageSignaledInterruptProperties → MSISupported. Se 1, non fare nulla. Se assente/0 su GPU moderna, indagare perché prima di forzare.",
     "conflicts_with": [],
-    "measurable": true
+    "measurable": true,
+    "apply": {
+      "method": "gui-only",
+      "operations": [],
+      "requires_reboot": false,
+      "undo": "manual-steps",
+      "gui_only_reason": "Device-specific registry path must be resolved per GPU instance; deferred"
+    }
   },
   {
     "id": "disable-fullscreen-optimizations",
@@ -114,7 +164,14 @@
     "rollback": "Stessa finestra Proprietà → Compatibilità → togli la spunta.",
     "manual_steps": "Tasto destro sull'exe del gioco → Proprietà → Compatibilità → 'Disabilita ottimizzazioni a schermo intero' → OK. Solo per il gioco problematico, non globalmente.",
     "conflicts_with": [],
-    "measurable": true
+    "measurable": true,
+    "apply": {
+      "method": "gui-only",
+      "operations": [],
+      "requires_reboot": false,
+      "undo": "manual-steps",
+      "gui_only_reason": "Per-exe compatibility flag — file picker needed; deferred"
+    }
   },
   {
     "id": "memory-integrity-vbs-off",
@@ -227,7 +284,20 @@
     "rollback": "Impostazioni → Giochi → Modalità gioco → Disattivato.",
     "manual_steps": "Già attivo di default. Verifica: Impostazioni → Giochi → Modalità gioco → Attivato.",
     "conflicts_with": [],
-    "measurable": false
+    "measurable": false,
+    "apply": {
+      "method": "registry",
+      "operations": [
+        {
+          "path": "HKCU\\Software\\Microsoft\\GameBar\\AutoGameModeEnabled",
+          "value_after": "1",
+          "verify": "1"
+        }
+      ],
+      "requires_reboot": false,
+      "undo": "auto-journal",
+      "gui_only_reason": null
+    }
   },
   {
     "id": "timer-resolution-0.5ms",
@@ -263,7 +333,20 @@
     "rollback": "Ripristinare SystemResponsiveness=20 (default) in HKLM\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Multimedia\\SystemProfile.",
     "manual_steps": "Sconsigliato senza misura. Per test: SystemProfile → SystemResponsiveness → 10 o 0, riavvio, misura con wpep bench/compare, rollback se entro il noise floor.",
     "conflicts_with": [],
-    "measurable": true
+    "measurable": true,
+    "apply": {
+      "method": "registry",
+      "operations": [
+        {
+          "path": "HKLM\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Multimedia\\SystemProfile\\SystemResponsiveness",
+          "value_after": "0",
+          "verify": "0"
+        }
+      ],
+      "requires_reboot": true,
+      "undo": "auto-journal",
+      "gui_only_reason": null
+    }
   },
   {
     "id": "correct-refresh-rate-and-fps-cap",
@@ -283,7 +366,14 @@
     "rollback": "Riportare refresh/limitatore ai valori precedenti.",
     "manual_steps": "1) Impostazioni → Sistema → Schermo → Schermo avanzato → verifica che la frequenza sia il massimo del monitor. 2) Se il gioco supporta Reflex: attivalo. Altrimenti con G-SYNC: cap in-game ~3-5 FPS sotto il refresh. 3) Verifica con wpep bench che il frametime sia stabile al cap.",
     "conflicts_with": [],
-    "measurable": true
+    "measurable": true,
+    "apply": {
+      "method": "gui-only",
+      "operations": [],
+      "requires_reboot": false,
+      "undo": "manual-steps",
+      "gui_only_reason": "Display settings + in-game cap"
+    }
   },
   {
     "id": "xmp-expo-enable",
@@ -303,7 +393,14 @@
     "rollback": "BIOS → profilo memoria → Disabled/Auto.",
     "manual_steps": "Riavvia nel BIOS (Canc/F2) → sezione memoria/OC → attiva EXPO (AMD) o XMP (Intel) profilo 1 → salva e riavvia. Verifica con 'wpep analyze' che la velocità configurata corrisponda a quella dichiarata.",
     "conflicts_with": [],
-    "measurable": true
+    "measurable": true,
+    "apply": {
+      "method": "gui-only",
+      "operations": [],
+      "requires_reboot": false,
+      "undo": "manual-steps",
+      "gui_only_reason": "BIOS setting — no safe programmatic path"
+    }
   },
   {
     "id": "amd-ftpm-bios-update",
@@ -323,7 +420,14 @@
     "rollback": "I BIOS moderni permettono downgrade; alcuni produttori lo bloccano. Verificare prima.",
     "manual_steps": "Identifica scheda madre e versione BIOS attuale → sito del produttore → scarica l'ultimo BIOS stabile (AGESA ≥1.2.0.7, ormai qualsiasi BIOS 2023+) → flash via utility ufficiale (es. EZ Flash/Q-Flash) → riconfigura EXPO dopo il flash.",
     "conflicts_with": [],
-    "measurable": true
+    "measurable": true,
+    "apply": {
+      "method": "gui-only",
+      "operations": [],
+      "requires_reboot": false,
+      "undo": "manual-steps",
+      "gui_only_reason": "BIOS flash — vendor utility only"
+    }
   },
   {
     "id": "enable-nvidia-reflex",
@@ -344,7 +448,14 @@
     "rollback": "Stessa impostazione in-game → Off.",
     "manual_steps": "Nelle impostazioni grafiche del gioco: NVIDIA Reflex Low Latency → On (oppure On+Boost se non sei mai CPU-bound). Va attivato per-gioco.",
     "conflicts_with": [],
-    "measurable": false
+    "measurable": false,
+    "apply": {
+      "method": "gui-only",
+      "operations": [],
+      "requires_reboot": false,
+      "undo": "manual-steps",
+      "gui_only_reason": "In-game setting"
+    }
   },
   {
     "id": "enable-gsync-vrr",
@@ -365,7 +476,14 @@
     "rollback": "Pannello NVIDIA → ripristina le impostazioni precedenti.",
     "manual_steps": "Pannello di controllo NVIDIA → Configura G-SYNC → abilita per schermo intero → Gestisci impostazioni 3D → Sincronizzazione verticale: On → nel gioco: Reflex On (o cap FPS ~3-5 sotto il refresh) e VSync in-game Off.",
     "conflicts_with": [],
-    "measurable": false
+    "measurable": false,
+    "apply": {
+      "method": "gui-only",
+      "operations": [],
+      "requires_reboot": false,
+      "undo": "manual-steps",
+      "gui_only_reason": "Driver control panel setting"
+    }
   },
   {
     "id": "nvidia-ultra-low-latency-mode",
@@ -385,7 +503,14 @@
     "rollback": "Pannello NVIDIA → Modalità bassa latenza → Off.",
     "manual_steps": "Pannello di controllo NVIDIA → Gestisci impostazioni 3D → Modalità bassa latenza → Ultra (globale o per-gioco sui soli titoli DX11 senza Reflex).",
     "conflicts_with": [],
-    "measurable": false
+    "measurable": false,
+    "apply": {
+      "method": "gui-only",
+      "operations": [],
+      "requires_reboot": false,
+      "undo": "manual-steps",
+      "gui_only_reason": "Driver control panel setting"
+    }
   },
   {
     "id": "nvidia-prefer-max-performance",
@@ -405,7 +530,14 @@
     "rollback": "Pannello NVIDIA → Modalità di gestione alimentazione → Normale.",
     "manual_steps": "Pannello di controllo NVIDIA → Gestisci impostazioni 3D → Impostazioni di programma → seleziona il gioco → Modalità di gestione dell'alimentazione → Preferisci prestazioni massime.",
     "conflicts_with": [],
-    "measurable": true
+    "measurable": true,
+    "apply": {
+      "method": "gui-only",
+      "operations": [],
+      "requires_reboot": false,
+      "undo": "manual-steps",
+      "gui_only_reason": "Driver control panel setting"
+    }
   },
   {
     "id": "resizable-bar-enable",
@@ -425,7 +557,14 @@
     "rollback": "BIOS → Resizable BAR / Above 4G Decoding → Disabled.",
     "manual_steps": "BIOS → abilita 'Above 4G Decoding' e 'Resizable BAR Support' (spesso sotto PCI/PCIe settings) → salva. Verifica nel pannello NVIDIA → Informazioni di sistema → Resizable BAR: Sì.",
     "conflicts_with": [],
-    "measurable": true
+    "measurable": true,
+    "apply": {
+      "method": "gui-only",
+      "operations": [],
+      "requires_reboot": false,
+      "undo": "manual-steps",
+      "gui_only_reason": "BIOS setting — no safe programmatic path"
+    }
   },
   {
     "id": "ethernet-over-wifi",
@@ -443,7 +582,14 @@
     "rollback": "Riconnetti il Wi-Fi.",
     "manual_steps": "Collega un cavo ethernet (Cat5e+ basta) dal router al PC. Disattiva il Wi-Fi per evitare che Windows lo preferisca. Verifica con 'wpep analyze' che la connessione attiva risulti cablata.",
     "conflicts_with": [],
-    "measurable": false
+    "measurable": false,
+    "apply": {
+      "method": "gui-only",
+      "operations": [],
+      "requires_reboot": false,
+      "undo": "manual-steps",
+      "gui_only_reason": "Physical cable change"
+    }
   },
   {
     "id": "disable-gamedvr-background-recording",
@@ -461,7 +607,20 @@
     "rollback": "Stessa impostazione → riattiva.",
     "manual_steps": "Impostazioni → Giochi → Acquisizioni → 'Registra cosa è successo' → Disattivato.",
     "conflicts_with": [],
-    "measurable": true
+    "measurable": true,
+    "apply": {
+      "method": "registry",
+      "operations": [
+        {
+          "path": "HKCU\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\GameDVR\\AppCaptureEnabled",
+          "value_after": "0",
+          "verify": "0"
+        }
+      ],
+      "requires_reboot": false,
+      "undo": "auto-journal",
+      "gui_only_reason": null
+    }
   },
   {
     "id": "disable-startup-bloat",
@@ -479,7 +638,14 @@
     "rollback": "Gestione attività → Avvio → riattiva le voci.",
     "manual_steps": "Gestione attività (Ctrl+Shift+Esc) → scheda App di avvio → disattiva ciò che non serve all'avvio (launcher di giochi, updater, software RGB se non usato). Per analisi approfondita: Sysinternals Autoruns.",
     "conflicts_with": [],
-    "measurable": true
+    "measurable": true,
+    "apply": {
+      "method": "gui-only",
+      "operations": [],
+      "requires_reboot": false,
+      "undo": "manual-steps",
+      "gui_only_reason": "User must choose which entries to disable"
+    }
   },
   {
     "id": "keep-gpu-driver-updated",
@@ -497,7 +663,14 @@
     "rollback": "Installare la versione precedente del driver dal sito del vendor.",
     "manual_steps": "NVIDIA App (o nvidia.com/drivers) → verifica aggiornamenti → installazione pulita se si arriva da molte versioni indietro. Leggere le release notes per fix rilevanti ai propri giochi.",
     "conflicts_with": [],
-    "measurable": true
+    "measurable": true,
+    "apply": {
+      "method": "gui-only",
+      "operations": [],
+      "requires_reboot": false,
+      "undo": "manual-steps",
+      "gui_only_reason": "Driver installation — vendor installer only"
+    }
   },
   {
     "id": "network-throttling-index",
@@ -518,7 +691,20 @@
     "conflicts_with": [
       "systemresponsiveness-gpupriority-registry"
     ],
-    "measurable": true
+    "measurable": true,
+    "apply": {
+      "method": "registry",
+      "operations": [
+        {
+          "path": "HKLM\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Multimedia\\SystemProfile\\NetworkThrottlingIndex",
+          "value_after": "4294967295",
+          "verify": "4294967295"
+        }
+      ],
+      "requires_reboot": true,
+      "undo": "auto-journal",
+      "gui_only_reason": null
+    }
   },
   {
     "id": "nic-interrupt-moderation-off",
@@ -555,7 +741,20 @@
     "rollback": "Eliminare OverlayTestMode da HKLM\\SOFTWARE\\Microsoft\\Windows\\Dwm → riavvio.",
     "manual_steps": "Solo se hai flicker/stutter riconducibili a MPO: HKLM\\SOFTWARE\\Microsoft\\Windows\\Dwm → DWORD OverlayTestMode=5 → riavvio → verifica se il sintomo sparisce. Se non sparisce, rollback immediato.",
     "conflicts_with": [],
-    "measurable": true
+    "measurable": true,
+    "apply": {
+      "method": "registry",
+      "operations": [
+        {
+          "path": "HKLM\\SOFTWARE\\Microsoft\\Windows\\Dwm\\OverlayTestMode",
+          "value_after": "5",
+          "verify": "5"
+        }
+      ],
+      "requires_reboot": true,
+      "undo": "auto-journal",
+      "gui_only_reason": null
+    }
   },
   {
     "id": "fast-startup-disable",
@@ -573,7 +772,20 @@
     "rollback": "Stessa finestra → rispunta 'Attiva avvio rapido'.",
     "manual_steps": "Pannello di controllo → Opzioni risparmio energia → Specifica comportamento pulsanti → Modifica impostazioni attualmente non disponibili → togli spunta 'Attiva avvio rapido' → Salva.",
     "conflicts_with": [],
-    "measurable": false
+    "measurable": false,
+    "apply": {
+      "method": "registry",
+      "operations": [
+        {
+          "path": "HKLM\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Power\\HiberbootEnabled",
+          "value_after": "0",
+          "verify": "0"
+        }
+      ],
+      "requires_reboot": false,
+      "undo": "auto-journal",
+      "gui_only_reason": null
+    }
   },
   {
     "id": "sysmain-superfetch-disable",
@@ -722,7 +934,14 @@
     "conflicts_with": [
       "disable-fullscreen-optimizations"
     ],
-    "measurable": true
+    "measurable": true,
+    "apply": {
+      "method": "gui-only",
+      "operations": [],
+      "requires_reboot": false,
+      "undo": "manual-steps",
+      "gui_only_reason": "Windows graphics settings page"
+    }
   },
   {
     "id": "dlss-fsr-upscaling",
@@ -740,7 +959,14 @@
     "rollback": "Impostazioni grafiche del gioco → upscaling → Off/Nativo.",
     "manual_steps": "Impostazioni grafiche del gioco → DLSS/FSR → inizia da Quality → misura con wpep bench → scala verso Performance solo se servono altri FPS.",
     "conflicts_with": [],
-    "measurable": true
+    "measurable": true,
+    "apply": {
+      "method": "gui-only",
+      "operations": [],
+      "requires_reboot": false,
+      "undo": "manual-steps",
+      "gui_only_reason": "In-game setting"
+    }
   },
   {
     "id": "frame-gen-competitive-tradeoff",
@@ -780,7 +1006,14 @@
     "rollback": "Ricollegare il cavo dov'era.",
     "manual_steps": "Spegni il PC → sposta il cavo DisplayPort/HDMI dalla porta verticale vicino alle USB (scheda madre) a una delle porte della scheda video (orizzontali, in basso) → riaccendi.",
     "conflicts_with": [],
-    "measurable": true
+    "measurable": true,
+    "apply": {
+      "method": "gui-only",
+      "operations": [],
+      "requires_reboot": false,
+      "undo": "manual-steps",
+      "gui_only_reason": "Physical cable change"
+    }
   },
   {
     "id": "game-on-nvme-ssd",
@@ -798,7 +1031,14 @@
     "rollback": "Spostare il gioco sul disco precedente (Steam: Impostazioni → Archiviazione → Sposta).",
     "manual_steps": "Steam → Impostazioni → Archiviazione → seleziona i giochi → Sposta sul drive NVMe. Epic/altri launcher hanno funzioni analoghe.",
     "conflicts_with": [],
-    "measurable": true
+    "measurable": true,
+    "apply": {
+      "method": "gui-only",
+      "operations": [],
+      "requires_reboot": false,
+      "undo": "manual-steps",
+      "gui_only_reason": "Game files must be moved via the launcher"
+    }
   },
   {
     "id": "disable-drive-optimization-myth",
@@ -835,7 +1075,14 @@
     "rollback": "Disattivare SQM/QoS nell'interfaccia del router.",
     "manual_steps": "1) Misura: test bufferbloat di Waveform durante un download. Voto C o peggio = problema reale. 2) Nel router: attiva SQM/Smart Queue/QoS adattivo (fq_codel o CAKE) impostando ~95% della banda misurata. Router consumer senza SQM: valutare OpenWrt o un router con CAKE.",
     "conflicts_with": [],
-    "measurable": true
+    "measurable": true,
+    "apply": {
+      "method": "gui-only",
+      "operations": [],
+      "requires_reboot": false,
+      "undo": "manual-steps",
+      "gui_only_reason": "Router-side configuration"
+    }
   },
   {
     "id": "ipv6-disable",
@@ -893,7 +1140,14 @@
     "rollback": "Software del mouse → polling rate precedente.",
     "manual_steps": "Software del produttore (Synapse, G HUB, ecc.) → Polling rate → 1000Hz. Verifica che non sia rimasto a 125/500Hz di default.",
     "conflicts_with": [],
-    "measurable": false
+    "measurable": false,
+    "apply": {
+      "method": "gui-only",
+      "operations": [],
+      "requires_reboot": false,
+      "undo": "manual-steps",
+      "gui_only_reason": "Peripheral vendor software"
+    }
   },
   {
     "id": "windows-search-indexing-off",
@@ -965,7 +1219,14 @@
     "rollback": "Stessa opzione in-game → off.",
     "manual_steps": "Impostazioni del gioco → Mouse/Input → 'Raw Input' → On (es. CS2: m_rawinput 1, già default).",
     "conflicts_with": [],
-    "measurable": false
+    "measurable": false,
+    "apply": {
+      "method": "gui-only",
+      "operations": [],
+      "requires_reboot": false,
+      "undo": "manual-steps",
+      "gui_only_reason": "In-game setting"
+    }
   },
   {
     "id": "fn-rendering-performance-mode",
@@ -986,7 +1247,14 @@
     "conflicts_with": [
       "fn-tsr-vs-dlss"
     ],
-    "measurable": true
+    "measurable": true,
+    "apply": {
+      "method": "gui-only",
+      "operations": [],
+      "requires_reboot": false,
+      "undo": "manual-steps",
+      "gui_only_reason": "In-game setting"
+    }
   },
   {
     "id": "fn-reflex-on-boost",
@@ -1008,7 +1276,14 @@
     "rollback": "Stessa impostazione → Off.",
     "manual_steps": "Fortnite → Impostazioni → Video → Grafica avanzata → NVIDIA Reflex Low Latency → On (o On+Boost se la GPU non è mai il collo di bottiglia).",
     "conflicts_with": [],
-    "measurable": false
+    "measurable": false,
+    "apply": {
+      "method": "gui-only",
+      "operations": [],
+      "requires_reboot": false,
+      "undo": "manual-steps",
+      "gui_only_reason": "In-game setting"
+    }
   },
   {
     "id": "fn-reflex-vs-ullm-no-stack",
@@ -1029,7 +1304,14 @@
     "rollback": "Pannello NVIDIA → Modalità bassa latenza → valore precedente.",
     "manual_steps": "Nel gioco: Reflex On. Nel pannello NVIDIA, per Fortnite: Modalità bassa latenza → lasciare il default (il gioco ha Reflex, la gestisce lui).",
     "conflicts_with": [],
-    "measurable": false
+    "measurable": false,
+    "apply": {
+      "method": "gui-only",
+      "operations": [],
+      "requires_reboot": false,
+      "undo": "manual-steps",
+      "gui_only_reason": "In-game setting"
+    }
   },
   {
     "id": "fn-frame-cap-vs-unlimited",
@@ -1051,7 +1333,14 @@
     "rollback": "Impostazioni → Video → Limite frame rate → valore precedente.",
     "manual_steps": "Con G-SYNC + Reflex On: limite in-game su Unlimited o sul refresh (Reflex cappa da solo sotto il refresh). Senza VRR: prova entrambe e misura con wpep bench quale dà frametime più stabili.",
     "conflicts_with": [],
-    "measurable": true
+    "measurable": true,
+    "apply": {
+      "method": "gui-only",
+      "operations": [],
+      "requires_reboot": false,
+      "undo": "manual-steps",
+      "gui_only_reason": "In-game setting"
+    }
   },
   {
     "id": "fn-vsync-off",
@@ -1071,7 +1360,14 @@
     "rollback": "Stessa impostazione → On.",
     "manual_steps": "Fortnite → Impostazioni → Video → V-Sync → Off. Con G-SYNC: VSync On nel PANNELLO driver (non in-game) per la combo a latenza minima senza tearing.",
     "conflicts_with": [],
-    "measurable": false
+    "measurable": false,
+    "apply": {
+      "method": "gui-only",
+      "operations": [],
+      "requires_reboot": false,
+      "undo": "manual-steps",
+      "gui_only_reason": "In-game setting"
+    }
   },
   {
     "id": "fn-nanite-lumen-off",
@@ -1092,7 +1388,14 @@
     "conflicts_with": [
       "fn-rendering-performance-mode"
     ],
-    "measurable": true
+    "measurable": true,
+    "apply": {
+      "method": "gui-only",
+      "operations": [],
+      "requires_reboot": false,
+      "undo": "manual-steps",
+      "gui_only_reason": "In-game setting"
+    }
   },
   {
     "id": "fn-multithreaded-rendering",
@@ -1111,7 +1414,14 @@
     "rollback": "Stessa impostazione → Off.",
     "manual_steps": "Impostazioni → Video → Grafica avanzata → Rendering multithread → On (verifica che non sia stato disattivato da config esterne).",
     "conflicts_with": [],
-    "measurable": true
+    "measurable": true,
+    "apply": {
+      "method": "gui-only",
+      "operations": [],
+      "requires_reboot": false,
+      "undo": "manual-steps",
+      "gui_only_reason": "In-game setting"
+    }
   },
   {
     "id": "fn-tsr-vs-dlss",
@@ -1134,7 +1444,14 @@
     "conflicts_with": [
       "fn-rendering-performance-mode"
     ],
-    "measurable": true
+    "measurable": true,
+    "apply": {
+      "method": "gui-only",
+      "operations": [],
+      "requires_reboot": false,
+      "undo": "manual-steps",
+      "gui_only_reason": "In-game setting"
+    }
   },
   {
     "id": "fn-shader-warmup-before-judging",
@@ -1153,6 +1470,13 @@
     "rollback": "n/a (regola di metodo, non modifica).",
     "manual_steps": "Dopo patch/driver/rendering mode nuovi: 5-10 minuti di gioco di warm-up prima di qualsiasi run di benchmark; la prima run dopo il cambio va scartata (wpep bench lo ricorda).",
     "conflicts_with": [],
-    "measurable": false
+    "measurable": false,
+    "apply": {
+      "method": "gui-only",
+      "operations": [],
+      "requires_reboot": false,
+      "undo": "manual-steps",
+      "gui_only_reason": "In-game setting"
+    }
   }
 ]

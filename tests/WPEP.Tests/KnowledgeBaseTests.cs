@@ -66,6 +66,41 @@ public class KnowledgeBaseTests
     }
 
     [Fact]
+    public void ShippedKb_ApplySpecsAreCoherent()
+    {
+        var entries = KnowledgeBaseLoader.Load(KbPath); // validator runs at load
+        var withApply = entries.Where(e => e.Apply is not null).ToArray();
+        Assert.True(withApply.Length >= 30, $"attese >=30 voci con apply, trovate {withApply.Length}");
+        Assert.Contains(withApply, e => e.Apply!.Method == "registry");
+        Assert.Contains(withApply, e => e.Apply!.Method == "gui-only");
+    }
+
+    [Fact]
+    public void Validator_ProgrammaticApplyOnPlacebo_IsRejected()
+    {
+        var entry = ValidEntry() with
+        {
+            EvidenceLevel = EvidenceLevel.Placebo,
+            Sources = [],
+            Apply = new ApplySpec
+            {
+                Method = "registry",
+                Operations = [new ApplyOperation { Path = @"HKCU\X" }],
+            },
+        };
+        var problems = KnowledgeBaseValidator.Validate([entry]);
+        Assert.Contains(problems, p => p.Contains("placebo"));
+    }
+
+    [Fact]
+    public void Validator_GuiOnlyWithoutReason_IsRejected()
+    {
+        var entry = ValidEntry() with { Apply = new ApplySpec { Method = "gui-only" } };
+        var problems = KnowledgeBaseValidator.Validate([entry]);
+        Assert.Contains(problems, p => p.Contains("gui_only_reason"));
+    }
+
+    [Fact]
     public void Validator_DuplicateIds_AreRejected()
     {
         var problems = KnowledgeBaseValidator.Validate([ValidEntry(), ValidEntry()]);

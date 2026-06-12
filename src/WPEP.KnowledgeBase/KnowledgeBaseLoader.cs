@@ -59,6 +59,20 @@ public static class KnowledgeBaseValidator
                 problems.Add($"{e.Id}: rollback mancante.");
             if (e.Risk is RiskLevel.Medium or RiskLevel.High && string.IsNullOrWhiteSpace(e.RiskNotes))
                 problems.Add($"{e.Id}: risk={e.Risk} richiede risk_notes.");
+
+            // V2 prep: apply specs must be coherent even before the engine exists.
+            if (e.Apply is { } apply)
+            {
+                string[] methods = ["registry", "powercfg", "bcdedit", "service", "gui-only"];
+                if (!methods.Contains(apply.Method))
+                    problems.Add($"{e.Id}: apply.method '{apply.Method}' non valido.");
+                if (apply.Method == "gui-only" && string.IsNullOrWhiteSpace(apply.GuiOnlyReason))
+                    problems.Add($"{e.Id}: apply gui-only richiede gui_only_reason.");
+                if (apply.Method != "gui-only" && apply.Operations.Count == 0)
+                    problems.Add($"{e.Id}: apply.{apply.Method} senza operations.");
+                if (e.EvidenceLevel == EvidenceLevel.Placebo && apply.Method != "gui-only")
+                    problems.Add($"{e.Id}: un placebo non può avere apply programmatico (che senso avrebbe?).");
+            }
         }
 
         foreach (var e in entries)
