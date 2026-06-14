@@ -82,6 +82,20 @@ Nessun computer-use, nessuna apertura app, solo build/test/commit.
   e disabilita Undo se già annullato.
 - **Report**: include le modifiche applicate (journaled, non annullate).
 
+### 5. Open settings deep-links (commit 8a69eac)
+- ApplySpec.SettingsUri (nuovo campo): ms-settings:/control panel URI per voci gui-only.
+- 8 voci gui-only collegate (gaming-gamebar, display-advancedgraphics, mousetouchpad,
+  windowsdefender, network-ethernet, visualeffects, startupapps, ecc.).
+- UI: voci gui-only con URI mostrano "Open settings" (apre la pagina, NON scrive).
+  ExecutionService.OpenSettings via ShellExecute. DA RIVEDERE: alcune URI control-panel
+  (services.msc, SystemPropertiesPerformance.exe) — verificare che aprano la pagina giusta.
+- Verificato sul campo: power-plan apply+undo funziona (journal: BXTool→High Perf verified,
+  poi undo → schema attivo di nuovo BXTool Gaming Profile Unpark). Engine certificato
+  per registry E powercfg su macchina reale.
+- NOTA DEPLOY: a fine sessione artifacts/app è STALE perché l'app di Léon era APERTA
+  (PID lock). Source committato e test verdi; publish verificato pulito in cartella temp.
+  Va ripubblicato in artifacts/app quando l'app è chiusa.
+
 ## Stato a fine sessione Opus (2026-06-14)
 - `dotnet test`: **110/110 verdi**. `dotnet build WPEP.sln -c Release`: 0 errori.
 - KB: 66 voci (19 forti, 17 plausibili, 14 controverse, 10 placebo, 6 risky);
