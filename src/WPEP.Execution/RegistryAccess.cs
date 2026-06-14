@@ -1,8 +1,50 @@
+using System.Diagnostics;
 using Microsoft.Win32;
 
 namespace WPEP.Execution;
 
 public sealed record RegistryValue(bool Exists, string Kind, string? Value);
+
+/// <summary>Power-scheme access (powercfg). Abstracted so the engine stays
+/// testable without changing the machine's active power plan.</summary>
+public interface IPowerCfg
+{
+    /// <summary>Active power scheme GUID, lowercase.</summary>
+    string GetActiveScheme();
+    void SetActiveScheme(string guid);
+}
+
+public sealed class RealPowerCfg : IPowerCfg
+{
+    public string GetActiveScheme()
+    {
+        string output = Run("/getactivescheme");
+        var match = System.Text.RegularExpressions.Regex.Match(
+            output, @"([0-9a-fA-F]{8}-[0-9a-fA-F-]{27})");
+        return match.Success ? match.Groups[1].Value.ToLowerInvariant()
+            : throw new InvalidOperationException("Impossibile leggere lo schema attivo.");
+    }
+
+    public void SetActiveScheme(string guid) => Run($"/setactive {guid}");
+
+    private static string Run(string args)
+    {
+        var psi = new ProcessStartInfo("powercfg", args)
+        {
+            UseShellExecute = false,
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+            CreateNoWindow = true,
+        };
+        using var p = Process.Start(psi)!;
+        string output = p.StandardOutput.ReadToEnd();
+        string err = p.StandardError.ReadToEnd();
+        p.WaitForExit(10000);
+        if (p.ExitCode != 0)
+            throw new InvalidOperationException($"powercfg {args} fallito: {err.Trim()}");
+        return output;
+    }
+}
 
 /// <summary>Abstraction so the engine is testable without touching the real
 /// registry. Paths are "HKCU\Key\Sub\ValueName" / "HKLM\…".</summary>

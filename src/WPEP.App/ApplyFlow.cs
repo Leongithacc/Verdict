@@ -14,7 +14,8 @@ public sealed class ExecutionService
         new(new RealRegistryAccess(), ExecutionEngine.DefaultJournalDirectory);
 
     public bool CanApply(TweakEntry entry) =>
-        entry.Apply is { Method: "registry" } && entry.EvidenceLevel != EvidenceLevel.Placebo;
+        entry.Apply is { Method: "registry" or "powercfg" } &&
+        entry.EvidenceLevel != EvidenceLevel.Placebo;
 
     public bool NeedsAdmin(TweakEntry entry) =>
         entry.Apply?.Operations.Any(o =>

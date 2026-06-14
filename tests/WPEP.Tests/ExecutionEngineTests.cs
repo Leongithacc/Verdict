@@ -26,6 +26,14 @@ file sealed class FakeRegistry : IRegistryAccess
     public void Delete(string path) => Data.Remove(path);
 }
 
+/// <summary>In-memory power scheme: never touches the real active plan.</summary>
+file sealed class FakePowerCfg : IPowerCfg
+{
+    public string Active = "381b4222-f694-41f0-9685-ff5bb260df2e"; // Balanced
+    public string GetActiveScheme() => Active;
+    public void SetActiveScheme(string guid) => Active = guid.ToLowerInvariant();
+}
+
 public class ExecutionEngineTests : IDisposable
 {
     private readonly string _journalDir =
@@ -71,8 +79,30 @@ public class ExecutionEngineTests : IDisposable
 
         var plan = engine.BuildPlan(Entry());
 
-        Assert.Equal("1", plan.Operations[0].Before.Value);
-        Assert.False(plan.Operations[1].Before.Exists); // ValueB not set
+        Assert.Equal("1", plan.Operations[0].Before);
+        Assert.False(plan.Operations[1].ExistedBefore); // ValueB not set
+    }
+
+    [Fact]
+    public void PowerCfg_Apply_SwitchesSchemeAndJournals()
+    {
+        var power = new FakePowerCfg();
+        var engine = new ExecutionEngine(new FakeRegistry(), _journalDir, power);
+        var entry = Entry(apply: new ApplySpec
+        {
+            Method = "powercfg",
+            Operations = [new ApplyOperation
+                { Path = "active-scheme", ValueAfter = "8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c", Kind = "powercfg" }],
+        });
+
+        var plan = engine.BuildPlan(entry);
+        Assert.Equal("381b4222-f694-41f0-9685-ff5bb260df2e", plan.Operations[0].Before);
+
+        var file = engine.Execute(plan);
+        Assert.Equal("8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c", power.Active);
+
+        engine.Undo(file);
+        Assert.Equal("381b4222-f694-41f0-9685-ff5bb260df2e", power.Active); // restored
     }
 
     [Fact]

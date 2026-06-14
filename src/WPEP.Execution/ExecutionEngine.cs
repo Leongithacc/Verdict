@@ -5,19 +5,20 @@ using WPEP.KnowledgeBase;
 namespace WPEP.Execution;
 
 public sealed record PlannedOperation(
-    string Path, string Kind, RegistryValue Before, string After);
+    string Path, string Kind, bool ExistedBefore, string? Before, string After);
 
 public sealed record ExecutionPlan(
     string TweakId, string TweakName, string Method, bool RequiresReboot,
     string RiskNotes, IReadOnlyList<PlannedOperation> Operations)
 {
     public string Describe() => string.Join("\n", Operations.Select(o =>
-        $"  {o.Path}\n    before: {(o.Before.Exists ? o.Before.Value : "<not set>")}  →  after: {o.After}"));
+        $"  {o.Path}\n    before: {(o.ExistedBefore ? o.Before : "<not set>")}  →  after: {o.After}"));
 }
 
 public sealed class JournalEntry
 {
     public required string TweakId { get; set; }
+    public required string Method { get; set; }
     public required string Path { get; set; }
     public required string Kind { get; set; }
     public bool ExistedBefore { get; set; }
@@ -39,9 +40,13 @@ public sealed class JournalSession
 /// The V2 execution engine, EXECUTION_ENGINE_V2 principles enforced in code:
 /// only KB apply specs, dry-run plan with live before-values, journal-before-write,
 /// verify-after-write, stop on any incoherence, per-entry undo in reverse order.
+/// Supports registry and powercfg methods (bcdedit/service: TODO).
 /// </summary>
-public sealed class ExecutionEngine(IRegistryAccess registry, string journalDirectory)
+public sealed class ExecutionEngine(
+    IRegistryAccess registry, string journalDirectory, IPowerCfg? powerCfg = null)
 {
+    private readonly IPowerCfg _powerCfg = powerCfg ?? new RealPowerCfg();
+
     public static string DefaultJournalDirectory =>
         System.IO.Path.Combine(AppContext.BaseDirectory, "data", "journal");
 
@@ -54,22 +59,34 @@ public sealed class ExecutionEngine(IRegistryAccess registry, string journalDire
                 $"{entry.Id} si applica solo a mano: {entry.Apply?.GuiOnlyReason ?? "nessuna apply spec"}.");
         if (entry.EvidenceLevel == EvidenceLevel.Placebo)
             throw new InvalidOperationException("I placebo non si applicano. Che senso avrebbe?");
-        if (apply.Method != "registry")
-            throw new NotSupportedException(
-                $"Metodo '{apply.Method}' non ancora supportato dall'engine (solo registry in questa build).");
 
-        var ops = apply.Operations.Select(op => new PlannedOperation(
-            op.Path, op.Kind, registry.Read(op.Path),
-            op.ValueAfter ?? throw new InvalidOperationException($"{entry.Id}: value_after mancante")))
-            .ToList();
+        var ops = apply.Method switch
+        {
+            "registry" => apply.Operations.Select(op =>
+            {
+                var cur = registry.Read(op.Path);
+                return new PlannedOperation(op.Path, op.Kind, cur.Exists, cur.Value,
+                    op.ValueAfter ?? throw new InvalidOperationException($"{entry.Id}: value_after mancante"));
+            }).ToList(),
+
+            "powercfg" => apply.Operations.Select(op =>
+            {
+                string current = _powerCfg.GetActiveScheme();
+                string target = (op.ValueAfter ?? throw new InvalidOperationException(
+                    $"{entry.Id}: value_after (GUID schema) mancante")).ToLowerInvariant();
+                return new PlannedOperation("Active power scheme", "powercfg", true, current, target);
+            }).ToList(),
+
+            _ => throw new NotSupportedException(
+                $"Metodo '{apply.Method}' non ancora supportato dall'engine (registry e powercfg in questa build)."),
+        };
 
         return new ExecutionPlan(entry.Id, entry.Name, apply.Method,
             apply.RequiresReboot, entry.RiskNotes, ops);
     }
 
     /// <summary>Applies a plan: journal first, write, verify by re-reading.
-    /// Any mismatch stops the session immediately — never continue on an
-    /// uncertain state. Returns the journal file path.</summary>
+    /// Any mismatch stops the session immediately.</summary>
     public string Execute(ExecutionPlan plan)
     {
         var session = new JournalSession
@@ -86,26 +103,25 @@ public sealed class ExecutionEngine(IRegistryAccess registry, string journalDire
             var entry = new JournalEntry
             {
                 TweakId = plan.TweakId,
+                Method = plan.Method,
                 Path = op.Path,
                 Kind = op.Kind,
-                ExistedBefore = op.Before.Exists,
-                ValueBefore = op.Before.Value,
+                ExistedBefore = op.ExistedBefore,
+                ValueBefore = op.Before,
                 ValueAfter = op.After,
                 AppliedAtUtc = DateTimeOffset.UtcNow,
             };
             session.Entries.Add(entry);
             Save(file, session); // journal BEFORE the write
 
-            registry.Write(op.Path, op.Kind, op.After);
-
-            var check = registry.Read(op.Path);
-            entry.Verified = check.Exists && check.Value == op.After;
+            string actual = ApplyOne(plan.Method, op.Path, op.Kind, op.After);
+            entry.Verified = actual == op.After;
             Save(file, session);
 
             if (!entry.Verified)
                 throw new InvalidOperationException(
                     $"VERIFY FALLITA su {op.Path}: scritto '{op.After}', riletto " +
-                    $"'{check.Value ?? "<niente>"}'. Sessione fermata, journal: {file}");
+                    $"'{actual}'. Sessione fermata, journal: {file}");
         }
 
         return file;
@@ -124,16 +140,21 @@ public sealed class ExecutionEngine(IRegistryAccess registry, string journalDire
         {
             if (entry.Undone)
                 continue;
-            if (entry.ExistedBefore)
+            switch (entry.Method)
             {
-                registry.Write(entry.Path, entry.Kind, entry.ValueBefore!);
-                var check = registry.Read(entry.Path);
-                if (check.Value != entry.ValueBefore)
-                    throw new InvalidOperationException($"Undo VERIFY fallita su {entry.Path}.");
-            }
-            else
-            {
-                registry.Delete(entry.Path);
+                case "registry" when entry.ExistedBefore:
+                    registry.Write(entry.Path, entry.Kind, entry.ValueBefore!);
+                    if (registry.Read(entry.Path).Value != entry.ValueBefore)
+                        throw new InvalidOperationException($"Undo VERIFY fallita su {entry.Path}.");
+                    break;
+                case "registry":
+                    registry.Delete(entry.Path);
+                    break;
+                case "powercfg":
+                    _powerCfg.SetActiveScheme(entry.ValueBefore!);
+                    if (_powerCfg.GetActiveScheme() != entry.ValueBefore)
+                        throw new InvalidOperationException("Undo VERIFY fallita sullo schema energetico.");
+                    break;
             }
             entry.Undone = true;
             restored++;
@@ -147,13 +168,28 @@ public sealed class ExecutionEngine(IRegistryAccess registry, string journalDire
             ? [.. System.IO.Directory.EnumerateFiles(journalDirectory, "session-*.json").Order()]
             : [];
 
+    /// <summary>Performs one write and returns the re-read value for verification.</summary>
+    private string ApplyOne(string method, string path, string kind, string after)
+    {
+        switch (method)
+        {
+            case "registry":
+                registry.Write(path, kind, after);
+                return registry.Read(path).Value ?? "<niente>";
+            case "powercfg":
+                _powerCfg.SetActiveScheme(after);
+                return _powerCfg.GetActiveScheme();
+            default:
+                throw new NotSupportedException($"Metodo '{method}' non eseguibile.");
+        }
+    }
+
     private static void Save(string file, JournalSession session) =>
         System.IO.File.WriteAllText(file, JsonSerializer.Serialize(session,
             new JsonSerializerOptions { WriteIndented = true }));
 
     /// <summary>Belt-and-braces: a System Restore checkpoint before writing.
-    /// Best effort — requires admin and System Restore enabled; Windows also
-    /// rate-limits checkpoints. The journal remains the primary undo.</summary>
+    /// Best effort — requires admin and System Restore enabled.</summary>
     private static bool TryCreateRestorePoint(string description)
     {
         try
