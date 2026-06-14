@@ -47,6 +47,28 @@ verify-after-write, undo reversibile. Placebo non applicabili by design.
 - Engine: solo registry per ora. powercfg (power plan) e service mode: TODO.
 - Restore point: best-effort, non bloccante se fallisce (il journal è l'undo primario).
 
+### 2. Apply flow nella UI (commit 0452351)
+- `src/WPEP.App/ApplyFlow.cs`: ExecutionService (wrap engine), ApplyDialogViewModel
+  (dry-run + consent), ChangesViewModel (lista journal + undo).
+- VerdictItem ora porta la TweakEntry e ha ApplyCommand (visibile solo se CanApply =
+  registry method + non placebo). Bottone Apply accanto a How to.
+- Dialog overlay: mostra l'operazione esatta before→after, risk text se rischioso,
+  blocco admin se HKLM e non elevato. NIENTE scrittura finché l'utente non preme "Apply now".
+- Pagina "Changes" (nuova voce sidebar): ogni sessione journaled, Undo per riga.
+- RelayCommand<T> generico aggiunto a Infrastructure.cs.
+- **Verificato visivamente da Opus** (computer-use): dialog renderizza corretto su
+  Game DVR (`HKCU\...\AppCaptureEnabled before:1 → after:0`). NON applicato (scrittura
+  reale = decisione dell'utente in chat). Léon farà lui il primo Apply vero.
+
+### 3. Fix falso positivo managed-device (commit 0452351)
+- Bug era nel probe di Fable (commit precedente): contava le chiavi placeholder
+  `Enrollments\*` con EnrollmentState=1 che OGNI Windows ha → banner "company-managed"
+  sul desktop personale di Léon. Verificato live: zero DiscoveryServiceFullURL/UPN/dominio.
+  Fix: richiedere URL server MDM o UPN reale. Ora IsManagedDevice=False sul suo PC.
+
 ## Stato test/build a fine sessione Opus
-- `dotnet test`: vedi ultimo commit (target: tutti verdi).
-- Nessuna modifica ai moduli core di misura/statistica di Fable se non additiva.
+- `dotnet test`: 109/109 verdi.
+- Nessuna modifica distruttiva ai moduli core di Fable; engine è progetto nuovo,
+  apply flow è additivo, il fix managed-device è una correzione di robustezza.
+- DA RIVEDERE da Fable con priorità: tutto WPEP.Execution (scrive sul registry) e
+  le apply-spec in tweaks.json (9 operazioni, path/valori da ri-controllare uno a uno).
