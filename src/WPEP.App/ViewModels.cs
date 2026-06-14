@@ -402,8 +402,9 @@ public sealed class ReportViewModel(MainViewModel main) : ViewModelBase
                 var kb = KnowledgeBaseLoader.Load();
                 var recommendations = AdvisorEngine.Advise(snapshot, kb);
                 var (noise, comparison) = LoadLatestWizardSession();
+                var applied = LoadAppliedChanges();
                 var html = Reporting.ReportBuilder.BuildHtml(new Reporting.ReportData(
-                    DateTimeOffset.UtcNow, snapshot, recommendations, noise, comparison));
+                    DateTimeOffset.UtcNow, snapshot, recommendations, noise, comparison, applied));
 
                 var dir = Path.Combine(AppContext.BaseDirectory, "reports");
                 Directory.CreateDirectory(dir);
@@ -463,6 +464,31 @@ public sealed class ReportViewModel(MainViewModel main) : ViewModelBase
         catch
         {
             return (null, null);
+        }
+    }
+
+    /// <summary>Currently-active applied changes from the journal (not undone),
+    /// so the report honestly shows what Verdict changed on this system.</summary>
+    private IReadOnlyList<string>? LoadAppliedChanges()
+    {
+        try
+        {
+            var lines = new List<string>();
+            foreach (var file in main.Execution.Sessions())
+            {
+                var session = System.Text.Json.JsonSerializer
+                    .Deserialize<Execution.JournalSession>(File.ReadAllText(file));
+                foreach (var e in session?.Entries ?? [])
+                {
+                    if (!e.Undone && e.Verified)
+                        lines.Add($"{e.TweakId}: {e.Path} = {e.ValueAfter} (was {(e.ExistedBefore ? e.ValueBefore : "not set")})");
+                }
+            }
+            return lines.Count > 0 ? lines : null;
+        }
+        catch
+        {
+            return null;
         }
     }
 }

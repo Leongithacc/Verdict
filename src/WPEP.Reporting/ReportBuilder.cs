@@ -10,7 +10,8 @@ public sealed record ReportData(
     SystemSnapshot Snapshot,
     IReadOnlyList<Recommendation> Recommendations,
     NoiseFloorAnalyzer.NoiseReport? Noise,
-    ComparisonEngine.ComparisonReport? Comparison);
+    ComparisonEngine.ComparisonReport? Comparison,
+    IReadOnlyList<string>? AppliedChanges = null);
 
 /// <summary>
 /// Renders the honest report (spec §3G): system snapshot, advisor verdicts
@@ -69,6 +70,15 @@ public static class ReportBuilder
         Row(sb, "Power plan", Esc(s.PowerPlanName));
         Row(sb, "Rete attiva", s.ActiveNicIsWifi switch { true => "Wi-Fi", false => "cablata", null => "sconosciuta" });
         sb.Append("</table></div>");
+
+        // — Applied changes (V2 execution) —
+        if (data.AppliedChanges is { Count: > 0 } changes)
+        {
+            sb.Append("<h2>Changes applied by Verdict</h2><div class=\"panel\"><table>");
+            foreach (var c in changes)
+                sb.Append($"<tr><td><code>{Esc(c)}</code></td></tr>");
+            sb.Append("</table><p class=\"dim\">Every change above is journaled and reversible from the Changes page.</p></div>");
+        }
 
         // — Advisor —
         sb.Append("<h2>Advisor</h2>");

@@ -1596,5 +1596,57 @@
       "undo": "manual-steps",
       "gui_only_reason": "In-game / launch-option setting"
     }
+  },
+  {
+    "id": "laptop-dgpu-preference",
+    "name": "Laptop: forza la GPU dedicata per il gioco (per-app GPU preference)",
+    "category": "gpu",
+    "description": "Su laptop con GPU ibrida (iGPU + dGPU), Windows può far girare un gioco sulla iGPU debole se il routing automatico sbaglia. La pagina Grafica di Windows 11 (documentata da Microsoft) permette di assegnare 'Prestazioni elevate' a un eseguibile, forzando la GPU dedicata. Sui desktop con una sola GPU è irrilevante; sui laptop può fare una differenza enorme.",
+    "hardware_prerequisites": [],
+    "expected_impact": "Su laptop dove il gioco girava per errore sulla iGPU: guadagno enorme. Dove la dGPU è già usata (caso normale): nessun cambiamento. Le preferenze si valutano all'avvio dell'app, non in tempo reale.",
+    "evidence_level": "plausible",
+    "sources": [
+      "https://devblogs.microsoft.com/directx/navigating-the-redesigned-graphics-settings-page/"
+    ],
+    "risk": "none",
+    "risk_notes": "",
+    "rollback": "Stessa pagina → l'app → Opzioni → 'Lascia decidere a Windows'.",
+    "manual_steps": "Impostazioni → Sistema → Schermo → Grafica → aggiungi l'eseguibile del gioco (Sfoglia) → Opzioni → Prestazioni elevate → Salva. Chiudi e riavvia il gioco.",
+    "conflicts_with": [],
+    "measurable": true,
+    "apply": {
+      "method": "gui-only",
+      "operations": [],
+      "requires_reboot": false,
+      "undo": "manual-steps",
+      "gui_only_reason": "Windows Settings / Graphics page"
+    }
+  },
+  {
+    "id": "win11-variable-refresh-rate",
+    "name": "Windows 11: Variable Refresh Rate (impostazione di sistema)",
+    "category": "gpu",
+    "description": "Toggle di Windows 11 (separato dal G-SYNC/FreeSync del pannello driver) che abilita il VRR per i giochi DirectX in finestra/borderless che non lo avrebbero nativamente. Documentato da Microsoft come riduzione di tearing e stutter su display compatibili. Complementare, non alternativo, a G-SYNC.",
+    "hardware_prerequisites": [
+      "monitor:high-refresh"
+    ],
+    "expected_impact": "Su monitor VRR: meno tearing/stutter nei giochi in finestra che altrimenti non userebbero il refresh variabile. Nessun lato negativo se il monitor lo supporta.",
+    "evidence_level": "evidence_strong",
+    "sources": [
+      "https://devblogs.microsoft.com/directx/variable-refresh-rate-windows/"
+    ],
+    "risk": "none",
+    "risk_notes": "",
+    "rollback": "Stessa impostazione → Disattivato.",
+    "manual_steps": "Impostazioni → Sistema → Schermo → Grafica → Modifica impostazioni grafiche predefinite → Frequenza di aggiornamento variabile → Attivato.",
+    "conflicts_with": [],
+    "measurable": true,
+    "apply": {
+      "method": "gui-only",
+      "operations": [],
+      "requires_reboot": false,
+      "undo": "manual-steps",
+      "gui_only_reason": "Windows Settings / Graphics page"
+    }
   }
 ]
