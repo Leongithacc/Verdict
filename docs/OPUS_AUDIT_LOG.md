@@ -96,10 +96,19 @@ Nessun computer-use, nessuna apertura app, solo build/test/commit.
   (PID lock). Source committato e test verdi; publish verificato pulito in cartella temp.
   Va ripubblicato in artifacts/app quando l'app è chiusa.
 
+### 6. powercfg-value executor (commit c6d81be)
+- IPowerCfg esteso: QuerySettingIndex / SetSettingIndex (AC+DC su SCHEME_CURRENT + re-apply).
+- Engine: metodo "powercfg-value", path = "subgroupGuid/settingGuid", value = indice.
+- KB: core-parking (CPMINCORES=100) e usb-selective-suspend (USB_SUSPEND=0) ora applicabili.
+  Validator esteso col nuovo metodo. FakePowerCfg con dict valori nei test.
+- DA RIVEDERE: RealPowerCfg.QuerySettingIndex parsing "Current AC Power Setting Index: 0xNN";
+  SetSettingIndex modifica lo schema ATTIVO (sul PC di Léon = BXTool Gaming Profile Unpark).
+  GUID subgroup/setting (SUB_PROCESSOR/CPMINCORES, SUB_USB/USB_SUSPEND) da verificare.
+
 ## Stato a fine sessione Opus (2026-06-14)
-- `dotnet test`: **110/110 verdi**. `dotnet build WPEP.sln -c Release`: 0 errori.
-- KB: 66 voci (19 forti, 17 plausibili, 14 controverse, 10 placebo, 6 risky);
-  8 applicabili one-click (registry+powercfg), il resto gui-only (onesto: BIOS/in-game).
+- `dotnet test`: **112/112 verdi**. `dotnet build WPEP.sln -c Release`: 0 errori.
+- KB: 66 voci; **10 applicabili one-click** (registry+powercfg+powercfg-value),
+  8 gui-only con deep-link "Open settings", il resto gui-only puro (BIOS/in-game).
 - Nessuna modifica distruttiva ai moduli core di Fable; engine/apply/detection sono additivi.
 - DA RIVEDERE da Fable con PRIORITÀ: tutto WPEP.Execution (scrive su registry+powercfg),
   le 9 apply-spec registry + 1 powercfg in tweaks.json (path/valori uno a uno),
