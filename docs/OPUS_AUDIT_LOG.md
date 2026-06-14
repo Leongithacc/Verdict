@@ -66,9 +66,27 @@ verify-after-write, undo reversibile. Placebo non applicabili by design.
   sul desktop personale di Léon. Verificato live: zero DiscoveryServiceFullURL/UPN/dominio.
   Fix: richiedere URL server MDM o UPN reale. Ora IsManagedDevice=False sul suo PC.
 
-## Stato test/build a fine sessione Opus
-- `dotnet test`: 109/109 verdi.
-- Nessuna modifica distruttiva ai moduli core di Fable; engine è progetto nuovo,
-  apply flow è additivo, il fix managed-device è una correzione di robustezza.
-- DA RIVEDERE da Fable con priorità: tutto WPEP.Execution (scrive sul registry) e
-  le apply-spec in tweaks.json (9 operazioni, path/valori da ri-controllare uno a uno).
+### 4. Sessione autonoma 2026-06-14 (Léon gioca, Opus lavora senza toccare il PC)
+Nessun computer-use, nessuna apertura app, solo build/test/commit.
+- **powercfg executor**: power-plan-high-performance ora applicabile one-click.
+  Engine generalizzato per metodo (PlannedOperation/JournalEntry portano `Method`).
+  IPowerCfg astratto, FakePowerCfg nei test (mai schema reale). DA RIVEDERE: RealPowerCfg
+  lancia powercfg /setactive — controllare il parsing del GUID e l'undo.
+- **KB 64→66**: Valorant (Raw Input Buffer/Reflex, fonti Riot+NVIDIA), CS2 (mito
+  -tickrate placebo via sub-tick Valve, fps cap VRR), laptop per-app dGPU + Windows VRR
+  (fonti MS DirectX blog). Tutte gui-only tranne le esistenti. DA RIVEDERE: gli URL fonte
+  (alcuni potrebbero richiedere verifica, es. devblogs VRR).
+- **Rilevamento giochi**: Valorant (metadata Riot) + CS2 (appmanifest_730 Steam) oltre
+  Fortnite; sezioni per-gioco nascoste se assente. Verificato live: tutti e 3 =True sul PC.
+- **Changes page**: ora mostra le operazioni di ogni sessione (path, before→after, stato)
+  e disabilita Undo se già annullato.
+- **Report**: include le modifiche applicate (journaled, non annullate).
+
+## Stato a fine sessione Opus (2026-06-14)
+- `dotnet test`: **110/110 verdi**. `dotnet build WPEP.sln -c Release`: 0 errori.
+- KB: 66 voci (19 forti, 17 plausibili, 14 controverse, 10 placebo, 6 risky);
+  8 applicabili one-click (registry+powercfg), il resto gui-only (onesto: BIOS/in-game).
+- Nessuna modifica distruttiva ai moduli core di Fable; engine/apply/detection sono additivi.
+- DA RIVEDERE da Fable con PRIORITÀ: tutto WPEP.Execution (scrive su registry+powercfg),
+  le 9 apply-spec registry + 1 powercfg in tweaks.json (path/valori uno a uno),
+  i probe di rilevamento giochi (path Riot/Steam), gli URL fonte delle voci KB nuove.
