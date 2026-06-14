@@ -218,7 +218,21 @@
     "conflicts_with": [
       "power-plan-high-performance"
     ],
-    "measurable": true
+    "measurable": true,
+    "apply": {
+      "method": "powercfg-value",
+      "operations": [
+        {
+          "path": "54533251-82be-4824-96c1-47b60b740d00/0cc5b647-c1df-4637-891a-dec35c318583",
+          "value_after": "100",
+          "verify": "powercfg /query SCHEME_CURRENT",
+          "kind": "powercfg-value"
+        }
+      ],
+      "requires_reboot": false,
+      "undo": "auto-journal",
+      "gui_only_reason": null
+    }
   },
   {
     "id": "disable-dynamic-tick",
@@ -928,7 +942,21 @@
     "rollback": "Stessa impostazione → Attivato.",
     "manual_steps": "Opzioni risparmio energia → Modifica impostazioni piano → Impostazioni avanzate → Impostazioni USB → Sospensione selettiva USB → Disattivato.",
     "conflicts_with": [],
-    "measurable": false
+    "measurable": false,
+    "apply": {
+      "method": "powercfg-value",
+      "operations": [
+        {
+          "path": "2a737441-1930-4402-8d77-b2bebba308a3/48e6b7a6-50f5-4782-a5d4-53bb8f07e226",
+          "value_after": "0",
+          "verify": "powercfg /query SCHEME_CURRENT",
+          "kind": "powercfg-value"
+        }
+      ],
+      "requires_reboot": false,
+      "undo": "auto-journal",
+      "gui_only_reason": null
+    }
   },
   {
     "id": "win11-windowed-optimizations",

@@ -77,6 +77,16 @@ public sealed class ExecutionEngine(
                 return new PlannedOperation("Active power scheme", "powercfg", true, current, target);
             }).ToList(),
 
+            "powercfg-value" => apply.Operations.Select(op =>
+            {
+                var (subgroup, setting) = SplitPowerPath(op.Path);
+                int current = _powerCfg.QuerySettingIndex(subgroup, setting);
+                string target = op.ValueAfter ?? throw new InvalidOperationException(
+                    $"{entry.Id}: value_after (indice) mancante");
+                return new PlannedOperation(op.Path, "powercfg-value", true,
+                    current.ToString(), target);
+            }).ToList(),
+
             _ => throw new NotSupportedException(
                 $"Metodo '{apply.Method}' non ancora supportato dall'engine (registry e powercfg in questa build)."),
         };
@@ -155,6 +165,12 @@ public sealed class ExecutionEngine(
                     if (_powerCfg.GetActiveScheme() != entry.ValueBefore)
                         throw new InvalidOperationException("Undo VERIFY fallita sullo schema energetico.");
                     break;
+                case "powercfg-value":
+                    var (sg, st) = SplitPowerPath(entry.Path);
+                    _powerCfg.SetSettingIndex(sg, st, int.Parse(entry.ValueBefore!));
+                    if (_powerCfg.QuerySettingIndex(sg, st).ToString() != entry.ValueBefore)
+                        throw new InvalidOperationException($"Undo VERIFY fallita su {entry.Path}.");
+                    break;
             }
             entry.Undone = true;
             restored++;
@@ -179,9 +195,22 @@ public sealed class ExecutionEngine(
             case "powercfg":
                 _powerCfg.SetActiveScheme(after);
                 return _powerCfg.GetActiveScheme();
+            case "powercfg-value":
+                var (subgroup, setting) = SplitPowerPath(path);
+                _powerCfg.SetSettingIndex(subgroup, setting, int.Parse(after));
+                return _powerCfg.QuerySettingIndex(subgroup, setting).ToString();
             default:
                 throw new NotSupportedException($"Metodo '{method}' non eseguibile.");
         }
+    }
+
+    /// <summary>Power-setting path is "subgroupGuid/settingGuid".</summary>
+    private static (string subgroup, string setting) SplitPowerPath(string path)
+    {
+        var parts = path.Split('/');
+        if (parts.Length != 2)
+            throw new InvalidOperationException($"Path powercfg-value non valido: {path}");
+        return (parts[0], parts[1]);
     }
 
     private static void Save(string file, JournalSession session) =>

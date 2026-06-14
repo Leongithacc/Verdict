@@ -30,8 +30,13 @@ file sealed class FakeRegistry : IRegistryAccess
 file sealed class FakePowerCfg : IPowerCfg
 {
     public string Active = "381b4222-f694-41f0-9685-ff5bb260df2e"; // Balanced
+    public readonly Dictionary<string, int> Values = new();
     public string GetActiveScheme() => Active;
     public void SetActiveScheme(string guid) => Active = guid.ToLowerInvariant();
+    public int QuerySettingIndex(string subgroup, string setting) =>
+        Values.TryGetValue($"{subgroup}/{setting}", out var v) ? v : 0;
+    public void SetSettingIndex(string subgroup, string setting, int index) =>
+        Values[$"{subgroup}/{setting}"] = index;
 }
 
 public class ExecutionEngineTests : IDisposable
@@ -150,6 +155,29 @@ public class ExecutionEngineTests : IDisposable
         Assert.Contains("VERIFY", ex.Message);
         // The journal still recorded the attempt: nothing is lost.
         Assert.Single(ExecutionEngine.ListSessions(_journalDir));
+    }
+
+    [Fact]
+    public void PowerCfgValue_Apply_SetsIndexAndUndoRestores()
+    {
+        var power = new FakePowerCfg();
+        power.Values["sub/setting"] = 0; // current: parking allowed
+        var engine = new ExecutionEngine(new FakeRegistry(), _journalDir, power);
+        var entry = Entry(apply: new ApplySpec
+        {
+            Method = "powercfg-value",
+            Operations = [new ApplyOperation
+                { Path = "sub/setting", ValueAfter = "100", Kind = "powercfg-value" }],
+        });
+
+        var plan = engine.BuildPlan(entry);
+        Assert.Equal("0", plan.Operations[0].Before);
+
+        var file = engine.Execute(plan);
+        Assert.Equal(100, power.Values["sub/setting"]); // applied
+
+        engine.Undo(file);
+        Assert.Equal(0, power.Values["sub/setting"]); // restored
     }
 
     [Fact]

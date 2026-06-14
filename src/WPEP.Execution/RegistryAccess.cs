@@ -12,6 +12,11 @@ public interface IPowerCfg
     /// <summary>Active power scheme GUID, lowercase.</summary>
     string GetActiveScheme();
     void SetActiveScheme(string guid);
+
+    /// <summary>Current AC value index of a setting on the active scheme.</summary>
+    int QuerySettingIndex(string subgroup, string setting);
+    /// <summary>Sets a setting's AC+DC index on the active scheme and applies it.</summary>
+    void SetSettingIndex(string subgroup, string setting, int index);
 }
 
 public sealed class RealPowerCfg : IPowerCfg
@@ -26,6 +31,24 @@ public sealed class RealPowerCfg : IPowerCfg
     }
 
     public void SetActiveScheme(string guid) => Run($"/setactive {guid}");
+
+    public int QuerySettingIndex(string subgroup, string setting)
+    {
+        string output = Run($"/query SCHEME_CURRENT {subgroup} {setting}");
+        var match = System.Text.RegularExpressions.Regex.Match(
+            output, @"Current AC Power Setting Index:\s*0x([0-9a-fA-F]+)");
+        return match.Success
+            ? Convert.ToInt32(match.Groups[1].Value, 16)
+            : throw new InvalidOperationException(
+                $"Impossibile leggere il valore di {subgroup}/{setting}.");
+    }
+
+    public void SetSettingIndex(string subgroup, string setting, int index)
+    {
+        Run($"/setacvalueindex SCHEME_CURRENT {subgroup} {setting} {index}");
+        Run($"/setdcvalueindex SCHEME_CURRENT {subgroup} {setting} {index}");
+        Run("/setactive SCHEME_CURRENT"); // re-apply so the change takes effect
+    }
 
     private static string Run(string args)
     {
