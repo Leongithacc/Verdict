@@ -134,7 +134,7 @@ public sealed class ApplyDialogViewModel : ViewModelBase
     }
 }
 
-public sealed record ChangeSession(string File, string Display);
+public sealed record ChangeSession(string File, string Display, string Detail, bool AllUndone);
 
 /// <summary>The Changes page: every journaled apply, undoable in reverse.</summary>
 public sealed class ChangesViewModel : ViewModelBase
@@ -156,8 +156,31 @@ public sealed class ChangesViewModel : ViewModelBase
     {
         Sessions.Clear();
         foreach (var file in _exec.Sessions().Reverse())
-            Sessions.Add(new ChangeSession(file, Path.GetFileNameWithoutExtension(file)));
+            Sessions.Add(Describe(file));
         Raise(nameof(IsEmpty));
+    }
+
+    private static ChangeSession Describe(string file)
+    {
+        // Show exactly what each session changed; degrade gracefully if unreadable.
+        try
+        {
+            var session = System.Text.Json.JsonSerializer.Deserialize<WPEP.Execution.JournalSession>(
+                File.ReadAllText(file));
+            if (session is { Entries.Count: > 0 })
+            {
+                string tweak = session.Entries[0].TweakId;
+                var lines = session.Entries.Select(e =>
+                    $"  {e.Path}: {(e.ExistedBefore ? e.ValueBefore : "<not set>")} → {e.ValueAfter}" +
+                    (e.Undone ? "  [undone]" : e.Verified ? "  [applied]" : "  [failed]"));
+                bool allUndone = session.Entries.All(e => e.Undone);
+                string when = session.StartedAtUtc.ToLocalTime().ToString("yyyy-MM-dd HH:mm");
+                return new ChangeSession(file, $"{tweak} · {when}",
+                    string.Join("\n", lines), allUndone);
+            }
+        }
+        catch { /* fall through to filename-only */ }
+        return new ChangeSession(file, Path.GetFileNameWithoutExtension(file), "", false);
     }
 
     public RelayCommand<ChangeSession> UndoCommand => new(session =>

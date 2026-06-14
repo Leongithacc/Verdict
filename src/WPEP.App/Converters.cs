@@ -37,6 +37,12 @@ public sealed class BoolToVisibilityConverter : IValueConverter
         throw new NotSupportedException();
 }
 
+public sealed class InverseBoolConverter : IValueConverter
+{
+    public object Convert(object? value, Type _, object? __, CultureInfo ___) => value is not true;
+    public object ConvertBack(object? v, Type t, object? p, CultureInfo c) => v is not true;
+}
+
 public sealed class NullToVisibilityConverter : IValueConverter
 {
     public object Convert(object? value, Type _, object? __, CultureInfo ___) =>

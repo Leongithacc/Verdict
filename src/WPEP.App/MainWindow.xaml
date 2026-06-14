@@ -10,6 +10,7 @@
     <local:TokenBrushConverter x:Key="TokenBrush" />
     <local:BoolToVisibilityConverter x:Key="BoolToVis" />
     <local:BoolToVisibilityConverter x:Key="BoolToVisInverted" Invert="True" />
+    <local:InverseBoolConverter x:Key="InverseBool" />
     <local:NullToVisibilityConverter x:Key="NullToVis" />
 
     <!-- ============ VERDICT ============ -->
@@ -357,9 +358,13 @@
                   <Button DockPanel.Dock="Right" Style="{StaticResource GhostButton}" Content="Undo"
                           Command="{Binding DataContext.UndoCommand,
                                     RelativeSource={RelativeSource AncestorType=ItemsControl}}"
-                          CommandParameter="{Binding}" VerticalAlignment="Center" />
-                  <TextBlock Style="{StaticResource Mono}" Text="{Binding Display}"
-                             VerticalAlignment="Center" />
+                          CommandParameter="{Binding}" VerticalAlignment="Top"
+                          IsEnabled="{Binding AllUndone, Converter={StaticResource InverseBool}}" />
+                  <StackPanel>
+                    <TextBlock Style="{StaticResource Body}" Text="{Binding Display}" />
+                    <TextBlock Style="{StaticResource Mono}" FontSize="11" Margin="0,4,0,0"
+                               Foreground="{DynamicResource TextMuted}" Text="{Binding Detail}" />
+                  </StackPanel>
                 </DockPanel>
               </Border>
             </DataTemplate>
