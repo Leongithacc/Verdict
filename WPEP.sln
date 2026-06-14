@@ -22,6 +22,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WPEP.Reporting", "src\WPEP.
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WPEP.App", "src\WPEP.App\WPEP.App.csproj", "{A1000000-0000-0000-0000-00000000000B}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WPEP.Execution", "src\WPEP.Execution\WPEP.Execution.csproj", "{A1000000-0000-0000-0000-00000000000C}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -72,5 +74,9 @@ Global
 		{A1000000-0000-0000-0000-00000000000B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A1000000-0000-0000-0000-00000000000B}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A1000000-0000-0000-0000-00000000000B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A1000000-0000-0000-0000-00000000000C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A1000000-0000-0000-0000-00000000000C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A1000000-0000-0000-0000-00000000000C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A1000000-0000-0000-0000-00000000000C}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

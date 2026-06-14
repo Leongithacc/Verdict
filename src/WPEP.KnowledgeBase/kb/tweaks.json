@@ -56,17 +56,20 @@
         {
           "path": "HKCU\\Control Panel\\Mouse\\MouseSpeed",
           "value_after": "0",
-          "verify": "0"
+          "verify": "0",
+          "kind": "string"
         },
         {
           "path": "HKCU\\Control Panel\\Mouse\\MouseThreshold1",
           "value_after": "0",
-          "verify": "0"
+          "verify": "0",
+          "kind": "string"
         },
         {
           "path": "HKCU\\Control Panel\\Mouse\\MouseThreshold2",
           "value_after": "0",
-          "verify": "0"
+          "verify": "0",
+          "kind": "string"
         }
       ],
       "requires_reboot": false,
@@ -291,7 +294,8 @@
         {
           "path": "HKCU\\Software\\Microsoft\\GameBar\\AutoGameModeEnabled",
           "value_after": "1",
-          "verify": "1"
+          "verify": "1",
+          "kind": "dword"
         }
       ],
       "requires_reboot": false,
@@ -340,7 +344,8 @@
         {
           "path": "HKLM\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Multimedia\\SystemProfile\\SystemResponsiveness",
           "value_after": "0",
-          "verify": "0"
+          "verify": "0",
+          "kind": "dword"
         }
       ],
       "requires_reboot": true,
@@ -614,7 +619,8 @@
         {
           "path": "HKCU\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\GameDVR\\AppCaptureEnabled",
           "value_after": "0",
-          "verify": "0"
+          "verify": "0",
+          "kind": "dword"
         }
       ],
       "requires_reboot": false,
@@ -698,7 +704,8 @@
         {
           "path": "HKLM\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Multimedia\\SystemProfile\\NetworkThrottlingIndex",
           "value_after": "4294967295",
-          "verify": "4294967295"
+          "verify": "4294967295",
+          "kind": "dword"
         }
       ],
       "requires_reboot": true,
@@ -748,7 +755,8 @@
         {
           "path": "HKLM\\SOFTWARE\\Microsoft\\Windows\\Dwm\\OverlayTestMode",
           "value_after": "5",
-          "verify": "5"
+          "verify": "5",
+          "kind": "dword"
         }
       ],
       "requires_reboot": true,
@@ -779,7 +787,8 @@
         {
           "path": "HKLM\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Power\\HiberbootEnabled",
           "value_after": "0",
-          "verify": "0"
+          "verify": "0",
+          "kind": "dword"
         }
       ],
       "requires_reboot": false,

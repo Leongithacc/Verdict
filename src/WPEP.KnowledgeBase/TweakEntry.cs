@@ -64,4 +64,6 @@ public sealed record ApplyOperation
     [JsonPropertyName("path")] public required string Path { get; init; }
     [JsonPropertyName("value_after")] public string? ValueAfter { get; init; }
     [JsonPropertyName("verify")] public string? Verify { get; init; }
+    /// <summary>Registry value kind: "dword" (default) or "string".</summary>
+    [JsonPropertyName("kind")] public string Kind { get; init; } = "dword";
 }
