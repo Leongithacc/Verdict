@@ -96,14 +96,18 @@ public sealed class VerdictItem
         StateNote = stateNote;
         HowToCommand = new(() => main.ShowKbEntry(entry.Id));
         ApplyCommand = new(() => main.ApplyDialog.Open(entry));
+        OpenSettingsCommand = new(() => ExecutionService.OpenSettings(_entry.Apply!.SettingsUri!));
     }
 
     public string Id => _entry.Id;
     public string Name => _entry.Name;
     public string StateNote { get; }
     public bool CanApply => _main.Execution.CanApply(_entry);
+    // Show "Open settings" only for gui-only tweaks (applicable ones get Apply).
+    public bool CanOpenSettings => !CanApply && _entry.Apply?.SettingsUri is not null;
     public RelayCommand HowToCommand { get; }
     public RelayCommand ApplyCommand { get; }
+    public RelayCommand OpenSettingsCommand { get; }
 }
 
 public sealed class VerdictGroup(string label, string badgeColorKey)

@@ -57,6 +57,11 @@ public sealed record ApplySpec
     [JsonPropertyName("requires_reboot")] public bool RequiresReboot { get; init; }
     [JsonPropertyName("undo")] public string Undo { get; init; } = "auto-journal";
     [JsonPropertyName("gui_only_reason")] public string? GuiOnlyReason { get; init; }
+
+    /// <summary>Deep-link to the relevant Windows page (ms-settings: URI or
+    /// control-panel command) for gui-only tweaks. Opening a settings page is
+    /// navigation, not a system write — Verdict stays read-only.</summary>
+    [JsonPropertyName("settings_uri")] public string? SettingsUri { get; init; }
 }
 
 public sealed record ApplyOperation

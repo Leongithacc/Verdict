@@ -85,6 +85,10 @@
                               <Button Style="{StaticResource GhostButton}" Content="How to"
                                       Padding="10,4" FontSize="12" Margin="8,0,0,0"
                                       Command="{Binding HowToCommand}" />
+                              <Button Style="{StaticResource GhostButton}" Content="Open settings"
+                                      Padding="10,4" FontSize="12" Margin="6,0,0,0"
+                                      Command="{Binding OpenSettingsCommand}"
+                                      Visibility="{Binding CanOpenSettings, Converter={StaticResource BoolToVis}}" />
                               <Button Style="{StaticResource PrimaryButton}" Content="Apply"
                                       Padding="12,4" FontSize="12" Margin="6,0,0,0"
                                       Command="{Binding ApplyCommand}"

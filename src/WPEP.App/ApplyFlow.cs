@@ -29,6 +29,18 @@ public sealed class ExecutionService
         ExecutionEngine.ListSessions(ExecutionEngine.DefaultJournalDirectory);
 
     public static bool IsElevated => Elevation.IsElevated();
+
+    /// <summary>Opens a Windows settings page / control panel for a gui-only
+    /// tweak. Navigation only — never a system write.</summary>
+    public static void OpenSettings(string uri)
+    {
+        try
+        {
+            System.Diagnostics.Process.Start(
+                new System.Diagnostics.ProcessStartInfo(uri) { UseShellExecute = true });
+        }
+        catch { /* a missing page must never crash the app */ }
+    }
 }
 
 /// <summary>The dry-run consent + result dialog (EXECUTION_ENGINE_V2 §2). Shows

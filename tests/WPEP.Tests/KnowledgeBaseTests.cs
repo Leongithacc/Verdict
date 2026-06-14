@@ -101,6 +101,22 @@ public class KnowledgeBaseTests
     }
 
     [Fact]
+    public void ShippedKb_SettingsDeepLinks_AreOnGuiOnlyEntriesAndWellFormed()
+    {
+        var entries = KnowledgeBaseLoader.Load(KbPath);
+        var withUri = entries.Where(e => e.Apply?.SettingsUri is not null).ToArray();
+        Assert.True(withUri.Length >= 6, $"attesi >=6 deep-link, trovati {withUri.Length}");
+        string[] allowedPrefixes =
+            ["ms-settings:", "windowsdefender:", "control", "services.msc", "SystemProperties"];
+        foreach (var e in withUri)
+        {
+            Assert.Equal("gui-only", e.Apply!.Method); // applicable ones don't need a deep-link
+            Assert.True(allowedPrefixes.Any(p => e.Apply.SettingsUri!.StartsWith(p)),
+                $"{e.Id}: URI inattesa '{e.Apply.SettingsUri}'");
+        }
+    }
+
+    [Fact]
     public void Validator_DuplicateIds_AreRejected()
     {
         var problems = KnowledgeBaseValidator.Validate([ValidEntry(), ValidEntry()]);

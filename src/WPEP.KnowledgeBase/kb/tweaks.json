@@ -100,7 +100,8 @@
       "operations": [],
       "requires_reboot": false,
       "undo": "manual-steps",
-      "gui_only_reason": "Multiple third-party apps"
+      "gui_only_reason": "Multiple third-party apps",
+      "settings_uri": "ms-settings:gaming-gamebar"
     }
   },
   {
@@ -378,7 +379,8 @@
       "operations": [],
       "requires_reboot": false,
       "undo": "manual-steps",
-      "gui_only_reason": "Display settings + in-game cap"
+      "gui_only_reason": "Display settings + in-game cap",
+      "settings_uri": "ms-settings:display-advanced"
     }
   },
   {
@@ -594,7 +596,8 @@
       "operations": [],
       "requires_reboot": false,
       "undo": "manual-steps",
-      "gui_only_reason": "Physical cable change"
+      "gui_only_reason": "Physical cable change",
+      "settings_uri": "ms-settings:network-ethernet"
     }
   },
   {
@@ -651,7 +654,8 @@
       "operations": [],
       "requires_reboot": false,
       "undo": "manual-steps",
-      "gui_only_reason": "User must choose which entries to disable"
+      "gui_only_reason": "User must choose which entries to disable",
+      "settings_uri": "ms-settings:startupapps"
     }
   },
   {
@@ -950,7 +954,8 @@
       "operations": [],
       "requires_reboot": false,
       "undo": "manual-steps",
-      "gui_only_reason": "Windows graphics settings page"
+      "gui_only_reason": "Windows graphics settings page",
+      "settings_uri": "ms-settings:display-advancedgraphics"
     }
   },
   {
@@ -1156,7 +1161,8 @@
       "operations": [],
       "requires_reboot": false,
       "undo": "manual-steps",
-      "gui_only_reason": "Peripheral vendor software"
+      "gui_only_reason": "Peripheral vendor software",
+      "settings_uri": "ms-settings:mousetouchpad"
     }
   },
   {
@@ -1619,7 +1625,8 @@
       "operations": [],
       "requires_reboot": false,
       "undo": "manual-steps",
-      "gui_only_reason": "Windows Settings / Graphics page"
+      "gui_only_reason": "Windows Settings / Graphics page",
+      "settings_uri": "ms-settings:display-advancedgraphics"
     }
   },
   {
@@ -1646,7 +1653,8 @@
       "operations": [],
       "requires_reboot": false,
       "undo": "manual-steps",
-      "gui_only_reason": "Windows Settings / Graphics page"
+      "gui_only_reason": "Windows Settings / Graphics page",
+      "settings_uri": "ms-settings:display-advancedgraphics"
     }
   }
 ]
