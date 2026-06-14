@@ -1488,5 +1488,113 @@
       "undo": "manual-steps",
       "gui_only_reason": "In-game setting"
     }
+  },
+  {
+    "id": "val-raw-input-buffer",
+    "name": "Valorant: Raw Input Buffer",
+    "category": "input",
+    "game": "valorant",
+    "description": "Feature ufficiale Riot (patch 3.07): cambia le API usate per processare il raw input del mouse. Le note ufficiali sono oneste: 'minor performance improvement and identical input latency' con mouse standard, 'major performance improvement' solo con mouse a 8000Hz. Quasi tutti i pro la tengono ON, ma per un mouse normale il guadagno è minimo.",
+    "hardware_prerequisites": [],
+    "expected_impact": "Con mouse standard/1000Hz: miglioramento minimo, latenza identica (parole di Riot). Con mouse 8000Hz: guadagno reale di performance. Nessun lato negativo noto.",
+    "evidence_level": "plausible",
+    "sources": [
+      "https://playvalorant.com/en-us/news/game-updates/valorant-patch-notes-3-07/"
+    ],
+    "risk": "none",
+    "risk_notes": "",
+    "rollback": "Stessa impostazione → Off.",
+    "manual_steps": "Valorant → Impostazioni → CONTROLLI → scorri fino a [BETA] Raw Input Buffer → On.",
+    "conflicts_with": [],
+    "measurable": false,
+    "apply": {
+      "method": "gui-only",
+      "operations": [],
+      "requires_reboot": false,
+      "undo": "manual-steps",
+      "gui_only_reason": "In-game / launch-option setting"
+    }
+  },
+  {
+    "id": "val-reflex-on",
+    "name": "Valorant: NVIDIA Reflex On",
+    "category": "gpu",
+    "game": "valorant",
+    "description": "Reflex riduce la latenza di sistema documentata da NVIDIA del 20-50% in Valorant allineando il lavoro del game engine al rendering. Su driver RTX 40/50 recenti richiede HAGS attivo per funzionare al meglio.",
+    "hardware_prerequisites": [
+      "gpu:nvidia"
+    ],
+    "expected_impact": "Riduzione di latenza documentata dal vendor, più evidente quando GPU-bound (raro in Valorant, gioco leggero). La migliore opzione di latenza disponibile nel gioco.",
+    "evidence_level": "evidence_strong",
+    "sources": [
+      "https://www.nvidia.com/en-us/geforce/news/reflex-low-latency-apex-legends-valorant-fortnite-cs2/"
+    ],
+    "risk": "none",
+    "risk_notes": "",
+    "rollback": "Stessa impostazione → Off.",
+    "manual_steps": "Valorant → Impostazioni → Video → Generale → NVIDIA Reflex Low Latency → On (o On + Boost).",
+    "conflicts_with": [],
+    "measurable": false,
+    "apply": {
+      "method": "gui-only",
+      "operations": [],
+      "requires_reboot": false,
+      "undo": "manual-steps",
+      "gui_only_reason": "In-game / launch-option setting"
+    }
+  },
+  {
+    "id": "cs2-tickrate-launch-myth",
+    "name": "CS2: il mito di '-tickrate 128' nelle launch options",
+    "category": "network",
+    "game": "cs2",
+    "description": "Mito ereditato da CS:GO. CS2 usa un'architettura sub-tick: i server ufficiali girano a 64 tick MA ogni input è registrato col timestamp esatto al millisecondo, indipendentemente dal tick. La launch option '-tickrate 128' non cambia i server matchmaking (gestiti da Valve) e non ha effetto sull'esperienza competitiva: è retaggio di un sistema che CS2 ha superato.",
+    "hardware_prerequisites": [],
+    "expected_impact": "Nessuno sui server ufficiali. Il sub-tick rende molto più piccolo il vantaggio del 128 tick rispetto a CS:GO. Launch option inutile per il matchmaking.",
+    "evidence_level": "placebo",
+    "sources": [
+      "https://www.counter-strike.net/news/update"
+    ],
+    "risk": "none",
+    "risk_notes": "",
+    "rollback": "Rimuovere '-tickrate 128' dalle opzioni di avvio.",
+    "manual_steps": "Non serve. CS2 usa sub-tick: la precisione degli input non dipende dal tickrate del server. Se l'hai messa, puoi toglierla senza perdere nulla.",
+    "conflicts_with": [],
+    "measurable": false,
+    "apply": {
+      "method": "gui-only",
+      "operations": [],
+      "requires_reboot": false,
+      "undo": "manual-steps",
+      "gui_only_reason": "In-game / launch-option setting"
+    }
+  },
+  {
+    "id": "cs2-fps-cap-vrr",
+    "name": "CS2: fps_max con G-SYNC/VRR",
+    "category": "gpu",
+    "game": "cs2",
+    "description": "Stessa logica di latenza del cap frame rate negli altri titoli: con monitor VRR, un cap pochi FPS sotto il refresh (o Reflex) evita il backpressure del VSync e tiene la latenza bassa senza tearing. Senza VRR, molti pro lasciano fps_max alto/illimitato per la latenza minima accettando il tearing. Dipende dal setup — voce 'configura in base al tuo monitor'.",
+    "hardware_prerequisites": [
+      "monitor:high-refresh"
+    ],
+    "expected_impact": "Con G-SYNC: frame pacing stabile e latenza contenuta col cap corretto. Senza VRR: uncapped per latenza minima. Da decidere in base al monitor, misurabile con wpep bench.",
+    "evidence_level": "controversial",
+    "sources": [
+      "https://www.nvidia.com/en-us/geforce/guides/gfecnt/202010/system-latency-optimization-guide/"
+    ],
+    "risk": "none",
+    "risk_notes": "",
+    "rollback": "Console: fps_max 0 (illimitato) o valore precedente.",
+    "manual_steps": "Con G-SYNC + Reflex: cap ~3-5 FPS sotto il refresh (console: fps_max <valore>, es. 235 per un 240Hz). Senza VRR: fps_max 0 e prova entrambi con wpep bench.",
+    "conflicts_with": [],
+    "measurable": true,
+    "apply": {
+      "method": "gui-only",
+      "operations": [],
+      "requires_reboot": false,
+      "undo": "manual-steps",
+      "gui_only_reason": "In-game / launch-option setting"
+    }
   }
 ]

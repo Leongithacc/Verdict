@@ -196,7 +196,7 @@ public sealed class VerdictViewModel(MainViewModel main) : ViewModelBase
         {
             // Hide a game's section only when we KNOW it is not installed;
             // detection failure (null) keeps it visible — honest default.
-            if (gameGroup.Key == "fortnite" && snapshot.FortniteInstalled == false)
+            if (snapshot.GameInstalled(gameGroup.Key) == false)
                 continue;
             var group = new VerdictGroup($"Game-specific — {gameGroup.Key}", "Accent");
             foreach (var r in gameGroup.OrderBy(r => r.Entry.EvidenceLevel))

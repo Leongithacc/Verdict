@@ -64,4 +64,15 @@ public sealed record SystemSnapshot
     /// <summary>Null = detection failed (show game sections anyway, honestly).
     /// False = definitely not installed (hide that game's KB section).</summary>
     public bool? FortniteInstalled { get; init; }
+    public bool? ValorantInstalled { get; init; }
+    public bool? Cs2Installed { get; init; }
+
+    /// <summary>Maps a KB entry's `game` key to its detection result.</summary>
+    public bool? GameInstalled(string game) => game switch
+    {
+        "fortnite" => FortniteInstalled,
+        "valorant" => ValorantInstalled,
+        "cs2" => Cs2Installed,
+        _ => null,
+    };
 }

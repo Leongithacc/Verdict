@@ -637,7 +637,7 @@ static int RunAdvise()
 
     foreach (var gameGroup in gameSpecific.GroupBy(r => r.Entry.Game!))
     {
-        if (gameGroup.Key == "fortnite" && snapshot.FortniteInstalled == false)
+        if (snapshot.GameInstalled(gameGroup.Key) == false)
         {
             Console.WriteLine($"(voci {gameGroup.Key} nascoste: gioco non rilevato su questo PC — 'wpep kb' per vederle)\n");
             continue;

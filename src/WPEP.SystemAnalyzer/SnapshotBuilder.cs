@@ -64,7 +64,45 @@ public static class SnapshotBuilder
             CpuTempC = Probe(ReadCpuTempAcpi, (double?)null),
             CpuLoadPercent = Probe(ReadCpuLoadPercent, (int?)null),
             FortniteInstalled = Probe(ReadFortniteInstalled, (bool?)null),
+            ValorantInstalled = Probe(ReadValorantInstalled, (bool?)null),
+            Cs2Installed = Probe(ReadCs2Installed, (bool?)null),
         };
+    }
+
+    /// <summary>Riot writes per-product metadata here for every installed Riot game.</summary>
+    private static bool? ReadValorantInstalled()
+    {
+        var metadata = Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData),
+            "Riot Games", "Metadata");
+        if (!Directory.Exists(metadata))
+            return false;
+        return Directory.EnumerateDirectories(metadata, "valorant*").Any();
+    }
+
+    /// <summary>CS2 is Steam app 730. Check the manifest in the main Steam library
+    /// and any extra libraries listed in libraryfolders.vdf.</summary>
+    private static bool? ReadCs2Installed()
+    {
+        using var key = Registry.CurrentUser.OpenSubKey(@"Software\Valve\Steam");
+        if (key?.GetValue("SteamPath") is not string steamPath || steamPath.Length == 0)
+            return null;
+        steamPath = steamPath.Replace('/', '\\');
+
+        var libraries = new List<string> { steamPath };
+        var vdf = Path.Combine(steamPath, "steamapps", "libraryfolders.vdf");
+        if (File.Exists(vdf))
+        {
+            foreach (System.Text.RegularExpressions.Match m in
+                     System.Text.RegularExpressions.Regex.Matches(
+                         File.ReadAllText(vdf), "\"path\"\\s*\"([^\"]+)\""))
+            {
+                libraries.Add(m.Groups[1].Value.Replace("\\\\", "\\"));
+            }
+        }
+
+        return libraries.Any(lib =>
+            File.Exists(Path.Combine(lib, "steamapps", "appmanifest_730.acf")));
     }
 
     /// <summary>Epic Games Launcher keeps one .item manifest per installed
