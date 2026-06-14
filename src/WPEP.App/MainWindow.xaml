@@ -80,9 +80,15 @@
                             </StackPanel>
                             <TextBlock Grid.Column="1" Style="{StaticResource Muted}"
                                        Text="{Binding StateNote}" VerticalAlignment="Center" Margin="16,0,0,0" />
-                            <Button Grid.Column="2" Style="{StaticResource GhostButton}" Content="How to"
-                                    Padding="10,4" FontSize="12" VerticalAlignment="Center" Margin="8,0,0,0"
-                                    Command="{Binding HowToCommand}" />
+                            <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+                              <Button Style="{StaticResource GhostButton}" Content="How to"
+                                      Padding="10,4" FontSize="12" Margin="8,0,0,0"
+                                      Command="{Binding HowToCommand}" />
+                              <Button Style="{StaticResource PrimaryButton}" Content="Apply"
+                                      Padding="12,4" FontSize="12" Margin="6,0,0,0"
+                                      Command="{Binding ApplyCommand}"
+                                      Visibility="{Binding CanApply, Converter={StaticResource BoolToVis}}" />
+                            </StackPanel>
                           </Grid>
                         </DataTemplate>
                       </ItemsControl.ItemTemplate>
@@ -332,6 +338,37 @@
       </StackPanel>
     </DataTemplate>
 
+    <!-- ============ CHANGES (undo journal) ============ -->
+    <DataTemplate DataType="{x:Type local:ChangesViewModel}">
+      <StackPanel Margin="32,24" MaxWidth="820" HorizontalAlignment="Left">
+        <TextBlock Style="{StaticResource H1}" Text="Changes" />
+        <TextBlock Style="{StaticResource Muted}" Margin="0,4,0,16"
+                   Text="Every change Verdict applied, newest first. Each is journaled and reversible — undo restores the exact previous value." />
+        <Border Style="{StaticResource Card}" Padding="20"
+                Visibility="{Binding IsEmpty, Converter={StaticResource BoolToVis}}">
+          <TextBlock Style="{StaticResource Muted}"
+                     Text="No changes applied yet. Verdict has written nothing to your system." />
+        </Border>
+        <ItemsControl ItemsSource="{Binding Sessions}">
+          <ItemsControl.ItemTemplate>
+            <DataTemplate>
+              <Border Style="{StaticResource Card}" Margin="0,0,0,8" Padding="16,12">
+                <DockPanel>
+                  <Button DockPanel.Dock="Right" Style="{StaticResource GhostButton}" Content="Undo"
+                          Command="{Binding DataContext.UndoCommand,
+                                    RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                          CommandParameter="{Binding}" VerticalAlignment="Center" />
+                  <TextBlock Style="{StaticResource Mono}" Text="{Binding Display}"
+                             VerticalAlignment="Center" />
+                </DockPanel>
+              </Border>
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+        <TextBlock Style="{StaticResource Muted}" Text="{Binding Status}" Margin="0,8,0,0" />
+      </StackPanel>
+    </DataTemplate>
+
     <!-- ============ SETTINGS ============ -->
     <DataTemplate DataType="{x:Type local:SettingsViewModel}">
       <ScrollViewer VerticalScrollBarVisibility="Auto">
@@ -404,6 +441,8 @@
                          Checked="OnNavKb" />
             <RadioButton x:Name="NavReport" Style="{StaticResource NavButton}" Content="Report"
                          Checked="OnNavReport" />
+            <RadioButton x:Name="NavChanges" Style="{StaticResource NavButton}" Content="Changes"
+                         Checked="OnNavChanges" />
             <RadioButton x:Name="NavSettings" Style="{StaticResource NavButton}" Content="Settings"
                          Checked="OnNavSettings" />
           </StackPanel>
@@ -431,6 +470,45 @@
                   HorizontalAlignment="Left" Command="{Binding StartFirstScanCommand}" />
           <TextBlock Style="{StaticResource Muted}" FontSize="11" Margin="0,8,0,0"
                      Text="The scan is read-only and needs no administrator." />
+        </StackPanel>
+      </Border>
+    </Grid>
+
+    <!-- Apply dry-run dialog (EXECUTION_ENGINE_V2 §2): exact before→after, consent first. -->
+    <Grid Background="#E00F0F14"
+          Visibility="{Binding ApplyDialog.IsOpen, Converter={StaticResource BoolToVis}}">
+      <Border Style="{StaticResource Card}" MaxWidth="640" VerticalAlignment="Center"
+              HorizontalAlignment="Center" Padding="28" DataContext="{Binding ApplyDialog}">
+        <StackPanel>
+          <TextBlock Style="{StaticResource H2}" Text="{Binding Title}" />
+          <TextBlock Style="{StaticResource Muted}" Margin="0,4,0,0"
+                     Text="Dry run — exactly what will change. Verdict reads the current value, writes the new one, then re-reads to verify. Nothing happens until you confirm." />
+
+          <Border Background="{DynamicResource Surface2}" CornerRadius="6" Padding="14" Margin="0,12,0,0">
+            <TextBlock Style="{StaticResource Mono}" FontSize="12" Text="{Binding PlanText}" TextWrapping="Wrap" />
+          </Border>
+
+          <Border Background="#33F87171" CornerRadius="6" Padding="14" Margin="0,12,0,0"
+                  Visibility="{Binding IsRisky, Converter={StaticResource BoolToVis}}">
+            <StackPanel>
+              <TextBlock Style="{StaticResource Body}" Foreground="{DynamicResource Danger}"
+                         Text="Risk — read before applying:" />
+              <TextBlock Style="{StaticResource Body}" Text="{Binding RiskText}" Margin="0,4,0,0" />
+            </StackPanel>
+          </Border>
+
+          <TextBlock Style="{StaticResource Muted}" Text="{Binding Status}" Margin="0,12,0,0" TextWrapping="Wrap" />
+
+          <StackPanel Orientation="Horizontal" Margin="0,16,0,0">
+            <Button Style="{StaticResource PrimaryButton}" Content="Apply now"
+                    Command="{Binding ConfirmCommand}"
+                    Visibility="{Binding Applied, Converter={StaticResource BoolToVisInverted}}" />
+            <Button Style="{StaticResource PrimaryButton}" Content="Relaunch as administrator"
+                    Command="{Binding RelaunchAsAdminCommand}" Margin="0,0,8,0"
+                    Visibility="{Binding AdminBlocked, Converter={StaticResource BoolToVis}}" />
+            <Button Style="{StaticResource GhostButton}" Content="Close"
+                    Command="{Binding CancelCommand}" Margin="8,0,0,0" />
+          </StackPanel>
         </StackPanel>
       </Border>
     </Grid>

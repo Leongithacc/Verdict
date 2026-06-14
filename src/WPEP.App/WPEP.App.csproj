@@ -16,5 +16,6 @@
     <ProjectReference Include="..\WPEP.Benchmark\WPEP.Benchmark.csproj" />
     <ProjectReference Include="..\WPEP.Statistics\WPEP.Statistics.csproj" />
     <ProjectReference Include="..\WPEP.Reporting\WPEP.Reporting.csproj" />
+    <ProjectReference Include="..\WPEP.Execution\WPEP.Execution.csproj" />
   </ItemGroup>
 </Project>

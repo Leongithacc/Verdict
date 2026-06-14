@@ -19,12 +19,15 @@ public sealed class MainViewModel : ViewModelBase
     private bool _showWelcome;
 
     public AppSettings Settings { get; }
+    public ExecutionService Execution { get; } = new();
     public VerdictViewModel Verdict { get; }
     public MeasureWizardViewModel Measure { get; }
     public DiagnosticsViewModel Diagnostics { get; }
     public KbViewModel Kb { get; }
     public ReportViewModel Report { get; }
+    public ChangesViewModel Changes { get; }
     public SettingsViewModel SettingsPage { get; }
+    public ApplyDialogViewModel ApplyDialog { get; }
 
     public ViewModelBase CurrentPage { get => _currentPage; set => Set(ref _currentPage, value); }
     public string TerminalLine { get => _terminalLine; set => Set(ref _terminalLine, value); }
@@ -45,7 +48,9 @@ public sealed class MainViewModel : ViewModelBase
         Diagnostics = new DiagnosticsViewModel(this);
         Kb = new KbViewModel();
         Report = new ReportViewModel(this);
+        Changes = new ChangesViewModel(Execution);
         SettingsPage = new SettingsViewModel(Settings);
+        ApplyDialog = new ApplyDialogViewModel(this, Execution);
         _currentPage = Verdict;
 
         StartFirstScanCommand = new(() =>
@@ -70,6 +75,7 @@ public sealed class MainViewModel : ViewModelBase
     public void ShowKbEntry(string id)
     {
         Kb.Filter = "All";
+        Kb.SearchText = "";
         Kb.Selected = Kb.Entries.FirstOrDefault(e =>
             e.Id.Equals(id, StringComparison.OrdinalIgnoreCase));
         CurrentPage = Kb;
@@ -78,12 +84,26 @@ public sealed class MainViewModel : ViewModelBase
 
 // ============================== VERDICT ==============================
 
-public sealed class VerdictItem(string id, string name, string stateNote, MainViewModel main)
+public sealed class VerdictItem
 {
-    public string Id => id;
-    public string Name => name;
-    public string StateNote => stateNote;
-    public RelayCommand HowToCommand { get; } = new(() => main.ShowKbEntry(id));
+    private readonly TweakEntry _entry;
+    private readonly MainViewModel _main;
+
+    public VerdictItem(TweakEntry entry, string stateNote, MainViewModel main)
+    {
+        _entry = entry;
+        _main = main;
+        StateNote = stateNote;
+        HowToCommand = new(() => main.ShowKbEntry(entry.Id));
+        ApplyCommand = new(() => main.ApplyDialog.Open(entry));
+    }
+
+    public string Id => _entry.Id;
+    public string Name => _entry.Name;
+    public string StateNote { get; }
+    public bool CanApply => _main.Execution.CanApply(_entry);
+    public RelayCommand HowToCommand { get; }
+    public RelayCommand ApplyCommand { get; }
 }
 
 public sealed class VerdictGroup(string label, string badgeColorKey)
@@ -167,7 +187,7 @@ public sealed class VerdictViewModel(MainViewModel main) : ViewModelBase
         {
             var group = new VerdictGroup(label, color);
             foreach (var r in recommendations.Where(r => classes.Contains(r.Classification)))
-                group.Items.Add(new VerdictItem(r.Entry.Id, r.Entry.Name, r.StateNote, main));
+                group.Items.Add(new VerdictItem(r.Entry, r.StateNote, main));
             if (group.Items.Count > 0)
                 Groups.Add(group);
         }
@@ -180,7 +200,7 @@ public sealed class VerdictViewModel(MainViewModel main) : ViewModelBase
                 continue;
             var group = new VerdictGroup($"Game-specific — {gameGroup.Key}", "Accent");
             foreach (var r in gameGroup.OrderBy(r => r.Entry.EvidenceLevel))
-                group.Items.Add(new VerdictItem(r.Entry.Id, r.Entry.Name, r.StateNote, main));
+                group.Items.Add(new VerdictItem(r.Entry, r.StateNote, main));
             Groups.Add(group);
         }
 

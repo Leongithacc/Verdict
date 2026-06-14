@@ -182,7 +182,10 @@ public static class SnapshotBuilder
             }
         }
 
-        // MDM/Intune enrollment leaves per-enrollment keys here.
+        // MDM/Intune enrollment. NB: every Windows install has many placeholder
+        // enrollment subkeys with EnrollmentState=1 — those are NOT managed
+        // devices (false positive observed on Léon's personal desktop). The
+        // reliable signal of a REAL enrollment is an MDM server URL.
         using var enrollments = Registry.LocalMachine.OpenSubKey(
             @"SOFTWARE\Microsoft\Enrollments");
         if (enrollments is not null)
@@ -190,13 +193,16 @@ public static class SnapshotBuilder
             foreach (var name in enrollments.GetSubKeyNames())
             {
                 using var key = enrollments.OpenSubKey(name);
-                if (key?.GetValue("EnrollmentState") is int state and > 0 &&
-                    key.GetValue("ProviderID") is string provider && provider.Length > 0)
+                if (key?.GetValue("EnrollmentState") is int and > 0 &&
+                    (NonEmpty(key.GetValue("DiscoveryServiceFullURL")) ||
+                     NonEmpty(key.GetValue("UPN"))))
                     return true;
             }
         }
 
         return false;
+
+        static bool NonEmpty(object? v) => v is string s && s.Trim().Length > 0;
     }
 
     private static T Probe<T>(Func<T> read, T fallback)

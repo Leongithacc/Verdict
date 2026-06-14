@@ -37,6 +37,18 @@ public sealed class RelayCommand(Action execute, Func<bool>? canExecute = null) 
     public void Execute(object? _) => execute();
 }
 
+public sealed class RelayCommand<T>(Action<T> execute, Func<T, bool>? canExecute = null) : ICommand
+{
+    public event EventHandler? CanExecuteChanged
+    {
+        add => System.Windows.Input.CommandManager.RequerySuggested += value;
+        remove => System.Windows.Input.CommandManager.RequerySuggested -= value;
+    }
+
+    public bool CanExecute(object? p) => p is T t ? canExecute?.Invoke(t) ?? true : false;
+    public void Execute(object? p) { if (p is T t) execute(t); }
+}
+
 /// <summary>Portable settings: a JSON file next to the exe (PORTABILITY:
 /// nothing outside the app folder, delete folder = never existed).</summary>
 public sealed class AppSettings

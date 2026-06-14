@@ -24,6 +24,7 @@ public partial class MainWindow : Window
                 DiagnosticsViewModel => NavDiagnostics,
                 KbViewModel => NavKb,
                 ReportViewModel => NavReport,
+                ChangesViewModel => NavChanges,
                 SettingsViewModel => NavSettings,
                 _ => null,
             };
@@ -37,5 +38,6 @@ public partial class MainWindow : Window
     private void OnNavDiagnostics(object s, RoutedEventArgs e) => _vm.CurrentPage = _vm.Diagnostics;
     private void OnNavKb(object s, RoutedEventArgs e) => _vm.CurrentPage = _vm.Kb;
     private void OnNavReport(object s, RoutedEventArgs e) => _vm.CurrentPage = _vm.Report;
+    private void OnNavChanges(object s, RoutedEventArgs e) { _vm.Changes.Refresh(); _vm.CurrentPage = _vm.Changes; }
     private void OnNavSettings(object s, RoutedEventArgs e) => _vm.CurrentPage = _vm.SettingsPage;
 }
