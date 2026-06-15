@@ -105,10 +105,24 @@ Nessun computer-use, nessuna apertura app, solo build/test/commit.
   SetSettingIndex modifica lo schema ATTIVO (sul PC di Léon = BXTool Gaming Profile Unpark).
   GUID subgroup/setting (SUB_PROCESSOR/CPMINCORES, SUB_USB/USB_SUSPEND) da verificare.
 
+### 7. BUGFIX dialog vuoto + reverts (commit 64bc9f8, d1f4938)
+- **Bug riportato da Léon**: "clicco Apply ed e vuoto". Causa: core-parking e
+  usb-selective-suspend usano setting powercfg NASCOSTI → `powercfg /query` non
+  restituisce "Current AC Power Setting Index" → QuerySettingIndex throw → BuildPlan
+  fallisce → dialog vuoto. Verificato live sul PC di Léon.
+- **Fix**: core-parking + usb-suspend riportati a gui-only con deep-link a powercfg.cpl.
+  Dialog ora mostra messaggio chiaro "can't apply automatically: <reason>" invece del box
+  vuoto; "Apply now" nascosto se non c'e piano (HasPlan/ShowApplyButton).
+  powercfg-value executor RESTA nel codice (corretto per setting non-nascosti, testato),
+  ma nessuna voce KB lo usa piu.
+- KB 67: aggiunto disable-sticky-keys-gaming (fonte MS, gui-only). Scartata una voce
+  focus-assist perche non avevo URL verificato (regola d'oro).
+
 ## Stato a fine sessione Opus (2026-06-14)
 - `dotnet test`: **112/112 verdi**. `dotnet build WPEP.sln -c Release`: 0 errori.
-- KB: 66 voci; **10 applicabili one-click** (registry+powercfg+powercfg-value),
-  8 gui-only con deep-link "Open settings", il resto gui-only puro (BIOS/in-game).
+- KB: **67 voci**; **8 applicabili one-click** (4 HKCU/powercfg no-admin, 4 HKLM admin),
+  9 gui-only con deep-link "Open settings", il resto gui-only puro (BIOS/in-game).
+  NB: core-parking/usb tornati gui-only (setting powercfg nascosti, non scriptabili).
 - Nessuna modifica distruttiva ai moduli core di Fable; engine/apply/detection sono additivi.
 - DA RIVEDERE da Fable con PRIORITÀ: tutto WPEP.Execution (scrive su registry+powercfg),
   le 9 apply-spec registry + 1 powercfg in tweaks.json (path/valori uno a uno),
