@@ -118,11 +118,26 @@ Nessun computer-use, nessuna apertura app, solo build/test/commit.
 - KB 67: aggiunto disable-sticky-keys-gaming (fonte MS, gui-only). Scartata una voce
   focus-assist perche non avevo URL verificato (regola d'oro).
 
-## Stato a fine sessione Opus (2026-06-14)
+### 8. Win+R launcher + giro di ricerca KB (commit 14e34a6, f51b3ce)
+- **Launcher** (richiesto da Léon): Win+R "verdict" via App Paths HKCU + collegamento
+  Desktop\Verdict.lnk. Reversibile (cancellare la chiave App Paths\verdict.exe).
+- **KB 67→74** (7 voci, ricerca con fonti primarie verificate):
+  - AMD Radeon Anti-Lag (evidence_strong, AMD DH-033, gpu:amd), RSR (plausible), HYPR-RX
+    (plausible) — non intasano il Verdetto NVIDIA grazie al prereq gpu:amd.
+  - RSS Receive Side Scaling (controversial, MS), audio exclusive mode (controversial, MS).
+  - memory-compression-disable myth (placebo, MS), Spectre/Meltdown mitigations off
+    (risky, MS KB - gemello di VBS: guadagno CPU reale, costo sicurezza).
+- **Bug collaterale risolto**: OpenSettings non separava comando+args → i deep-link
+  control.exe/powercfg.cpl/mmsys.cpl NON si aprivano. Ora splitta su primo spazio.
+  DA RIVEDERE: le URI deep-link (mmsys.cpl, control.exe srchadmin.dll, ecc.) — verificare
+  che aprano la pagina giusta sul campo.
+
+## Stato a fine sessione Opus (2026-06-15)
 - `dotnet test`: **112/112 verdi**. `dotnet build WPEP.sln -c Release`: 0 errori.
-- KB: **67 voci**; **8 applicabili one-click** (4 HKCU/powercfg no-admin, 4 HKLM admin),
-  9 gui-only con deep-link "Open settings", il resto gui-only puro (BIOS/in-game).
-  NB: core-parking/usb tornati gui-only (setting powercfg nascosti, non scriptabili).
+- KB: **74 voci** (20 forti, 20 plausibili, 16 controverse, 11 placebo, 7 risky);
+  **8 applicabili one-click** (4 HKCU/powercfg no-admin, 4 HKLM admin),
+  ~10 gui-only con deep-link "Open settings", il resto gui-only puro (BIOS/in-game).
+  NB: core-parking/usb gui-only (setting powercfg nascosti, non scriptabili).
 - Nessuna modifica distruttiva ai moduli core di Fable; engine/apply/detection sono additivi.
 - DA RIVEDERE da Fable con PRIORITÀ: tutto WPEP.Execution (scrive su registry+powercfg),
   le 9 apply-spec registry + 1 powercfg in tweaks.json (path/valori uno a uno),
