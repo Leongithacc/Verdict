@@ -132,9 +132,16 @@ Nessun computer-use, nessuna apertura app, solo build/test/commit.
   DA RIVEDERE: le URI deep-link (mmsys.cpl, control.exe srchadmin.dll, ecc.) — verificare
   che aprano la pagina giusta sul campo.
 
+### 9. Launcher fix + Win32PrioritySeparation (commit 1d23c04)
+- Win+R "verdict" non funzionava (App Paths HKCU ignorato dal Run, serve HKLM/admin).
+  Fix: `C:\Scripts\verdict.vbs` su PATH (PATHEXT include .VBS), apre l'app senza console.
+  Verificato sul campo. App Paths HKCU rimossa.
+- KB 74→75: win32priorityseparation-myth (controversial, MS archive). On-brand:
+  l'impostazione "Programmi" fa gia il boost; i numeri magici da forum non hanno fonte.
+
 ## Stato a fine sessione Opus (2026-06-15)
 - `dotnet test`: **112/112 verdi**. `dotnet build WPEP.sln -c Release`: 0 errori.
-- KB: **74 voci** (20 forti, 20 plausibili, 16 controverse, 11 placebo, 7 risky);
+- KB: **75 voci** (20 forti, 20 plausibili, 17 controverse, 11 placebo, 7 risky);
   **8 applicabili one-click** (4 HKCU/powercfg no-admin, 4 HKLM admin),
   ~10 gui-only con deep-link "Open settings", il resto gui-only puro (BIOS/in-game).
   NB: core-parking/usb gui-only (setting powercfg nascosti, non scriptabili).
