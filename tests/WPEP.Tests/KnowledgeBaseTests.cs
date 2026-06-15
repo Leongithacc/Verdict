@@ -107,7 +107,7 @@ public class KnowledgeBaseTests
         var withUri = entries.Where(e => e.Apply?.SettingsUri is not null).ToArray();
         Assert.True(withUri.Length >= 6, $"attesi >=6 deep-link, trovati {withUri.Length}");
         string[] allowedPrefixes =
-            ["ms-settings:", "windowsdefender:", "control", "services.msc", "SystemProperties"];
+            ["ms-settings:", "windowsdefender:", "control", "services.msc", "SystemProperties", "mmsys"];
         foreach (var e in withUri)
         {
             Assert.Equal("gui-only", e.Apply!.Method); // applicable ones don't need a deep-link

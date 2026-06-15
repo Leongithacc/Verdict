@@ -1698,5 +1698,138 @@
       "gui_only_reason": "Accessibility setting",
       "settings_uri": "ms-settings:easeofaccess-keyboard"
     }
+  },
+  {
+    "id": "amd-radeon-anti-lag",
+    "name": "AMD Radeon Anti-Lag",
+    "category": "gpu",
+    "description": "Equivalente AMD di NVIDIA Reflex: limita quanto la CPU puo precedere la GPU, riducendo i frame in coda e quindi la latenza input-to-display. Documentato da AMD. Funziona quando sei GPU-bound; in scenari CPU-limited non ha effetto (come Reflex).",
+    "hardware_prerequisites": [
+      "gpu:amd"
+    ],
+    "expected_impact": "Riduzione di latenza documentata dal vendor quando GPU-bound. La migliore opzione di latenza per chi ha GPU AMD, analoga a Reflex.",
+    "evidence_level": "evidence_strong",
+    "sources": [
+      "https://www.amd.com/en/resources/support-articles/faqs/DH-033.html"
+    ],
+    "risk": "none",
+    "risk_notes": "",
+    "rollback": "AMD Software: Adrenalin Edition -> Gaming -> disattiva Radeon Anti-Lag.",
+    "manual_steps": "AMD Software: Adrenalin Edition -> Gaming -> Impostazioni globali (o per-gioco) -> Radeon Anti-Lag -> Attivato.",
+    "conflicts_with": [],
+    "measurable": false,
+    "apply": {
+      "method": "gui-only",
+      "operations": [],
+      "requires_reboot": false,
+      "undo": "manual-steps",
+      "gui_only_reason": "Vendor software / Device Manager / Windows audio panel"
+    }
+  },
+  {
+    "id": "amd-radeon-super-resolution",
+    "name": "AMD Radeon Super Resolution (RSR)",
+    "category": "gpu",
+    "description": "Upscaler a livello di driver basato su FSR: migliora le prestazioni nei giochi che NON hanno un upscaler integrato, renderizzando a risoluzione piu bassa e ricostruendo all'output. Documentato da AMD. Si attiva nel driver, non nel gioco.",
+    "hardware_prerequisites": [
+      "gpu:amd"
+    ],
+    "expected_impact": "Guadagno di FPS nei giochi GPU-bound senza upscaler nativo, con costo in qualita immagine come ogni upscaling. Inutile se il gioco ha gia FSR/DLSS o se sei al cap.",
+    "evidence_level": "plausible",
+    "sources": [
+      "https://www.amd.com/en/products/software/adrenalin/radeon-super-resolution.html",
+      "https://www.amd.com/en/resources/support-articles/faqs/DH3-040.html"
+    ],
+    "risk": "none",
+    "risk_notes": "",
+    "rollback": "AMD Software -> Gaming -> disattiva Radeon Super Resolution.",
+    "manual_steps": "AMD Software: Adrenalin Edition -> Gaming -> Radeon Super Resolution -> Attivato. Va usato a schermo intero. Disattiva automaticamente Chill/Image Sharpening/Integer Scaling.",
+    "conflicts_with": [],
+    "measurable": true,
+    "apply": {
+      "method": "gui-only",
+      "operations": [],
+      "requires_reboot": false,
+      "undo": "manual-steps",
+      "gui_only_reason": "Vendor software / Device Manager / Windows audio panel"
+    }
+  },
+  {
+    "id": "amd-hypr-rx",
+    "name": "AMD HYPR-RX (profilo one-click)",
+    "category": "gpu",
+    "description": "Profilo AMD che attiva con un click la combinazione di Radeon Anti-Lag, Boost e Super Resolution per massimizzare prestazioni e reattivita. Documentato da AMD. Comodo bundle delle feature gia presenti, da misurare per-gioco.",
+    "hardware_prerequisites": [
+      "gpu:amd"
+    ],
+    "expected_impact": "Combina i benefici di Anti-Lag (latenza) e RSR/Boost (FPS). L'effetto dipende dal gioco e dallo scenario; da misurare con wpep bench.",
+    "evidence_level": "plausible",
+    "sources": [
+      "https://www.amd.com/en/products/software/adrenalin/hypr-rx.html"
+    ],
+    "risk": "none",
+    "risk_notes": "",
+    "rollback": "AMD Software -> disattiva HYPR-RX o le singole feature.",
+    "manual_steps": "AMD Software: Adrenalin Edition -> Gaming -> HYPR-RX -> Attivato (globale o per-gioco).",
+    "conflicts_with": [],
+    "measurable": true,
+    "apply": {
+      "method": "gui-only",
+      "operations": [],
+      "requires_reboot": false,
+      "undo": "manual-steps",
+      "gui_only_reason": "Vendor software / Device Manager / Windows audio panel"
+    }
+  },
+  {
+    "id": "nic-rss-enable",
+    "name": "Receive Side Scaling (RSS) attivo sulla NIC",
+    "category": "network",
+    "description": "RSS distribuisce il processing dei pacchetti in ricezione su piu core CPU invece di concentrarlo su uno solo, documentato da Microsoft. Su NIC moderne e attivo di default. Rilevante per throughput alto; per il traffico UDP a basso bitrate dei giochi raramente e il collo di bottiglia, ma tenerlo attivo evita che un singolo core saturi sotto carico di rete.",
+    "hardware_prerequisites": [],
+    "expected_impact": "Su sistemi con processing di rete concentrato su un core: distribuzione del carico. Per il gaming tipico: gia ok di default, effetto in-game raramente percepibile.",
+    "evidence_level": "controversial",
+    "sources": [
+      "https://learn.microsoft.com/en-us/windows-hardware/drivers/network/introduction-to-receive-side-scaling"
+    ],
+    "risk": "low",
+    "risk_notes": "Alcuni driver NIC hanno RSS instabile: se compaiono problemi di rete dopo l'attivazione, tornare al default.",
+    "rollback": "Gestione dispositivi -> scheda di rete -> Avanzate -> Receive Side Scaling -> valore precedente.",
+    "manual_steps": "Gestione dispositivi -> Schede di rete -> la tua NIC -> Proprieta -> Avanzate -> 'Receive Side Scaling' -> Enabled. Verifica anche con PowerShell: Get-NetAdapterRss.",
+    "conflicts_with": [],
+    "measurable": true,
+    "apply": {
+      "method": "gui-only",
+      "operations": [],
+      "requires_reboot": false,
+      "undo": "manual-steps",
+      "gui_only_reason": "Vendor software / Device Manager / Windows audio panel"
+    }
+  },
+  {
+    "id": "audio-exclusive-mode",
+    "name": "Modalita esclusiva audio (latenza audio)",
+    "category": "background",
+    "description": "Windows permette alle app di prendere il controllo esclusivo del dispositivo audio per una latenza piu bassa (WASAPI exclusive mode), documentato da Microsoft. MA: la maggior parte dei giochi usa il mixer condiviso, non l'esclusiva, quindi il toggle 'Consenti alle applicazioni di assumere il controllo esclusivo' (attivo di default) raramente cambia qualcosa nel gaming. Disattivarlo puo persino impedire ad app pro-audio di ottenere bassa latenza.",
+    "hardware_prerequisites": [],
+    "expected_impact": "Per il gaming tipico: nessun effetto misurabile (i giochi non usano l'esclusiva). Rilevante solo per app pro-audio o setup specifici. Lasciare il default e l'opzione piu sicura.",
+    "evidence_level": "controversial",
+    "sources": [
+      "https://learn.microsoft.com/en-us/windows/win32/coreaudio/exclusive-mode-streams"
+    ],
+    "risk": "low",
+    "risk_notes": "Disattivare l'esclusiva puo aumentare la latenza per le app che la usano davvero (DAW, alcuni software voce).",
+    "rollback": "Pannello audio -> dispositivo -> Proprieta -> Avanzate -> ripristina le spunte 'controllo esclusivo'.",
+    "manual_steps": "Pannello di controllo audio (mmsys.cpl) -> dispositivo di riproduzione -> Proprieta -> Avanzate -> sezione 'Modalita esclusiva'. Per il gaming, lasciare entrambe le spunte attive (default).",
+    "conflicts_with": [],
+    "measurable": false,
+    "apply": {
+      "method": "gui-only",
+      "operations": [],
+      "requires_reboot": false,
+      "undo": "manual-steps",
+      "gui_only_reason": "Vendor software / Device Manager / Windows audio panel",
+      "settings_uri": "mmsys.cpl"
+    }
   }
 ]

@@ -31,13 +31,29 @@ public sealed class ExecutionService
     public static bool IsElevated => Elevation.IsElevated();
 
     /// <summary>Opens a Windows settings page / control panel for a gui-only
-    /// tweak. Navigation only — never a system write.</summary>
+    /// tweak. Navigation only — never a system write. Handles both URI schemes
+    /// (ms-settings:, windowsdefender:) and "command args" forms
+    /// (control.exe powercfg.cpl, mmsys.cpl, services.msc).</summary>
     public static void OpenSettings(string uri)
     {
         try
         {
-            System.Diagnostics.Process.Start(
-                new System.Diagnostics.ProcessStartInfo(uri) { UseShellExecute = true });
+            // URI schemes launch as-is; "command args" forms are split so the
+            // arguments aren't treated as part of the file name.
+            bool isScheme = uri.Contains(':') && !uri.Contains(' ');
+            System.Diagnostics.ProcessStartInfo psi;
+            if (isScheme)
+            {
+                psi = new(uri) { UseShellExecute = true };
+            }
+            else
+            {
+                int space = uri.IndexOf(' ');
+                psi = space < 0
+                    ? new(uri) { UseShellExecute = true }
+                    : new(uri[..space], uri[(space + 1)..]) { UseShellExecute = true };
+            }
+            System.Diagnostics.Process.Start(psi);
         }
         catch { /* a missing page must never crash the app */ }
     }
