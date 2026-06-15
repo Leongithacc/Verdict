@@ -1672,5 +1672,31 @@
       "gui_only_reason": "Windows Settings / Graphics page",
       "settings_uri": "ms-settings:display-advancedgraphics"
     }
+  },
+  {
+    "id": "disable-sticky-keys-gaming",
+    "name": "Disattiva la scorciatoia Sticky Keys (Shift x5)",
+    "category": "input",
+    "description": "Sticky Keys e una funzione di accessibilita: premere Shift cinque volte di fila apre un popup che ruba il focus. Shift e un tasto usatissimo nei giochi (corsa/accovacciarsi), quindi l'attivazione accidentale a meta partita e un classico. Non e un tweak di FPS: elimina un'interruzione fastidiosa. Microsoft documenta la funzione e come disattivarne la scorciatoia.",
+    "hardware_prerequisites": [],
+    "expected_impact": "Zero sugli FPS. Elimina il popup Sticky Keys che ti butta fuori dal gioco quando premi Shift ripetutamente. QoL puro.",
+    "evidence_level": "plausible",
+    "sources": [
+      "https://www.microsoft.com/en-us/surface/do-more-with-surface/defining-sticky-keys"
+    ],
+    "risk": "none",
+    "risk_notes": "",
+    "rollback": "Stessa pagina, rimetti la spunta a 'Attiva Tasti permanenti premendo MAIUSC cinque volte'.",
+    "manual_steps": "Impostazioni -> Accessibilita -> Tastiera -> Tasti permanenti -> togli 'Scorciatoia da tastiera per Tasti permanenti' (Shift x5).",
+    "conflicts_with": [],
+    "measurable": false,
+    "apply": {
+      "method": "gui-only",
+      "operations": [],
+      "requires_reboot": false,
+      "undo": "manual-steps",
+      "gui_only_reason": "Accessibility setting",
+      "settings_uri": "ms-settings:easeofaccess-keyboard"
+    }
   }
 ]
