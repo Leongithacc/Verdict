@@ -1881,5 +1881,31 @@
       "undo": "manual-steps",
       "gui_only_reason": "Manual registry/PowerShell - deliberate action required"
     }
+  },
+  {
+    "id": "win32priorityseparation-myth",
+    "name": "Win32PrioritySeparation: i 'numeri magici' da forum",
+    "category": "scheduler",
+    "description": "Win32PrioritySeparation controlla il boost di CPU che Windows da ai thread in primo piano (documentato da Microsoft). La cosa importante: l'impostazione 'Regola per ottenere le prestazioni migliori di: Programmi' in Proprieta di sistema gia attiva il foreground boost ottimale per il gaming su Windows desktop. I valori registry 'magici' (0x26, 0x28, 0x29...) che girano sui forum NON hanno alcuna fonte primaria che ne dimostri un beneficio oltre il default.",
+    "hardware_prerequisites": [],
+    "expected_impact": "Il default 'Programmi' e gia favorevole al foreground. I valori custom da forum: nessuna evidenza di miglioramento, possibile peggioramento del bilanciamento se sbagliati.",
+    "evidence_level": "controversial",
+    "sources": [
+      "https://learn.microsoft.com/en-us/archive/blogs/embedded/master-your-quantum"
+    ],
+    "risk": "low",
+    "risk_notes": "Valori errati possono penalizzare i servizi di background. Default = 0x26 (38) su desktop.",
+    "rollback": "Proprieta di sistema -> Prestazioni -> Avanzate -> 'Programmi' (ripristina il default), o eliminare/azzerare Win32PrioritySeparation in HKLM\\SYSTEM\\CurrentControlSet\\Control\\PriorityControl.",
+    "manual_steps": "Usa l'opzione ufficiale: SystemPropertiesPerformance.exe -> Avanzate -> Pianificazione processore -> Programmi. Ignora i valori registry custom dei forum: non sono provati.",
+    "conflicts_with": [],
+    "measurable": true,
+    "apply": {
+      "method": "gui-only",
+      "operations": [],
+      "requires_reboot": false,
+      "undo": "manual-steps",
+      "gui_only_reason": "Use the official System Properties setting",
+      "settings_uri": "SystemPropertiesPerformance.exe"
+    }
   }
 ]
