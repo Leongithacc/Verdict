@@ -76,9 +76,11 @@ public sealed class ApplyDialogViewModel : ViewModelBase
     public bool IsRisky { get => _isRisky; set => Set(ref _isRisky, value); }
     public bool NeedsAdmin { get => _needsAdmin; set => Set(ref _needsAdmin, value); }
     public string Status { get => _status; set => Set(ref _status, value); }
-    public bool Applied { get => _applied; set { Set(ref _applied, value); Raise(nameof(CanConfirm)); } }
+    public bool Applied { get => _applied; set { Set(ref _applied, value); Raise(nameof(CanConfirm)); Raise(nameof(ShowApplyButton)); } }
     public bool IsBusy { get => _busy; set { Set(ref _busy, value); Raise(nameof(CanConfirm)); } }
     public bool AdminBlocked => NeedsAdmin && !ExecutionService.IsElevated;
+    public bool HasPlan => _plan is not null;
+    public bool ShowApplyButton => HasPlan && !Applied;
     public bool CanConfirm => _plan is not null && !Applied && !IsBusy && !AdminBlocked;
 
     public RelayCommand ConfirmCommand { get; }
@@ -107,9 +109,12 @@ public sealed class ApplyDialogViewModel : ViewModelBase
         {
             _plan = null;
             PlanText = "";
-            Status = ex.Message;
+            Status = "This tweak can't be applied automatically — apply it by hand " +
+                     "(see How to). Reason: " + ex.Message;
         }
         Raise(nameof(AdminBlocked));
+        Raise(nameof(HasPlan));
+        Raise(nameof(ShowApplyButton));
         Raise(nameof(CanConfirm));
         IsOpen = true;
     }
