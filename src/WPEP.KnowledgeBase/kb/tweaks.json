@@ -1831,5 +1831,55 @@
       "gui_only_reason": "Vendor software / Device Manager / Windows audio panel",
       "settings_uri": "mmsys.cpl"
     }
+  },
+  {
+    "id": "memory-compression-disable-myth",
+    "name": "Il mito di 'disattivare la compressione memoria'",
+    "category": "background",
+    "description": "Tweak diffuso (Disable-MMAgent -mc). La compressione memoria, documentata da Microsoft dal Windows 10 RTM, comprime in RAM le pagine inattive invece di scriverle sul pagefile lento su disco: rende i page fault piu rari e il sistema piu reattivo. Disattivarla non libera prestazioni: rimuove un'ottimizzazione che EVITA l'accesso al disco. Su sistemi con tanta RAM la compressione lavora poco comunque.",
+    "hardware_prerequisites": [],
+    "expected_impact": "Nessun guadagno gaming. Su sistemi sotto pressione di memoria, disattivarla PEGGIORA (piu paging su disco). Su 32 GB+ e quasi irrilevante in un senso o nell'altro.",
+    "evidence_level": "placebo",
+    "sources": [
+      "https://learn.microsoft.com/en-us/shows/seth-juarez/memory-compression-in-windows-10-rtm"
+    ],
+    "risk": "none",
+    "risk_notes": "",
+    "rollback": "PowerShell admin: Enable-MMAgent -mc, riavvio.",
+    "manual_steps": "Non farlo: nessuna evidenza di beneficio. Se e stato disattivato in passato: PowerShell admin -> Enable-MMAgent -mc -> riavvio.",
+    "conflicts_with": [],
+    "measurable": false,
+    "apply": {
+      "method": "gui-only",
+      "operations": [],
+      "requires_reboot": false,
+      "undo": "manual-steps",
+      "gui_only_reason": "Manual registry/PowerShell - deliberate action required"
+    }
+  },
+  {
+    "id": "spectre-meltdown-mitigations-off",
+    "name": "Disattiva le mitigazioni Spectre/Meltdown (FeatureSettingsOverride)",
+    "category": "security",
+    "description": "Le mitigazioni delle vulnerabilita di esecuzione speculativa (Spectre/Meltdown e successive) hanno un costo prestazionale CPU documentato da Microsoft (KB4072698). Disattivarle via registry (FeatureSettingsOverride) restituisce quel costo MA rimuove protezioni contro attacchi side-channel reali. Su CPU recenti molte mitigazioni sono in hardware e il costo software e minore; il guadagno gaming e comunque tipicamente piccolo.",
+    "hardware_prerequisites": [],
+    "expected_impact": "Guadagno CPU reale ma di solito pochi punti percentuali, spesso entro la varianza in gioco. Costo: protezione side-channel rimossa. Da misurare PRIMA di decidere se vale il rischio.",
+    "evidence_level": "risky",
+    "sources": [
+      "https://learn.microsoft.com/en-us/troubleshoot/windows-server/security/windows-guidance-protect-against-speculative-execution"
+    ],
+    "risk": "high",
+    "risk_notes": "Costo di SICUREZZA documentato: rimuove protezioni contro vulnerabilita di esecuzione speculativa. Sconsigliato su qualsiasi sistema che esegue codice non fidato (= praticamente tutti). Alcuni anti-cheat e policy aziendali potrebbero reagire. Non e un tweak di default.",
+    "rollback": "Eliminare FeatureSettingsOverride e FeatureSettingsOverrideMask da HKLM\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Memory Management, riavvio (ripristina i default protetti).",
+    "manual_steps": "SCONSIGLIATO. Solo dopo aver misurato un beneficio reale con wpep bench/compare e accettato il costo: HKLM\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Memory Management -> DWORD FeatureSettingsOverride=3 e FeatureSettingsOverrideMask=3 -> riavvio.",
+    "conflicts_with": [],
+    "measurable": true,
+    "apply": {
+      "method": "gui-only",
+      "operations": [],
+      "requires_reboot": false,
+      "undo": "manual-steps",
+      "gui_only_reason": "Manual registry/PowerShell - deliberate action required"
+    }
   }
 ]
