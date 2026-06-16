@@ -225,6 +225,22 @@ comunque per Execute → journal → verify → undo INDIVIDUALE nella pagina Ch
   'Riduci buffering' Blizzard. gui-only. Gating per-gioco nasconde la sezione se assente.
 - Build 0 err, 117 test (KnowledgeBaseTests valida ow2). App+CLI ripubblicati (KB=80).
 
+### 15. Due gui-only → applicabili (2026-06-16) — valori registry verificati a fonte
+Convertite due voci NON-placebo da gui-only a registry-applicabile (one-click + undo).
+Valori di registro VERIFICATI via ricerca prima di scrivere (regola d'oro: no guessing):
+- `hags-hardware-gpu-scheduling` (controversial): HwSchMode in
+  HKLM\SYSTEM\CurrentControlSet\Control\GraphicsDrivers, dword 2=on/1=off, reboot. Fonte
+  primaria gia presente (MS DirectX blog). HAGS ha gia detection (HagsEnabled) + stato
+  Advisor → per Leon risultera "gia attivo" (niente Apply); per altri diventa one-click.
+  Honesto: utile soprattutto perche REQUISITO di DLSS Frame Generation, neutro sugli FPS puri.
+- `disable-sticky-keys-gaming` (plausible): Flags in HKCU\Control Panel\Accessibility\
+  StickyKeys, REG_SZ "506" (disabilita hotkey Shift x5; default "510"). HKCU = NO admin.
+  Effetto al prossimo accesso. QoL: stop al popup che ruba focus a meta partita.
+- Applicabili one-click: 10 → **12**. Validati dal test ShippedKb_AllProgrammaticRegistry
+  (costruisce il piano per ogni voce registry, kind dword/string). 117 test verdi.
+  App+CLI ripubblicati. DA RIVEDERE da Fable: HwSchMode (no fonte MS *del registro*, solo
+  della feature) e Flags=506 (puo variare per build Windows — verify lo intercetta).
+
 ## Stato a fine sessione Opus (2026-06-15)
 - `dotnet test`: **112/112 verdi**. `dotnet build WPEP.sln -c Release`: 0 errori.
 - KB: **75 voci** (20 forti, 20 plausibili, 17 controverse, 11 placebo, 7 risky);

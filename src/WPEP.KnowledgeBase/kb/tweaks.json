@@ -122,7 +122,21 @@
     "rollback": "Stesso percorso, interruttore su Disattivato, riavvio.",
     "manual_steps": "Impostazioni → Sistema → Schermo → Grafica → Modifica impostazioni grafiche predefinite → Pianificazione GPU con accelerazione hardware → Attivato → riavvio.",
     "conflicts_with": [],
-    "measurable": true
+    "measurable": true,
+    "apply": {
+      "method": "registry",
+      "operations": [
+        {
+          "path": "HKLM\\SYSTEM\\CurrentControlSet\\Control\\GraphicsDrivers\\HwSchMode",
+          "value_after": "2",
+          "verify": "2",
+          "kind": "dword"
+        }
+      ],
+      "requires_reboot": true,
+      "undo": "auto-journal",
+      "gui_only_reason": null
+    }
   },
   {
     "id": "gpu-msi-mode",
@@ -1701,16 +1715,22 @@
     "risk": "none",
     "risk_notes": "",
     "rollback": "Stessa pagina, rimetti la spunta a 'Attiva Tasti permanenti premendo MAIUSC cinque volte'.",
-    "manual_steps": "Impostazioni -> Accessibilita -> Tastiera -> Tasti permanenti -> togli 'Scorciatoia da tastiera per Tasti permanenti' (Shift x5).",
+    "manual_steps": "Impostazioni -> Accessibilita -> Tastiera -> Tasti permanenti -> togli 'Scorciatoia da tastiera per Tasti permanenti' (Shift x5). Oppure lascia che Verdict scriva Flags=506 (HKCU, no admin). Effetto al prossimo accesso.",
     "conflicts_with": [],
     "measurable": false,
     "apply": {
-      "method": "gui-only",
-      "operations": [],
-      "requires_reboot": false,
-      "undo": "manual-steps",
-      "gui_only_reason": "Accessibility setting",
-      "settings_uri": "ms-settings:easeofaccess-keyboard"
+      "method": "registry",
+      "operations": [
+        {
+          "path": "HKCU\\Control Panel\\Accessibility\\StickyKeys\\Flags",
+          "value_after": "506",
+          "verify": "506",
+          "kind": "string"
+        }
+      ],
+      "requires_reboot": true,
+      "undo": "auto-journal",
+      "gui_only_reason": null
     }
   },
   {
