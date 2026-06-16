@@ -67,6 +67,7 @@ public static class SnapshotBuilder
             ValorantInstalled = Probe(ReadValorantInstalled, (bool?)null),
             Cs2Installed = Probe(ReadCs2Installed, (bool?)null),
             ApexInstalled = Probe(ReadApexInstalled, (bool?)null),
+            Overwatch2Installed = Probe(ReadOverwatch2Installed, (bool?)null),
         };
     }
 
@@ -87,6 +88,22 @@ public static class SnapshotBuilder
     /// <summary>Apex Legends is Steam app 1172470. (EA App copies aren't detected
     /// here; null/false only means 'not found via Steam', section stays shown on null.)</summary>
     private static bool? ReadApexInstalled() => SteamAppInstalled(1172470);
+
+    /// <summary>Overwatch 2 ships on Steam (app 2357570) and Battle.net. Check Steam
+    /// first, then the default Battle.net install path. Returns null only when we truly
+    /// can't tell (no Steam and no Battle.net copy at the default path).</summary>
+    private static bool? ReadOverwatch2Installed()
+    {
+        var steam = SteamAppInstalled(2357570);
+        if (steam == true)
+            return true;
+        var bnet = Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86),
+            "Overwatch", "_retail_", "Overwatch.exe");
+        if (File.Exists(bnet))
+            return true;
+        return steam; // false if Steam is present but OW2 isn't; null if no Steam at all
+    }
 
     /// <summary>True if appmanifest_&lt;appid&gt;.acf exists in any Steam library.
     /// Null = Steam not found (caller shows the game section honestly).</summary>

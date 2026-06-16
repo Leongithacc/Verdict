@@ -215,6 +215,16 @@ comunque per Execute → journal → verify → undo INDIVIDUALE nella pagina Ch
   poi chiusa. App+CLI ripubblicati. DA RIVEDERE da Fable: la partizione admin e il fatto
   che ExecuteAll non fa rollback dei precedenti su stop (scelta deliberata, documentata).
 
+### 14. Overwatch 2: detection + KB (2026-06-16) — chiude la coda
+- Detection: OW2 e su Steam (app 2357570) dal 2023 → rilevabile in modo affidabile col
+  helper SteamAppInstalled gia usato per Apex/CS2, niente probe Battle.net traballante.
+  ReadOverwatch2Installed: Steam prima, poi fallback sul path default Battle.net
+  (ProgramFilesX86\Overwatch\_retail_\Overwatch.exe). Null solo se davvero non determinabile.
+  SystemSnapshot.Overwatch2Installed + GameInstalled("overwatch2").
+- KB 79→**80**: `ow2-reflex-on` (evidence_strong, NVIDIA, game:overwatch2): Reflex +
+  'Riduci buffering' Blizzard. gui-only. Gating per-gioco nasconde la sezione se assente.
+- Build 0 err, 117 test (KnowledgeBaseTests valida ow2). App+CLI ripubblicati (KB=80).
+
 ## Stato a fine sessione Opus (2026-06-15)
 - `dotnet test`: **112/112 verdi**. `dotnet build WPEP.sln -c Release`: 0 errori.
 - KB: **75 voci** (20 forti, 20 plausibili, 17 controverse, 11 placebo, 7 risky);

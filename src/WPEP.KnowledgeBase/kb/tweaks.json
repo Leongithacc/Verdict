@@ -2034,5 +2034,33 @@
       "undo": "manual-steps",
       "gui_only_reason": "In-game setting"
     }
+  },
+  {
+    "id": "ow2-reflex-on",
+    "name": "Overwatch 2: NVIDIA Reflex + Riduci buffering",
+    "category": "gpu",
+    "game": "overwatch2",
+    "description": "Overwatch 2 supporta NVIDIA Reflex (documentato da NVIDIA tra i titoli competitivi con Reflex), che riduce la latenza di sistema allineando engine e rendering. Da abbinare a 'Riduci buffering' nelle opzioni video, l'impostazione Blizzard che limita la coda di frame pre-renderizzati con la stessa logica. La miglior coppia di impostazioni di latenza disponibili nel gioco.",
+    "hardware_prerequisites": [
+      "gpu:nvidia"
+    ],
+    "expected_impact": "Riduzione di latenza documentata dal vendor (Reflex). 'Riduci buffering' taglia la coda frame come una low-latency mode in-game. Nessuno svantaggio competitivo: da tenere attivi.",
+    "evidence_level": "evidence_strong",
+    "sources": [
+      "https://www.nvidia.com/en-us/geforce/news/reflex-low-latency-apex-legends-valorant-fortnite-cs2/"
+    ],
+    "risk": "none",
+    "risk_notes": "",
+    "rollback": "Stesse impostazioni -> Off / buffering al valore precedente.",
+    "manual_steps": "Overwatch 2 -> Opzioni -> Video -> NVIDIA Reflex -> Abilitato (o Abilitato+Boost); e imposta 'Riduci buffering' su Attivato.",
+    "conflicts_with": [],
+    "measurable": false,
+    "apply": {
+      "method": "gui-only",
+      "operations": [],
+      "requires_reboot": false,
+      "undo": "manual-steps",
+      "gui_only_reason": "In-game setting"
+    }
   }
 ]

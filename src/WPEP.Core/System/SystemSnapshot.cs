@@ -67,6 +67,7 @@ public sealed record SystemSnapshot
     public bool? ValorantInstalled { get; init; }
     public bool? Cs2Installed { get; init; }
     public bool? ApexInstalled { get; init; }
+    public bool? Overwatch2Installed { get; init; }
 
     /// <summary>Maps a KB entry's `game` key to its detection result.</summary>
     public bool? GameInstalled(string game) => game switch
@@ -75,6 +76,7 @@ public sealed record SystemSnapshot
         "valorant" => ValorantInstalled,
         "cs2" => Cs2Installed,
         "apex" => ApexInstalled,
+        "overwatch2" => Overwatch2Installed,
         _ => null,
     };
 }
