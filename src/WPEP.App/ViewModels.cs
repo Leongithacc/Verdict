@@ -28,6 +28,7 @@ public sealed class MainViewModel : ViewModelBase
     public ChangesViewModel Changes { get; }
     public SettingsViewModel SettingsPage { get; }
     public ApplyDialogViewModel ApplyDialog { get; }
+    public ApplyAllViewModel ApplyAll { get; }
 
     public ViewModelBase CurrentPage { get => _currentPage; set => Set(ref _currentPage, value); }
     public string TerminalLine { get => _terminalLine; set => Set(ref _terminalLine, value); }
@@ -51,6 +52,7 @@ public sealed class MainViewModel : ViewModelBase
         Changes = new ChangesViewModel(Execution);
         SettingsPage = new SettingsViewModel(Settings);
         ApplyDialog = new ApplyDialogViewModel(this, Execution);
+        ApplyAll = new ApplyAllViewModel(this, Execution);
         _currentPage = Verdict;
 
         StartFirstScanCommand = new(() =>
@@ -124,6 +126,8 @@ public sealed class VerdictViewModel(MainViewModel main) : ViewModelBase
     private string _subHeader = "Read-only — WPEP never modifies your system";
     private bool _isScanning;
     private int _worthDoing, _alreadyOptimal, _placeboAvoided;
+    // The recommended tweaks that can be applied programmatically — fuels "Apply all".
+    private readonly List<TweakEntry> _applicableRecommended = [];
 
     public string Header { get => _header; set => Set(ref _header, value); }
     public string SubHeader { get => _subHeader; set => Set(ref _subHeader, value); }
@@ -133,7 +137,14 @@ public sealed class VerdictViewModel(MainViewModel main) : ViewModelBase
     public int PlaceboAvoided { get => _placeboAvoided; set => Set(ref _placeboAvoided, value); }
     public ObservableCollection<VerdictGroup> Groups { get; } = [];
 
+    public int ApplicableRecommendedCount => _applicableRecommended.Count;
+    public bool HasApplicableRecommended => _applicableRecommended.Count > 0;
+    public string ApplyAllLabel => $"Apply all recommended ({_applicableRecommended.Count})";
+
     public RelayCommand RescanCommand => new(() => _ = ScanAsync());
+    public RelayCommand ApplyAllCommand => new(
+        () => main.ApplyAll.Open(_applicableRecommended),
+        () => _applicableRecommended.Count > 0);
 
     public void SetIdle(string header)
     {
@@ -216,6 +227,18 @@ public sealed class VerdictViewModel(MainViewModel main) : ViewModelBase
         WorthDoing = recommendations.Count(r => r.Classification == Classification.Recommended);
         AlreadyOptimal = optimal;
         PlaceboAvoided = recommendations.Count(r => r.Classification == Classification.Placebo);
+
+        // "Apply all" only ever touches Recommended tweaks that are programmatically
+        // applicable (no placebo, no risky, no gui-only). Each still goes through the
+        // same dry-run + journal + per-tweak undo as a single apply.
+        _applicableRecommended.Clear();
+        _applicableRecommended.AddRange(recommendations
+            .Where(r => r.Classification == Classification.Recommended
+                        && main.Execution.CanApply(r.Entry))
+            .Select(r => r.Entry));
+        Raise(nameof(ApplicableRecommendedCount));
+        Raise(nameof(HasApplicableRecommended));
+        Raise(nameof(ApplyAllLabel));
 
         Header = actionable > 0 && optimal == actionable && WorthDoing == 0
             ? "Nothing left to optimize. Seriously. Go play."

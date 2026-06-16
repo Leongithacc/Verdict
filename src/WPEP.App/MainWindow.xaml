@@ -20,6 +20,10 @@
           <DockPanel>
             <Button DockPanel.Dock="Right" Style="{StaticResource GhostButton}"
                     Content="Rescan" Command="{Binding RescanCommand}" VerticalAlignment="Top" />
+            <Button DockPanel.Dock="Right" Style="{StaticResource PrimaryButton}"
+                    Content="{Binding ApplyAllLabel}" Command="{Binding ApplyAllCommand}"
+                    VerticalAlignment="Top" Margin="0,0,8,0"
+                    Visibility="{Binding HasApplicableRecommended, Converter={StaticResource BoolToVis}}" />
             <StackPanel>
               <TextBlock Style="{StaticResource H1}" Text="{Binding Header}" />
               <TextBlock Style="{StaticResource Muted}" Text="{Binding SubHeader}" Margin="0,4,0,0" />
@@ -516,6 +520,39 @@
                     Visibility="{Binding ShowApplyButton, Converter={StaticResource BoolToVis}}" />
             <Button Style="{StaticResource PrimaryButton}" Content="Relaunch as administrator"
                     Command="{Binding RelaunchAsAdminCommand}" Margin="0,0,8,0"
+                    Visibility="{Binding AdminBlocked, Converter={StaticResource BoolToVis}}" />
+            <Button Style="{StaticResource GhostButton}" Content="Close"
+                    Command="{Binding CancelCommand}" Margin="8,0,0,0" />
+          </StackPanel>
+        </StackPanel>
+      </Border>
+    </Grid>
+
+    <!-- Apply-all batch dialog: one consent, every recommended+applicable tweak, each still journaled. -->
+    <Grid Background="#E00F0F14"
+          Visibility="{Binding ApplyAll.IsOpen, Converter={StaticResource BoolToVis}}">
+      <Border Style="{StaticResource Card}" MaxWidth="680" MaxHeight="640" VerticalAlignment="Center"
+              HorizontalAlignment="Center" Padding="28" DataContext="{Binding ApplyAll}">
+        <StackPanel>
+          <TextBlock Style="{StaticResource H2}" Text="{Binding Title}" />
+          <TextBlock Style="{StaticResource Muted}" Margin="0,4,0,0"
+                     Text="Dry run — every change below, across all recommended tweaks. Each is written, re-read to verify, and journaled individually so you can undo any of them on the Changes page. Nothing happens until you confirm." />
+
+          <Border Background="{DynamicResource Surface2}" CornerRadius="6" Padding="14" Margin="0,12,0,0"
+                  Visibility="{Binding HasPlan, Converter={StaticResource BoolToVis}}">
+            <ScrollViewer VerticalScrollBarVisibility="Auto" MaxHeight="320">
+              <TextBlock Style="{StaticResource Mono}" FontSize="12" Text="{Binding PlanText}" TextWrapping="Wrap" />
+            </ScrollViewer>
+          </Border>
+
+          <TextBlock Style="{StaticResource Muted}" Text="{Binding Status}" Margin="0,12,0,0" TextWrapping="Wrap" />
+
+          <StackPanel Orientation="Horizontal" Margin="0,16,0,0">
+            <Button Style="{StaticResource PrimaryButton}" Content="Apply all now"
+                    Command="{Binding ConfirmCommand}"
+                    Visibility="{Binding ShowApplyButton, Converter={StaticResource BoolToVis}}" />
+            <Button Style="{StaticResource PrimaryButton}" Content="Relaunch as administrator"
+                    Command="{Binding RelaunchAsAdminCommand}" Margin="8,0,0,0"
                     Visibility="{Binding AdminBlocked, Converter={StaticResource BoolToVis}}" />
             <Button Style="{StaticResource GhostButton}" Content="Close"
                     Command="{Binding CancelCommand}" Margin="8,0,0,0" />

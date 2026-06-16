@@ -290,6 +290,34 @@ public class ExecutionEngineTests : IDisposable
     }
 
     [Fact]
+    public void ExecuteAll_AllSucceed_AppliesEachAndJournalsSeparately()
+    {
+        var engine = new ExecutionEngine(new FakeRegistry(), _journalDir);
+        var p1 = engine.BuildPlan(Entry(id: "tweak-a"));
+        var p2 = engine.BuildPlan(Entry(id: "tweak-b"));
+
+        var (applied, stopped) = engine.ExecuteAll([p1, p2]);
+
+        Assert.Equal(2, applied);
+        Assert.Null(stopped);
+        Assert.Equal(2, ExecutionEngine.ListSessions(_journalDir).Count); // one journal each
+    }
+
+    [Fact]
+    public void ExecuteAll_StopsAtFirstVerifyFailure()
+    {
+        var engine = new ExecutionEngine(new FakeRegistry { FailWrites = true }, _journalDir);
+        var p1 = engine.BuildPlan(Entry(id: "first"));
+        var p2 = engine.BuildPlan(Entry(id: "second"));
+
+        var (applied, stopped) = engine.ExecuteAll([p1, p2]);
+
+        Assert.Equal(0, applied);
+        Assert.NotNull(stopped);
+        Assert.Contains("Test", stopped); // plan.TweakName, surfaced to the user
+    }
+
+    [Fact]
     public void ShippedKb_DynamicTick_BuildsBcdeditPlan()
     {
         var bcd = new FakeBcdEdit();

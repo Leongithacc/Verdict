@@ -194,6 +194,27 @@ Nuovo metodo di esecuzione per la config di boot. SCRIVE SU BCD → da rivedere 
   BX Tool → applicare via Verdict legge "yes", target "yes" (no-op), undo ripristina "yes"
   (il suo stato), NON il default: semantica corretta.
 
+### 13. "Apply all recommended" — batch dietro singolo dry-run (2026-06-16)
+Bottone sul Verdict che applica TUTTI i tweak consigliati+applicabili in un colpo, dietro
+una sola schermata di consenso. NON e un "ottimizza tutto": prende solo
+Classification.Recommended ∩ CanApply (niente placebo/risky/gui-only), e ogni tweak passa
+comunque per Execute → journal → verify → undo INDIVIDUALE nella pagina Changes.
+- `ExecutionEngine.ExecuteAll(plans)` (primitiva, in WPEP.Execution): esegue in sequenza,
+  si ferma al PRIMO verify fallito, ritorna (Applied, StoppedAt). I gia-applicati restano
+  journaled e reversibili (nessun rollback automatico — coerente con la filosofia).
+- `ApplyAllViewModel` (ApplyFlow.cs): Open() costruisce il piano combinato, PARTIZIONA
+  onestamente i tweak che richiedono admin se non elevato (mostrati come "skipped", non
+  persi) e quelli che BuildPlan rifiuta. Confirm() chiama ExecuteAll. Mai scrittura prima
+  del consenso. AdminBlocked → bottone "Relaunch as administrator".
+- VerdictViewModel: raccoglie `_applicableRecommended` durante Apply(); espone
+  ApplyAllCommand + HasApplicableRecommended + label con conteggio.
+- XAML: bottone PrimaryButton nell'header Verdict (visibile solo se ci sono consigliati
+  applicabili) + overlay batch con lista scrollabile, rispecchia lo stile del dialog singolo.
+- Test: ExecuteAll all-success (2 journaled) + stop-al-primo-fail. Suite 115→**117 verdi**.
+- Verificato a runtime: app avviata 5s, XAML+binding caricano senza crash (smoke test),
+  poi chiusa. App+CLI ripubblicati. DA RIVEDERE da Fable: la partizione admin e il fatto
+  che ExecuteAll non fa rollback dei precedenti su stop (scelta deliberata, documentata).
+
 ## Stato a fine sessione Opus (2026-06-15)
 - `dotnet test`: **112/112 verdi**. `dotnet build WPEP.sln -c Release`: 0 errori.
 - KB: **75 voci** (20 forti, 20 plausibili, 17 controverse, 11 placebo, 7 risky);

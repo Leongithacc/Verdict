@@ -148,6 +148,22 @@ public sealed class ExecutionEngine(
         return file;
     }
 
+    /// <summary>Applies several plans in sequence (the "Apply all" batch). Each plan
+    /// is a normal Execute — own journal, own verify, independently undoable. Stops at
+    /// the FIRST plan whose verify fails: already-applied plans stay journaled and
+    /// reversible, nothing is rolled back automatically. Returns how many applied and,
+    /// if it stopped, which plan stopped it.</summary>
+    public (int Applied, string? StoppedAt) ExecuteAll(IReadOnlyList<ExecutionPlan> plans)
+    {
+        int applied = 0;
+        foreach (var plan in plans)
+        {
+            try { Execute(plan); applied++; }
+            catch (Exception ex) { return (applied, $"{plan.TweakName}: {ex.Message}"); }
+        }
+        return (applied, null);
+    }
+
     /// <summary>Undo a journaled session: reverse order, restore the previous
     /// value (or delete what did not exist), verify each restore.</summary>
     public int Undo(string journalFile)

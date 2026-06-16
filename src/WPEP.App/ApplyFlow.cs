@@ -26,6 +26,8 @@ public sealed class ExecutionService
 
     public ExecutionPlan BuildPlan(TweakEntry entry) => _engine.BuildPlan(entry);
     public string Execute(ExecutionPlan plan) => _engine.Execute(plan);
+    public (int Applied, string? StoppedAt) ExecuteAll(IReadOnlyList<ExecutionPlan> plans) =>
+        _engine.ExecuteAll(plans);
     public int Undo(string journalFile) => _engine.Undo(journalFile);
     public IReadOnlyList<string> Sessions() =>
         ExecutionEngine.ListSessions(ExecutionEngine.DefaultJournalDirectory);
@@ -158,6 +160,126 @@ public sealed class ApplyDialogViewModel : ViewModelBase
         {
             IsBusy = false;
         }
+    }
+
+    private void Close()
+    {
+        bool wasApplied = Applied;
+        IsOpen = false;
+        if (wasApplied)
+            _ = _main.Verdict.ScanAsync();
+    }
+}
+
+/// <summary>Batch consent dialog: applies ALL recommended+applicable tweaks behind a
+/// SINGLE dry-run. Each tweak is still executed, journaled and undoable individually on
+/// the Changes page — "Apply all" is a convenience over the same safe per-tweak engine,
+/// never an "optimize everything" shortcut. Placebo/risky/gui-only are excluded upstream
+/// (only Classification.Recommended ∩ CanApply reaches here). Stops at the first verify
+/// failure; everything already applied stays journaled and reversible.</summary>
+public sealed class ApplyAllViewModel : ViewModelBase
+{
+    private readonly MainViewModel _main;
+    private readonly ExecutionService _exec;
+    private readonly List<(TweakEntry Entry, ExecutionPlan Plan)> _ready = [];
+    private string _title = "";
+    private string _planText = "";
+    private string _status = "";
+    private bool _isOpen;
+    private bool _applied;
+    private bool _busy;
+    private int _adminSkipped;
+
+    public ApplyAllViewModel(MainViewModel main, ExecutionService exec)
+    {
+        _main = main;
+        _exec = exec;
+        ConfirmCommand = new(Confirm, () => CanConfirm);
+        CancelCommand = new(Close);
+        RelaunchAsAdminCommand = new(() => _main.Measure.RelaunchAsAdminCommand.Execute(null));
+    }
+
+    public bool IsOpen { get => _isOpen; set => Set(ref _isOpen, value); }
+    public string Title { get => _title; set => Set(ref _title, value); }
+    public string PlanText { get => _planText; set => Set(ref _planText, value); }
+    public string Status { get => _status; set => Set(ref _status, value); }
+    public bool IsBusy { get => _busy; set { Set(ref _busy, value); Raise(nameof(CanConfirm)); } }
+    public bool Applied { get => _applied; set { Set(ref _applied, value); Raise(nameof(CanConfirm)); Raise(nameof(ShowApplyButton)); } }
+    public bool HasPlan => _ready.Count > 0;
+    public bool ShowApplyButton => HasPlan && !Applied;
+    public bool AdminBlocked => _adminSkipped > 0 && !ExecutionService.IsElevated;
+    public bool CanConfirm => HasPlan && !Applied && !IsBusy;
+
+    public RelayCommand ConfirmCommand { get; }
+    public RelayCommand CancelCommand { get; }
+    public RelayCommand RelaunchAsAdminCommand { get; }
+
+    public void Open(IReadOnlyList<TweakEntry> entries)
+    {
+        Applied = false;
+        Status = "";
+        _ready.Clear();
+        _adminSkipped = 0;
+        bool elevated = ExecutionService.IsElevated;
+        var lines = new List<string>();
+        int reboots = 0;
+
+        foreach (var e in entries)
+        {
+            // Honest partition: anything needing admin while unelevated is shown
+            // as skipped, not silently dropped.
+            if (_exec.NeedsAdmin(e) && !elevated)
+            {
+                _adminSkipped++;
+                lines.Add($"• {e.Name}\n    [needs administrator — skipped]");
+                continue;
+            }
+            try
+            {
+                var plan = _exec.BuildPlan(e);
+                _ready.Add((e, plan));
+                lines.Add($"• {e.Name}\n{plan.Describe()}");
+                if (plan.RequiresReboot)
+                    reboots++;
+            }
+            catch (Exception ex)
+            {
+                lines.Add($"• {e.Name}\n    [can't apply automatically: {ex.Message}]");
+            }
+        }
+
+        Title = $"Apply {_ready.Count} recommended tweak(s)";
+        PlanText = string.Join("\n\n", lines) +
+            (reboots > 0 ? $"\n\n{reboots} of these need a reboot to take effect." : "");
+        Status = _adminSkipped > 0 && !elevated
+            ? $"{_adminSkipped} tweak(s) need administrator — relaunch as admin to include them."
+            : "";
+        Raise(nameof(HasPlan));
+        Raise(nameof(ShowApplyButton));
+        Raise(nameof(AdminBlocked));
+        Raise(nameof(CanConfirm));
+        IsOpen = true;
+    }
+
+    private void Confirm()
+    {
+        IsBusy = true;
+        int ok;
+        string? stoppedAt;
+        try
+        {
+            (ok, stoppedAt) = _exec.ExecuteAll([.. _ready.Select(r => r.Plan)]);
+        }
+        finally
+        {
+            IsBusy = false;
+        }
+        Applied = true;
+        Status = stoppedAt is null
+            ? $"Applied and verified {ok} tweak(s). Undo each in Changes."
+            : $"Applied {ok}, then STOPPED at {stoppedAt}. Applied tweaks are journaled and undoable.";
+        _main.TerminalLine = $"$ verdict apply-all · {ok} tweaks · journaled";
+        _main.Changes.Refresh();
     }
 
     private void Close()
