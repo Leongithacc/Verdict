@@ -273,6 +273,16 @@ Il campo KB `conflicts_with` esisteva ma NON era usato da nessuna parte: apply-a
 - Test: 4 nuovi (stronger vince, undirected, no-conflict, parità→ordine). Suite 117→**121**.
 - App+CLI ripubblicati.
 
+### 18. KB RTX 50 / NVIDIA 2025 (2026-06-16) — rilevante per la 5080 di Leon
+KB 80→**82**, fonti primarie NVIDIA verificate in sessione (WebSearch):
+- `nvidia-reflex-2-frame-warp` (evidence_strong, NVIDIA CES 2025): Frame Warp, -75%
+  latenza dichiarata, Valorant <3ms. ONESTO: al lancio esclusivo RTX 50 (la sua 5080) +
+  pochi titoli (Valorant, THE FINALS). Super rilevante per il suo competitive.
+- `nvidia-smooth-motion` (controversial, NVIDIA support): frame-gen driver-level RTX 50,
+  ~2x FPS percepiti MA aggiunge latenza → ONESTO: SCONSIGLIATO nei competitivi (Valorant/
+  CS2/Apex), solo dove la fluidita conta piu della reattivita.
+- Build 0 err, 121 test (KnowledgeBaseTests valida le 2 nuove). App+CLI ripubblicati (KB=82).
+
 ## Stato a fine sessione Opus (2026-06-15)
 - `dotnet test`: **112/112 verdi**. `dotnet build WPEP.sln -c Release`: 0 errori.
 - KB: **75 voci** (20 forti, 20 plausibili, 17 controverse, 11 placebo, 7 risky);

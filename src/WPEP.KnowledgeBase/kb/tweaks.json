@@ -2082,5 +2082,59 @@
       "undo": "manual-steps",
       "gui_only_reason": "In-game setting"
     }
+  },
+  {
+    "id": "nvidia-reflex-2-frame-warp",
+    "name": "NVIDIA Reflex 2 (Frame Warp)",
+    "category": "gpu",
+    "description": "Evoluzione di Reflex annunciata da NVIDIA al CES 2025. Oltre al Reflex Low Latency classico, il Frame Warp aggiorna il frame gia renderizzato con l'ultimo input del mouse appena prima di mandarlo al display, usando un algoritmo predittivo per riempire i bordi. NVIDIA dichiara fino al -75% di latenza di sistema; in Valorant (CPU-bound, 800+ FPS su RTX 50) la latenza media scende sotto i 3 ms.",
+    "hardware_prerequisites": [
+      "gpu:nvidia"
+    ],
+    "expected_impact": "Riduzione di latenza importante dichiarata dal vendor (fino a -75%). ONESTA: al debutto e ESCLUSIVO RTX 50 (la tua 5080 lo supporta) e solo nei titoli che lo integrano (Valorant, THE FINALS al lancio; altre RTX e altri giochi in arrivo). Abilita dove c'e: per il competitive e oro puro.",
+    "evidence_level": "evidence_strong",
+    "sources": [
+      "https://www.nvidia.com/en-us/geforce/news/reflex-2-even-lower-latency-gameplay-with-frame-warp/"
+    ],
+    "risk": "none",
+    "risk_notes": "",
+    "rollback": "Stessa impostazione in-game / NVIDIA App -> Off.",
+    "manual_steps": "Aggiorna il driver GeForce, abilita NVIDIA Reflex nel gioco supportato; il Frame Warp di Reflex 2 si attiva dove il titolo lo integra (Valorant, THE FINALS). Verifica con l'overlay latenza di NVIDIA App.",
+    "conflicts_with": [],
+    "measurable": true,
+    "apply": {
+      "method": "gui-only",
+      "operations": [],
+      "requires_reboot": false,
+      "undo": "manual-steps",
+      "gui_only_reason": "In-game / driver setting (RTX 50, titoli supportati)"
+    }
+  },
+  {
+    "id": "nvidia-smooth-motion",
+    "name": "NVIDIA Smooth Motion (frame-gen a livello driver, RTX 50)",
+    "category": "gpu",
+    "description": "Modello AI driver-based (NVIDIA App) che interpola un frame aggiuntivo tra due renderizzati, anche in giochi SENZA DLSS Frame Generation. Documentato da NVIDIA per le RTX 50: raddoppia tipicamente il frame rate percepito. Come ogni frame generation NON e gratis: introduce latenza (i frame interpolati non rispondono all'input) e possibili artefatti.",
+    "hardware_prerequisites": [
+      "gpu:nvidia"
+    ],
+    "expected_impact": "Fluidita visiva molto maggiore (FPS percepiti ~2x) nei single-player/giochi pesanti su RTX 50. Per i tuoi titoli COMPETITIVI (Valorant/CS2/Apex) SCONSIGLIATO: la latenza aggiunta e l'opposto di cio che vuoi in un FPS competitivo. Da usare solo dove la fluidita conta piu della reattivita.",
+    "evidence_level": "controversial",
+    "sources": [
+      "https://nvidia.custhelp.com/app/answers/detail/a_id/5621/~/enabling-smooth-motion-in-nvidia-app"
+    ],
+    "risk": "low",
+    "risk_notes": "Aggiunge latenza e possibili artefatti di interpolazione. Mai nei competitivi.",
+    "rollback": "NVIDIA App -> Graphics -> Program Settings -> Driver Settings -> Smooth Motion Off.",
+    "manual_steps": "NVIDIA App -> Graphics -> seleziona un gioco DX11/DX12 -> Program Settings -> Driver Settings -> Smooth Motion -> On. Solo per giochi dove vuoi piu fluidita e NON ti importa della latenza.",
+    "conflicts_with": [],
+    "measurable": true,
+    "apply": {
+      "method": "gui-only",
+      "operations": [],
+      "requires_reboot": false,
+      "undo": "manual-steps",
+      "gui_only_reason": "NVIDIA App driver setting (RTX 50)"
+    }
   }
 ]
