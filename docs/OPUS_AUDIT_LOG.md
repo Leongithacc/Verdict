@@ -170,6 +170,30 @@ KB **75→79** (ricerca con fonti primarie verificate via WebFetch in sessione):
 - Validazione: build 0 err, 112/112 test (KnowledgeBaseTests carica la KB reale + validator).
   79 voci, 0 id duplicati. App+CLI ripubblicati in artifacts (app non era in esecuzione).
 
+### 12. Esecutore bcdedit (2026-06-16) — chiude il TODO 'bcdedit' dell'engine
+Nuovo metodo di esecuzione per la config di boot. SCRIVE SU BCD → da rivedere con cura.
+- `BcdEditAccess.cs`: IBcdEdit + RealBcdEdit. Query parsa `bcdedit /enum {current}` per
+  un elemento (regex per nome riga), normalizza il valore a lowercase (bcdedit mostra "Yes"
+  ma accetta "yes" → verify case-insensitive). Set = `/set {current} <el> <val>`,
+  Delete = `/deletevalue {current} <el>` (= ritorno al DEFAULT Windows). Solo elementi
+  timer/tick passati dalla KB; mai identifier/device.
+- `ExecutionEngine`: ctor accetta IBcdEdit (default RealBcdEdit). BuildPlan/ApplyOne/Undo
+  hanno il ramo "bcdedit". Undo: se l'elemento ESISTEVA prima → ripristina il valore
+  precedente; se NON esisteva → deletevalue (default). Verify dopo ogni write e dopo undo.
+- `ApplyFlow`: CanApply include "bcdedit"; NeedsAdmin = SEMPRE true per bcdedit (boot store).
+- KB: `disable-dynamic-tick` (risky) ora method "bcdedit" (disabledynamictick=yes,
+  requires_reboot). SCELTA ONESTA: la voce resta gradata risky e "SCONSIGLIATA"; renderla
+  applicabile serve come banco di prova REVERSIBILE+MISURATO (restore point + journal + undo
+  one-click), il workflow che i suoi manual_steps gia descrivono. L'Advisor non la raccomanda.
+- `hypervisorlaunchtype off` NON collegato di proposito: spegnerebbe l'hypervisor → romperebbe
+  VBS/HVCI/Vanguard che Leon tiene attivi. Resta gui-only.
+- Test: FakeBcdEdit in-memory (mai BCD reale). 3 nuovi test (apply+undo-delete, apply+undo-
+  restore, shipped KB dynamic-tick costruisce il piano). Suite 112→**115 verdi**.
+- **DA TESTARE da Leon/Fable sul campo**: RealBcdEdit (parsing /enum, casing valori, che
+  /set accetti lowercase per tutti gli elementi). NB: Leon ha gia disabledynamictick=yes via
+  BX Tool → applicare via Verdict legge "yes", target "yes" (no-op), undo ripristina "yes"
+  (il suo stato), NON il default: semantica corretta.
+
 ## Stato a fine sessione Opus (2026-06-15)
 - `dotnet test`: **112/112 verdi**. `dotnet build WPEP.sln -c Release`: 0 errori.
 - KB: **75 voci** (20 forti, 20 plausibili, 17 controverse, 11 placebo, 7 risky);

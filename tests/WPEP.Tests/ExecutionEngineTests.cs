@@ -39,6 +39,23 @@ file sealed class FakePowerCfg : IPowerCfg
         Values[$"{subgroup}/{setting}"] = index;
 }
 
+/// <summary>In-memory BCD store: never touches the real boot configuration.
+/// Mirrors RealBcdEdit's lowercase normalisation so tests match the engine.</summary>
+file sealed class FakeBcdEdit : IBcdEdit
+{
+    public readonly Dictionary<string, string> Elements =
+        new(StringComparer.OrdinalIgnoreCase);
+
+    public BcdValue Query(string element) =>
+        Elements.TryGetValue(element, out var v)
+            ? new BcdValue(true, v) : new BcdValue(false, null);
+
+    public void Set(string element, string value) =>
+        Elements[element] = value.Trim().ToLowerInvariant();
+
+    public void Delete(string element) => Elements.Remove(element);
+}
+
 public class ExecutionEngineTests : IDisposable
 {
     private readonly string _journalDir =
@@ -225,5 +242,66 @@ public class ExecutionEngineTests : IDisposable
             Assert.NotEmpty(plan.Operations);
             Assert.All(plan.Operations, o => Assert.Matches("^(dword|string)$", o.Kind));
         }
+    }
+
+    private static ApplySpec BcdApply(string element = "disabledynamictick",
+        string value = "yes") => new()
+    {
+        Method = "bcdedit",
+        Operations =
+            [new ApplyOperation { Path = element, ValueAfter = value, Kind = "bcdedit" }],
+        RequiresReboot = true,
+    };
+
+    [Fact]
+    public void BcdEdit_Apply_WhenUnset_UndoDeletesBackToDefault()
+    {
+        var bcd = new FakeBcdEdit(); // element absent = Windows default
+        var engine = new ExecutionEngine(new FakeRegistry(), _journalDir, bcdEdit: bcd);
+        var entry = Entry(apply: BcdApply());
+
+        var plan = engine.BuildPlan(entry);
+        Assert.False(plan.Operations[0].ExistedBefore);
+        Assert.Null(plan.Operations[0].Before);
+
+        var file = engine.Execute(plan);
+        Assert.Equal("yes", bcd.Elements["disabledynamictick"]); // applied
+
+        engine.Undo(file);
+        Assert.False(bcd.Elements.ContainsKey("disabledynamictick")); // back to default
+    }
+
+    [Fact]
+    public void BcdEdit_Apply_WhenSet_UndoRestoresPreviousValue()
+    {
+        var bcd = new FakeBcdEdit();
+        bcd.Elements["disabledynamictick"] = "no"; // had an explicit prior value
+        var engine = new ExecutionEngine(new FakeRegistry(), _journalDir, bcdEdit: bcd);
+
+        var plan = engine.BuildPlan(Entry(apply: BcdApply()));
+        Assert.True(plan.Operations[0].ExistedBefore);
+        Assert.Equal("no", plan.Operations[0].Before);
+
+        var file = engine.Execute(plan);
+        Assert.Equal("yes", bcd.Elements["disabledynamictick"]);
+
+        engine.Undo(file);
+        Assert.Equal("no", bcd.Elements["disabledynamictick"]); // restored, not deleted
+    }
+
+    [Fact]
+    public void ShippedKb_DynamicTick_BuildsBcdeditPlan()
+    {
+        var bcd = new FakeBcdEdit();
+        var engine = new ExecutionEngine(new FakeRegistry(), _journalDir, bcdEdit: bcd);
+        var kb = KnowledgeBaseLoader.Load(
+            Path.Combine(AppContext.BaseDirectory, "kb", "tweaks.json"));
+        var entry = kb.First(e => e.Id == "disable-dynamic-tick");
+
+        var plan = engine.BuildPlan(entry);
+
+        Assert.Equal("bcdedit", plan.Method);
+        Assert.Equal("disabledynamictick", plan.Operations[0].Path);
+        Assert.Equal("yes", plan.Operations[0].After);
     }
 }

@@ -244,7 +244,21 @@
     "rollback": "Terminale admin: bcdedit /deletevalue disabledynamictick → riavvio.",
     "manual_steps": "SCONSIGLIATO di default. Per test controllato: terminale admin → bcdedit /set disabledynamictick yes → riavvio → misura con wpep bench (5+ run) → rollback se nessun miglioramento oltre il noise floor.",
     "conflicts_with": [],
-    "measurable": true
+    "measurable": true,
+    "apply": {
+      "method": "bcdedit",
+      "operations": [
+        {
+          "path": "disabledynamictick",
+          "value_after": "yes",
+          "verify": "yes",
+          "kind": "bcdedit"
+        }
+      ],
+      "requires_reboot": true,
+      "undo": "auto-journal",
+      "gui_only_reason": null
+    }
   },
   {
     "id": "nagle-tcpackfrequency",

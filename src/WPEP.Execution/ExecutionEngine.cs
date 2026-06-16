@@ -40,12 +40,14 @@ public sealed class JournalSession
 /// The V2 execution engine, EXECUTION_ENGINE_V2 principles enforced in code:
 /// only KB apply specs, dry-run plan with live before-values, journal-before-write,
 /// verify-after-write, stop on any incoherence, per-entry undo in reverse order.
-/// Supports registry and powercfg methods (bcdedit/service: TODO).
+/// Supports registry, powercfg and bcdedit methods (service: TODO).
 /// </summary>
 public sealed class ExecutionEngine(
-    IRegistryAccess registry, string journalDirectory, IPowerCfg? powerCfg = null)
+    IRegistryAccess registry, string journalDirectory,
+    IPowerCfg? powerCfg = null, IBcdEdit? bcdEdit = null)
 {
     private readonly IPowerCfg _powerCfg = powerCfg ?? new RealPowerCfg();
+    private readonly IBcdEdit _bcdEdit = bcdEdit ?? new RealBcdEdit();
 
     public static string DefaultJournalDirectory =>
         System.IO.Path.Combine(AppContext.BaseDirectory, "data", "journal");
@@ -87,8 +89,17 @@ public sealed class ExecutionEngine(
                     current.ToString(), target);
             }).ToList(),
 
+            "bcdedit" => apply.Operations.Select(op =>
+            {
+                var current = _bcdEdit.Query(op.Path); // op.Path = BCD element name
+                string target = (op.ValueAfter ?? throw new InvalidOperationException(
+                    $"{entry.Id}: value_after (valore bcdedit) mancante")).Trim().ToLowerInvariant();
+                return new PlannedOperation(op.Path, "bcdedit", current.Exists,
+                    current.Value, target);
+            }).ToList(),
+
             _ => throw new NotSupportedException(
-                $"Metodo '{apply.Method}' non ancora supportato dall'engine (registry e powercfg in questa build)."),
+                $"Metodo '{apply.Method}' non ancora supportato dall'engine (registry, powercfg, bcdedit in questa build)."),
         };
 
         return new ExecutionPlan(entry.Id, entry.Name, apply.Method,
@@ -171,6 +182,16 @@ public sealed class ExecutionEngine(
                     if (_powerCfg.QuerySettingIndex(sg, st).ToString() != entry.ValueBefore)
                         throw new InvalidOperationException($"Undo VERIFY fallita su {entry.Path}.");
                     break;
+                case "bcdedit" when entry.ExistedBefore:
+                    _bcdEdit.Set(entry.Path, entry.ValueBefore!);
+                    if (_bcdEdit.Query(entry.Path).Value != entry.ValueBefore)
+                        throw new InvalidOperationException($"Undo VERIFY fallita su {entry.Path} (bcdedit).");
+                    break;
+                case "bcdedit":
+                    _bcdEdit.Delete(entry.Path); // back to Windows default
+                    if (_bcdEdit.Query(entry.Path).Exists)
+                        throw new InvalidOperationException($"Undo VERIFY fallita su {entry.Path}: elemento ancora presente.");
+                    break;
             }
             entry.Undone = true;
             restored++;
@@ -199,6 +220,9 @@ public sealed class ExecutionEngine(
                 var (subgroup, setting) = SplitPowerPath(path);
                 _powerCfg.SetSettingIndex(subgroup, setting, int.Parse(after));
                 return _powerCfg.QuerySettingIndex(subgroup, setting).ToString();
+            case "bcdedit":
+                _bcdEdit.Set(path, after);
+                return _bcdEdit.Query(path).Value ?? "<niente>";
             default:
                 throw new NotSupportedException($"Metodo '{method}' non eseguibile.");
         }

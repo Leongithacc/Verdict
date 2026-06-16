@@ -14,13 +14,15 @@ public sealed class ExecutionService
         new(new RealRegistryAccess(), ExecutionEngine.DefaultJournalDirectory);
 
     public bool CanApply(TweakEntry entry) =>
-        entry.Apply is { Method: "registry" or "powercfg" or "powercfg-value" } &&
+        entry.Apply is { Method: "registry" or "powercfg" or "powercfg-value" or "bcdedit" } &&
         entry.EvidenceLevel != EvidenceLevel.Placebo;
 
     public bool NeedsAdmin(TweakEntry entry) =>
-        entry.Apply?.Operations.Any(o =>
+        // bcdedit always writes to the boot store: admin, always.
+        entry.Apply?.Method == "bcdedit" ||
+        (entry.Apply?.Operations.Any(o =>
             o.Path.StartsWith("HKLM", StringComparison.OrdinalIgnoreCase) ||
-            o.Path.StartsWith("HKEY_LOCAL_MACHINE", StringComparison.OrdinalIgnoreCase)) ?? false;
+            o.Path.StartsWith("HKEY_LOCAL_MACHINE", StringComparison.OrdinalIgnoreCase)) ?? false);
 
     public ExecutionPlan BuildPlan(TweakEntry entry) => _engine.BuildPlan(entry);
     public string Execute(ExecutionPlan plan) => _engine.Execute(plan);
