@@ -1907,5 +1907,118 @@
       "gui_only_reason": "Use the official System Properties setting",
       "settings_uri": "SystemPropertiesPerformance.exe"
     }
+  },
+  {
+    "id": "qos-disable-user-presence",
+    "name": "QoS: non abbassare la priorita per inattivita (DisableUserPresenceQos)",
+    "category": "power",
+    "description": "Documentato da Microsoft (Quality of Service): dopo un periodo SENZA input dell'utente Windows puo abbassare la QoS dell'app in primo piano da High a Medium. Microsoft stessa indica di disattivarlo quando si misurano le prestazioni (benchmark automatici senza input falsano i risultati). La chiave DisableUserPresenceQos=1 disabilita SOLO questo comportamento; non tocca la QoS normale.",
+    "hardware_prerequisites": [],
+    "expected_impact": "Microsoft specifica che l'abbassamento per inattivita avviene SOLO a batteria. Su un desktop fisso in AC, con input continuo durante il gioco, la feature non si attiva mai: effetto atteso nullo. Valore reale per laptop a batteria o per benchmark automatici senza input. Tweak onesto ma quasi-placebo sul tuo setup.",
+    "evidence_level": "plausible",
+    "sources": [
+      "https://learn.microsoft.com/en-us/windows/win32/procthread/quality-of-service"
+    ],
+    "risk": "low",
+    "risk_notes": "Nessun rischio di stabilita. Su desktop non cambia nulla.",
+    "rollback": "Eliminare il valore DisableUserPresenceQos (o impostarlo a 0) in HKLM\\SYSTEM\\CurrentControlSet\\Control\\Power\\PowerThrottling, riavvio.",
+    "manual_steps": "Regedit (admin) -> HKLM\\SYSTEM\\CurrentControlSet\\Control\\Power\\PowerThrottling -> nuovo DWORD DisableUserPresenceQos = 1 -> riavvio. Su desktop non aspettarti differenze misurabili.",
+    "conflicts_with": [],
+    "measurable": false,
+    "apply": {
+      "method": "registry",
+      "operations": [
+        {
+          "path": "HKLM\\SYSTEM\\CurrentControlSet\\Control\\Power\\PowerThrottling\\DisableUserPresenceQos",
+          "value_after": "1",
+          "verify": "1",
+          "kind": "dword"
+        }
+      ],
+      "requires_reboot": true,
+      "undo": "auto-journal",
+      "gui_only_reason": null
+    }
+  },
+  {
+    "id": "power-throttling-global-myth",
+    "name": "Il mito di 'disabilitare il Power Throttling' per i giochi",
+    "category": "power",
+    "description": "Tweak diffuso: creare PowerThrottlingOff=1 per spegnere globalmente il power throttling. La documentazione Microsoft (Quality of Service) mostra che un'app in primo piano e in focus riceve gia il livello 'High QoS' = piena performance, per design. Il power throttling (EcoQoS) colpisce i processi NON visibili/in background, non il gioco in foreground. Inoltre la chiave PowerThrottlingOff non e documentata da Microsoft: per la regola d'oro del progetto non puo superare 'placebo'.",
+    "hardware_prerequisites": [],
+    "expected_impact": "Nessun guadagno in gioco: il gioco in focus e gia High QoS. Spegnere globalmente il throttling fa solo consumare di piu ai processi di background. Su desktop AC, irrilevante.",
+    "evidence_level": "placebo",
+    "sources": [
+      "https://learn.microsoft.com/en-us/windows/win32/procthread/quality-of-service"
+    ],
+    "risk": "none",
+    "risk_notes": "",
+    "rollback": "Eliminare PowerThrottlingOff in HKLM\\SYSTEM\\CurrentControlSet\\Control\\Power\\PowerThrottling.",
+    "manual_steps": "Non necessario: il gioco in primo piano e gia a piena performance. Se vuoi proteggere un singolo eseguibile dall'efficienza, usa Impostazioni -> Sistema -> Alimentazione, oppure lascia fare a Process Lasso/priorita.",
+    "conflicts_with": [],
+    "measurable": false,
+    "apply": {
+      "method": "gui-only",
+      "operations": [],
+      "requires_reboot": false,
+      "undo": "manual-steps",
+      "gui_only_reason": "Myth - undocumented key, no foreground benefit by design"
+    }
+  },
+  {
+    "id": "auto-hdr-visual-not-perf",
+    "name": "Auto HDR: e' una feature visiva, non di performance",
+    "category": "gpu",
+    "description": "Microsoft documenta Auto HDR come upgrade da SDR a HDR per giochi DirectX 11/12: amplia gamma colore e luminosita per un'immagine piu ricca. NON e' un tweak di prestazioni: non aumenta gli FPS ne riduce la latenza. Va valutata solo per la resa visiva (richiede monitor HDR). Inserita qui per chiarezza: chi la cerca tra i 'tweak gaming' aspettandosi piu performance resta deluso.",
+    "hardware_prerequisites": [
+      "monitor:hdr"
+    ],
+    "expected_impact": "Impatto su FPS/latenza: nullo per design (e' un passo di post-processing colore). Possibile minimo costo GPU. Beneficio reale = solo estetico, su pannelli HDR capaci.",
+    "evidence_level": "placebo",
+    "sources": [
+      "https://www.microsoft.com/en-us/windows/tips/auto-hdr"
+    ],
+    "risk": "none",
+    "risk_notes": "",
+    "rollback": "Impostazioni -> Schermo -> HDR -> Auto HDR off.",
+    "manual_steps": "Solo se vuoi piu resa visiva su monitor HDR: Impostazioni -> Schermo -> HDR -> attiva 'Auto HDR'. Non aspettarti guadagni di FPS o latenza.",
+    "conflicts_with": [],
+    "measurable": false,
+    "apply": {
+      "method": "gui-only",
+      "operations": [],
+      "requires_reboot": false,
+      "undo": "manual-steps",
+      "gui_only_reason": "Visual feature - open Settings to toggle",
+      "settings_uri": "ms-settings:display-hdr"
+    }
+  },
+  {
+    "id": "apex-reflex-on",
+    "name": "Apex Legends: NVIDIA Reflex On",
+    "category": "gpu",
+    "game": "apex",
+    "description": "NVIDIA documenta che Reflex aumenta la reattivita fino al 37% in Apex Legends, allineando il lavoro del game engine al rendering e riducendo la latenza di sistema. E' la miglior opzione di latenza disponibile nel gioco; piu evidente quando GPU-bound.",
+    "hardware_prerequisites": [
+      "gpu:nvidia"
+    ],
+    "expected_impact": "Riduzione di latenza documentata dal vendor (fino al -37% di system latency in Apex). Nessuno svantaggio: da tenere On.",
+    "evidence_level": "evidence_strong",
+    "sources": [
+      "https://www.nvidia.com/en-us/geforce/news/reflex-low-latency-apex-legends-valorant-fortnite-cs2/"
+    ],
+    "risk": "none",
+    "risk_notes": "",
+    "rollback": "Stessa impostazione -> Disabilitato.",
+    "manual_steps": "Apex Legends -> Impostazioni -> Video -> NVIDIA Reflex -> Abilitato (o Abilitato + Boost).",
+    "conflicts_with": [],
+    "measurable": false,
+    "apply": {
+      "method": "gui-only",
+      "operations": [],
+      "requires_reboot": false,
+      "undo": "manual-steps",
+      "gui_only_reason": "In-game setting"
+    }
   }
 ]

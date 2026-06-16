@@ -66,6 +66,7 @@ public static class SnapshotBuilder
             FortniteInstalled = Probe(ReadFortniteInstalled, (bool?)null),
             ValorantInstalled = Probe(ReadValorantInstalled, (bool?)null),
             Cs2Installed = Probe(ReadCs2Installed, (bool?)null),
+            ApexInstalled = Probe(ReadApexInstalled, (bool?)null),
         };
     }
 
@@ -80,9 +81,28 @@ public static class SnapshotBuilder
         return Directory.EnumerateDirectories(metadata, "valorant*").Any();
     }
 
-    /// <summary>CS2 is Steam app 730. Check the manifest in the main Steam library
-    /// and any extra libraries listed in libraryfolders.vdf.</summary>
-    private static bool? ReadCs2Installed()
+    /// <summary>CS2 is Steam app 730.</summary>
+    private static bool? ReadCs2Installed() => SteamAppInstalled(730);
+
+    /// <summary>Apex Legends is Steam app 1172470. (EA App copies aren't detected
+    /// here; null/false only means 'not found via Steam', section stays shown on null.)</summary>
+    private static bool? ReadApexInstalled() => SteamAppInstalled(1172470);
+
+    /// <summary>True if appmanifest_&lt;appid&gt;.acf exists in any Steam library.
+    /// Null = Steam not found (caller shows the game section honestly).</summary>
+    private static bool? SteamAppInstalled(uint appId)
+    {
+        var libraries = EnumerateSteamLibraries();
+        if (libraries is null)
+            return null;
+        var manifest = $"appmanifest_{appId}.acf";
+        return libraries.Any(lib =>
+            File.Exists(Path.Combine(lib, "steamapps", manifest)));
+    }
+
+    /// <summary>The main Steam library plus any extra libraries in libraryfolders.vdf.
+    /// Null when Steam isn't installed (no SteamPath in registry).</summary>
+    private static List<string>? EnumerateSteamLibraries()
     {
         using var key = Registry.CurrentUser.OpenSubKey(@"Software\Valve\Steam");
         if (key?.GetValue("SteamPath") is not string steamPath || steamPath.Length == 0)
@@ -100,9 +120,7 @@ public static class SnapshotBuilder
                 libraries.Add(m.Groups[1].Value.Replace("\\\\", "\\"));
             }
         }
-
-        return libraries.Any(lib =>
-            File.Exists(Path.Combine(lib, "steamapps", "appmanifest_730.acf")));
+        return libraries;
     }
 
     /// <summary>Epic Games Launcher keeps one .item manifest per installed

@@ -139,6 +139,37 @@ Nessun computer-use, nessuna apertura app, solo build/test/commit.
 - KB 74→75: win32priorityseparation-myth (controversial, MS archive). On-brand:
   l'impostazione "Programmi" fa gia il boost; i numeri magici da forum non hanno fonte.
 
+### 10. Launcher restore — "Verdict non funziona piu" (2026-06-16)
+- Diagnosi: il "non funziona piu" segnalato da Leon era il **Win+R**, non l'app.
+  In un cleanup precedente avevo cancellato `C:\Scripts\verdict.vbs` E rimosso la chiave
+  App Paths → `where verdict` vuoto, Run non risolveva nulla. L'app era integra
+  (cartella artifacts/app completa, 43 file, Desktop\Verdict.lnk valido, nessun crash log).
+- Fix (no admin, no VBScript deprecato su 26200):
+  - chiave `HKCU\...\App Paths\verdict.exe` (default = exe, + Path) → Run risolve "verdict".
+  - `C:\Scripts\verdict.cmd` di backup (start dell'exe) per risoluzione via PATH.
+- DA TESTARE da Leon: Win+R → verdict. Fallback garantito = Desktop\Verdict.lnk.
+  NB: contraddizione storica nel punto 9 (vbs "verificato sul campo") vs summary
+  ("vbs deprecato"): risolta abbandonando del tutto VBScript.
+
+### 11. Giro ricerca KB + Apex detection (2026-06-16)
+KB **75→79** (ricerca con fonti primarie verificate via WebFetch in sessione):
+- `qos-disable-user-presence` (plausible, MS Learn QoS) — **registry HKLM applicabile**
+  (DisableUserPresenceQos=1). ONESTO: MS dice che l'abbassamento QoS per inattivita e
+  SOLO a batteria → su desktop AC effetto nullo. expected_impact lo dichiara apertamente.
+  DA RIVEDERE: path HKLM\...\Power\PowerThrottling\DisableUserPresenceQos, dword, reboot.
+- `power-throttling-global-myth` (placebo, stessa fonte MS) — il foreground in focus e gia
+  High QoS per design → PowerThrottlingOff globale non aggiunge nulla; chiave non documentata MS.
+- `auto-hdr-visual-not-perf` (placebo, MS support) — Auto HDR e visivo, zero FPS/latenza.
+  settings_uri ms-settings:display-hdr.
+- `apex-reflex-on` (evidence_strong, NVIDIA, game:apex) — Apex Reflex -37% system latency
+  (stessa pagina NVIDIA gia usata per Valorant/Fortnite). gui-only.
+- **Detection Apex**: SystemSnapshot.ApexInstalled + GameInstalled("apex"); SnapshotBuilder
+  ReadApexInstalled via Steam app 1172470. Refactor: estratti EnumerateSteamLibraries() +
+  SteamAppInstalled(appId), CS2 ora li riusa (no duplicazione). DA RIVEDERE: app id Apex.
+- OW2 NON aggiunto: detection Battle.net poco affidabile, evitato probe traballante.
+- Validazione: build 0 err, 112/112 test (KnowledgeBaseTests carica la KB reale + validator).
+  79 voci, 0 id duplicati. App+CLI ripubblicati in artifacts (app non era in esecuzione).
+
 ## Stato a fine sessione Opus (2026-06-15)
 - `dotnet test`: **112/112 verdi**. `dotnet build WPEP.sln -c Release`: 0 errori.
 - KB: **75 voci** (20 forti, 20 plausibili, 17 controverse, 11 placebo, 7 risky);
