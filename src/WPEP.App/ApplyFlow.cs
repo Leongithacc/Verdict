@@ -224,7 +224,12 @@ public sealed class ApplyAllViewModel : ViewModelBase
         var lines = new List<string>();
         int reboots = 0;
 
-        foreach (var e in entries)
+        // Never apply two mutually-exclusive tweaks in one batch.
+        var (kept, conflicts) = WPEP.Advisor.ConflictResolver.Resolve(entries);
+        foreach (var d in conflicts)
+            lines.Add($"• {d.Entry.Name}\n    [saltato: {d.Reason}]");
+
+        foreach (var e in kept)
         {
             // Honest partition: anything needing admin while unelevated is shown
             // as skipped, not silently dropped.

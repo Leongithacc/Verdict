@@ -260,6 +260,19 @@ testato, stessa sicurezza.
   Pinnato a `3.2.4` concreto + clean obj. DA RIVEDERE da Fable: il pin di versione.
 - 117 test verdi. App+CLI ripubblicati.
 
+### 17. Conflict guard per apply-all (2026-06-16) — sicurezza batch
+Il campo KB `conflicts_with` esisteva ma NON era usato da nessuna parte: apply-all poteva
+(in teoria) applicare due tweak mutuamente esclusivi. Chiuso.
+- `WPEP.Advisor.ConflictResolver.Resolve(entries)`: conflitto UNDIRECTED (A vs B se uno dei
+  due lista l'altro), tiene l'evidenza più forte (ordinal EvidenceLevel più basso), parità →
+  ordine d'input; ritorna (Keep, Dropped con motivo).
+- Agganciato in BOTH ApplyAllViewModel (GUI) e RunApplyAll (CLI): i tweak scartati per
+  conflitto sono MOSTRATI nel dry-run con la ragione, non spariti in silenzio.
+- Sul PC di Leon non si triggera (i pair in conflitto non sono tutti recommended+applicable),
+  ma e corretto per un'app distribuibile e a prova di futuro (nuove voci recommended).
+- Test: 4 nuovi (stronger vince, undirected, no-conflict, parità→ordine). Suite 117→**121**.
+- App+CLI ripubblicati.
+
 ## Stato a fine sessione Opus (2026-06-15)
 - `dotnet test`: **112/112 verdi**. `dotnet build WPEP.sln -c Release`: 0 errori.
 - KB: **75 voci** (20 forti, 20 plausibili, 17 controverse, 11 placebo, 7 risky);

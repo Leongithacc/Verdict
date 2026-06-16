@@ -764,8 +764,13 @@ static int RunApplyAll(string[] args)
     var engine = NewEngine();
     var ready = new List<WPEP.Execution.ExecutionPlan>();
     int adminSkipped = 0;
+
+    // Never apply two mutually-exclusive tweaks in one batch.
+    var (kept, conflicts) = WPEP.Advisor.ConflictResolver.Resolve(recs);
     Console.WriteLine("Dry run — Applica tutti i consigliati:\n");
-    foreach (var e in recs)
+    foreach (var d in conflicts)
+        Console.WriteLine($"• {d.Entry.Name}\n    [saltato: {d.Reason}]");
+    foreach (var e in kept)
     {
         if (EntryNeedsAdmin(e) && !elevated)
         {
