@@ -241,6 +241,25 @@ Valori di registro VERIFICATI via ricerca prima di scrivere (regola d'oro: no gu
   App+CLI ripubblicati. DA RIVEDERE da Fable: HwSchMode (no fonte MS *del registro*, solo
   della feature) e Flags=506 (puo variare per build Windows — verify lo intercetta).
 
+### 16. CLI apply/undo — parita GUI↔CLI per applicare (2026-06-16)
+La CLI (distribuibile, "CLI-first") ora puo APPLICARE, non solo misurare. Stesso engine
+testato, stessa sicurezza.
+- Nuovi comandi: `wpep apply <id> [--yes]`, `wpep apply-all [--yes]`, `wpep changes`,
+  `wpep undo <file|last>`. WPEP.Cli ora referenzia WPEP.Execution.
+- SICUREZZA: **dry-run di DEFAULT** — senza --yes stampa il before→after e NON scrive.
+  Scrive solo con --yes. Rifiuta placebo/gui-only (CanApplyEntry). HKLM/boot → richiede
+  terminale admin (EntryNeedsAdmin: bcdedit o path HKLM). Stop al primo verify fallito in
+  apply-all. Undo idempotente.
+- Verificato sul PC reale (dry-run, niente scritto): apply legge il valore LIVE
+  (StickyKeys Flags=510→506), placebo rifiutato (exit 2), id inesistente (exit 2),
+  apply-all = "nessun consigliato applicabile" (sistema di Leon gia ottimizzato → corretto).
+- PrintUsage aggiornato; corretta la riga obsoleta "V1 non scrive MAI" (vero solo per i
+  comandi di misura; apply e la via di scrittura deliberata con journal).
+- FIX BUILD collaterale: WPEP.Diagnostics usava TraceEvent `Version="3.*"` (flottante) →
+  conflitto publish NETSDK1152 (3.2.3 vs 3.2.4) quando il CLI ha tirato dentro Execution.
+  Pinnato a `3.2.4` concreto + clean obj. DA RIVEDERE da Fable: il pin di versione.
+- 117 test verdi. App+CLI ripubblicati.
+
 ## Stato a fine sessione Opus (2026-06-15)
 - `dotnet test`: **112/112 verdi**. `dotnet build WPEP.sln -c Release`: 0 errori.
 - KB: **75 voci** (20 forti, 20 plausibili, 17 controverse, 11 placebo, 7 risky);

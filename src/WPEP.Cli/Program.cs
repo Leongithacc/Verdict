@@ -33,6 +33,14 @@ switch (args[0])
         return RunReport(args.Skip(1).ToArray());
     case "advise":
         return RunAdvise();
+    case "apply":
+        return RunApply(args.Skip(1).ToArray());
+    case "apply-all":
+        return RunApplyAll(args.Skip(1).ToArray());
+    case "changes":
+        return RunChanges();
+    case "undo":
+        return RunUndo(args.Skip(1).ToArray());
     case "tools" when args.Length >= 2 && args[1] == "install-presentmon":
         return await InstallPresentMon();
     default:
@@ -660,6 +668,188 @@ static int RunAdvise()
     return 0;
 }
 
+// ===================== APPLY / UNDO (Execution Engine V2, scrive sul sistema) =====================
+// Default = dry-run: stampa il piano, NON scrive. Scrive solo con --yes. Stessa sicurezza
+// della GUI: solo apply-spec della KB, niente placebo/gui-only, journal + verify, undo per sessione.
+
+static WPEP.Execution.ExecutionEngine NewEngine() =>
+    new(new WPEP.Execution.RealRegistryAccess(),
+        WPEP.Execution.ExecutionEngine.DefaultJournalDirectory);
+
+static bool EntryNeedsAdmin(WPEP.KnowledgeBase.TweakEntry e) =>
+    e.Apply?.Method == "bcdedit" ||
+    (e.Apply?.Operations.Any(o =>
+        o.Path.StartsWith("HKLM", StringComparison.OrdinalIgnoreCase) ||
+        o.Path.StartsWith("HKEY_LOCAL_MACHINE", StringComparison.OrdinalIgnoreCase)) ?? false);
+
+static bool CanApplyEntry(WPEP.KnowledgeBase.TweakEntry e) =>
+    e.Apply is { Method: "registry" or "powercfg" or "powercfg-value" or "bcdedit" } &&
+    e.EvidenceLevel != WPEP.KnowledgeBase.EvidenceLevel.Placebo;
+
+static int RunApply(string[] args)
+{
+    bool yes = args.Contains("--yes") || args.Contains("-y");
+    var id = args.FirstOrDefault(a => !a.StartsWith('-'));
+    if (id is null) { Console.Error.WriteLine("Uso: wpep apply <id> [--yes]"); return 2; }
+
+    IReadOnlyList<WPEP.KnowledgeBase.TweakEntry> entries;
+    try { entries = WPEP.KnowledgeBase.KnowledgeBaseLoader.Load(); }
+    catch (Exception ex) { Console.Error.WriteLine($"Caricamento KB fallito: {ex.Message}"); return 1; }
+
+    var entry = entries.FirstOrDefault(e => e.Id.Equals(id, StringComparison.OrdinalIgnoreCase));
+    if (entry is null) { Console.Error.WriteLine($"Voce '{id}' non trovata. 'wpep kb' per la lista."); return 2; }
+    if (!CanApplyEntry(entry))
+    {
+        Console.Error.WriteLine($"'{entry.Id}' non è applicabile automaticamente " +
+            $"({entry.Apply?.GuiOnlyReason ?? "placebo o solo manuale"}). 'wpep kb show {entry.Id}' per i passi manuali.");
+        return 2;
+    }
+    if (EntryNeedsAdmin(entry) && !Elevation.IsElevated())
+    {
+        Console.Error.WriteLine($"'{entry.Id}' scrive in HKLM/boot: serve un terminale amministratore.");
+        return 3;
+    }
+
+    var engine = NewEngine();
+    WPEP.Execution.ExecutionPlan plan;
+    try { plan = engine.BuildPlan(entry); }
+    catch (Exception ex) { Console.Error.WriteLine($"Impossibile costruire il piano: {ex.Message}"); return 1; }
+
+    Console.WriteLine($"\n{entry.Name}  [{entry.Id}]");
+    Console.WriteLine("Dry run — esattamente cosa cambierà:");
+    Console.WriteLine(plan.Describe());
+    if (plan.RequiresReboot) Console.WriteLine("\n(richiede un riavvio per avere effetto)");
+    bool risky = entry.Risk is WPEP.KnowledgeBase.RiskLevel.High or WPEP.KnowledgeBase.RiskLevel.Medium
+                 || entry.EvidenceLevel == WPEP.KnowledgeBase.EvidenceLevel.Risky;
+    if (risky && !string.IsNullOrWhiteSpace(entry.RiskNotes))
+        Console.WriteLine($"\n⚠ RISCHIO: {entry.RiskNotes}");
+
+    if (!yes)
+    {
+        Console.WriteLine("\nNiente è stato scritto. Rilancia con --yes per applicare " +
+            "(journaled; annulla con 'wpep undo').");
+        return 0;
+    }
+    try
+    {
+        var file = engine.Execute(plan);
+        Console.WriteLine($"\nApplicato e verificato. Journal: {Path.GetFileName(file)}");
+        Console.WriteLine($"Undo: wpep undo {Path.GetFileName(file)}   (o 'wpep undo last')");
+        return 0;
+    }
+    catch (Exception ex) { Console.Error.WriteLine($"FERMATO: {ex.Message}"); return 1; }
+}
+
+static int RunApplyAll(string[] args)
+{
+    bool yes = args.Contains("--yes") || args.Contains("-y");
+    IReadOnlyList<WPEP.KnowledgeBase.TweakEntry> entries;
+    try { entries = WPEP.KnowledgeBase.KnowledgeBaseLoader.Load(); }
+    catch (Exception ex) { Console.Error.WriteLine($"Caricamento KB fallito: {ex.Message}"); return 1; }
+
+    var snapshot = WPEP.SystemAnalyzer.SnapshotBuilder.Build(DateTimeOffset.UtcNow);
+    var recs = WPEP.Advisor.AdvisorEngine.Advise(snapshot, entries)
+        .Where(r => r.Entry.Game is null
+                    && r.Classification == WPEP.Advisor.Classification.Recommended
+                    && CanApplyEntry(r.Entry))
+        .Select(r => r.Entry).ToList();
+
+    if (recs.Count == 0)
+    {
+        Console.WriteLine("Nessun tweak consigliato E applicabile su questo PC. (Di solito è un bel segno.)");
+        return 0;
+    }
+
+    bool elevated = Elevation.IsElevated();
+    var engine = NewEngine();
+    var ready = new List<WPEP.Execution.ExecutionPlan>();
+    int adminSkipped = 0;
+    Console.WriteLine("Dry run — Applica tutti i consigliati:\n");
+    foreach (var e in recs)
+    {
+        if (EntryNeedsAdmin(e) && !elevated)
+        {
+            adminSkipped++;
+            Console.WriteLine($"• {e.Name}\n    [serve amministratore — saltato]");
+            continue;
+        }
+        try { var p = engine.BuildPlan(e); ready.Add(p); Console.WriteLine($"• {e.Name}\n{p.Describe()}"); }
+        catch (Exception ex) { Console.WriteLine($"• {e.Name}\n    [non applicabile: {ex.Message}]"); }
+    }
+    if (adminSkipped > 0)
+        Console.WriteLine($"\n{adminSkipped} richiedono un terminale amministratore (rilancia da admin per includerli).");
+    if (ready.Count == 0) { Console.WriteLine("\nNiente da applicare adesso."); return 0; }
+
+    if (!yes)
+    {
+        Console.WriteLine($"\nNiente scritto. Rilancia con --yes per applicare i {ready.Count} piani " +
+            "(ognuno journaled, undo singolo con 'wpep undo').");
+        return 0;
+    }
+    var (applied, stopped) = engine.ExecuteAll(ready);
+    Console.WriteLine(stopped is null
+        ? $"\nApplicati e verificati {applied} tweak. 'wpep changes' per la lista."
+        : $"\nApplicati {applied}, poi FERMATO a {stopped}. I già applicati restano journaled e annullabili.");
+    return stopped is null ? 0 : 1;
+}
+
+static int RunChanges()
+{
+    var sessions = WPEP.Execution.ExecutionEngine.ListSessions(
+        WPEP.Execution.ExecutionEngine.DefaultJournalDirectory);
+    if (sessions.Count == 0) { Console.WriteLine("Nessuna modifica applicata. Verdict non ha scritto nulla."); return 0; }
+
+    Console.WriteLine($"{sessions.Count} sessioni journaled (più recenti in fondo):\n");
+    foreach (var f in sessions)
+    {
+        try
+        {
+            var s = JsonSerializer.Deserialize<WPEP.Execution.JournalSession>(File.ReadAllText(f));
+            string tweak = s?.Entries.FirstOrDefault()?.TweakId ?? "?";
+            bool allUndone = s is { Entries.Count: > 0 } && s.Entries.All(e => e.Undone);
+            Console.WriteLine($"  {Path.GetFileName(f),-54} {tweak} {(allUndone ? "[annullato]" : "[attivo]")}");
+        }
+        catch { Console.WriteLine($"  {Path.GetFileName(f)}  (illeggibile)"); }
+    }
+    Console.WriteLine("\nAnnulla con: wpep undo <nomefile>   (o 'wpep undo last')");
+    return 0;
+}
+
+static int RunUndo(string[] args)
+{
+    var target = args.FirstOrDefault(a => !a.StartsWith('-'));
+    if (target is null) { Console.Error.WriteLine("Uso: wpep undo <nomefile-sessione|last>"); return 2; }
+
+    var dir = WPEP.Execution.ExecutionEngine.DefaultJournalDirectory;
+    var sessions = WPEP.Execution.ExecutionEngine.ListSessions(dir);
+    if (sessions.Count == 0) { Console.Error.WriteLine("Nessuna sessione da annullare."); return 2; }
+
+    string file = target.Equals("last", StringComparison.OrdinalIgnoreCase)
+        ? sessions[^1]
+        : sessions.FirstOrDefault(s => Path.GetFileName(s).Equals(target, StringComparison.OrdinalIgnoreCase))
+          ?? (File.Exists(target) ? target : "");
+    if (string.IsNullOrEmpty(file))
+    {
+        Console.Error.WriteLine($"Sessione '{target}' non trovata. 'wpep changes' per la lista.");
+        return 2;
+    }
+
+    var engine = NewEngine();
+    try
+    {
+        int n = engine.Undo(file);
+        Console.WriteLine(n > 0
+            ? $"Annullate {n} modifiche da {Path.GetFileName(file)}."
+            : "Era già annullata.");
+        return 0;
+    }
+    catch (Exception ex)
+    {
+        Console.Error.WriteLine($"Undo fallito (serve admin per HKLM/boot?): {ex.Message}");
+        return 1;
+    }
+}
+
 static string ClassificationLabel(WPEP.Advisor.Classification c) => c switch
 {
     WPEP.Advisor.Classification.Recommended => "CONSIGLIATO (evidenza forte)",
@@ -862,7 +1052,27 @@ static void PrintUsage()
           wpep tools install-presentmon
               Scarica PresentMon (Intel, MIT) nella cartella tools di WPEP.
 
+          wpep apply <id> [--yes]
+              Applica un tweak della KB. SENZA --yes mostra solo il dry-run
+              (before→after) e non scrive nulla. Con --yes: scrive, verifica
+              rileggendo, e salva il journal per l'undo. Rifiuta placebo/gui-only;
+              HKLM/boot richiedono un terminale admin.
+
+          wpep apply-all [--yes]
+              Dry-run (o, con --yes, applica) TUTTI i tweak consigliati E
+              applicabili su questo PC. Ognuno journaled e annullabile singolarmente.
+              Si ferma al primo verify fallito.
+
+          wpep changes
+              Elenca le sessioni journaled (cosa è stato applicato, e se annullato).
+
+          wpep undo <file|last>
+              Annulla una sessione: ripristina i valori precedenti (o cancella ciò
+              che non esisteva), verificando ogni ripristino.
+
         diag e bench richiedono terminale elevato (vincolo ETW di Windows).
-        V1 non scrive MAI nulla sul sistema: misura e basta.
+        Misura (diag/bench/compare/analyze/advise) è SEMPRE sola lettura.
+        apply/apply-all/undo sono l'UNICA via di scrittura: dry-run di default,
+        scrivono solo con --yes, sempre con journal + undo (Execution Engine V2).
         """);
 }

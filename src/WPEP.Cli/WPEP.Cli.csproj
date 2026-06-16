@@ -14,5 +14,6 @@
     <ProjectReference Include="..\WPEP.SystemAnalyzer\WPEP.SystemAnalyzer.csproj" />
     <ProjectReference Include="..\WPEP.Advisor\WPEP.Advisor.csproj" />
     <ProjectReference Include="..\WPEP.Reporting\WPEP.Reporting.csproj" />
+    <ProjectReference Include="..\WPEP.Execution\WPEP.Execution.csproj" />
   </ItemGroup>
 </Project>
