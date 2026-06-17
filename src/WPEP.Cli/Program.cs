@@ -43,6 +43,8 @@ switch (args[0])
         return RunUndo(args.Skip(1).ToArray());
     case "selftest":
         return RunSelfTest();
+    case "doctor":
+        return RunDoctor();
     case "tools" when args.Length >= 2 && args[1] == "install-presentmon":
         return await InstallPresentMon();
     default:
@@ -890,6 +892,57 @@ static IReadOnlyList<string>? ReadAppliedChanges()
     return lines.Count > 0 ? lines : null;
 }
 
+// Riepilogo di prontezza: stato sistema + verdetto + diagnostica del motore.
+// Tutto sola-lettura/sicuro (self-test su chiave usa-e-getta; powercfg in lettura).
+static int RunDoctor()
+{
+    Console.WriteLine("Verdict doctor — stato e prontezza su QUESTO PC\n");
+    bool elevated = Elevation.IsElevated();
+
+    IReadOnlyList<WPEP.KnowledgeBase.TweakEntry> entries;
+    try { entries = WPEP.KnowledgeBase.KnowledgeBaseLoader.Load(); }
+    catch (Exception ex) { Console.Error.WriteLine($"Caricamento KB fallito: {ex.Message}"); return 1; }
+
+    var snapshot = WPEP.SystemAnalyzer.SnapshotBuilder.Build(DateTimeOffset.UtcNow);
+    static string Known(string v) => v.Length == 0 ? "sconosciuto" : v;
+    Console.WriteLine($"Sistema    : {Known(snapshot.CpuName)} · {Known(snapshot.GpuName)}");
+    Console.WriteLine($"Admin      : {(elevated ? "si (Diagnostics/ETW e tweak HKLM/boot disponibili)" : "no (misura base + tweak HKCU ok; HKLM/boot richiedono admin)")}");
+
+    var games = new[]
+        {
+            ("fortnite", "Fortnite"), ("valorant", "Valorant"), ("cs2", "CS2"),
+            ("apex", "Apex Legends"), ("overwatch2", "Overwatch 2"),
+        }
+        .Where(g => snapshot.GameInstalled(g.Item1) == true)
+        .Select(g => g.Item2).ToList();
+    Console.WriteLine($"Giochi     : {(games.Count > 0 ? string.Join(", ", games) : "nessuno dei noti rilevato")}");
+
+    var recs = WPEP.Advisor.AdvisorEngine.Advise(snapshot, entries)
+        .Where(r => r.Entry.Game is null).ToArray();
+    int oneClick = recs.Count(r => r.Classification == WPEP.Advisor.Classification.Recommended && CanApplyEntry(r.Entry));
+    int optimal = recs.Count(r => r.Classification == WPEP.Advisor.Classification.AlreadyActive);
+    int placebo = recs.Count(r => r.Classification == WPEP.Advisor.Classification.Placebo);
+    Console.WriteLine($"Verdetto   : {oneClick} consigliati applicabili one-click · {optimal} gia ottimali · {placebo} placebo evitati");
+
+    // Self-test del motore di scrittura (registry) — chiave usa-e-getta, cleanup totale.
+    var st = WPEP.Execution.EngineSelfTest.RunReal();
+    Console.WriteLine($"Engine     : self-test registry {(st.Passed ? "PASS" : "FAIL")} (write/verify/undo su chiave usa-e-getta)");
+
+    // powercfg in LETTURA (non distruttivo): valida il parsing dello schema attivo.
+    try
+    {
+        var scheme = new WPEP.Execution.RealPowerCfg().GetActiveScheme();
+        Console.WriteLine($"powercfg   : lettura schema attivo OK ({scheme})");
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"powercfg   : lettura schema FALLITA ({ex.Message})");
+    }
+
+    Console.WriteLine($"\nPronto: {(st.Passed ? "il motore di apply funziona su questo PC." : "self-test fallito — vedi sopra.")}");
+    return st.Passed ? 0 : 1;
+}
+
 // Verifica il motore di apply su QUESTO PC. Logica condivisa con la GUI in
 // WPEP.Execution.EngineSelfTest (chiave usa-e-getta, journal temp, cleanup totale).
 static int RunSelfTest()
@@ -1132,6 +1185,11 @@ static void PrintUsage()
               Verifica che il motore di apply funzioni su questo PC: write→verify→undo
               su una chiave di registro usa-e-getta (nessuna impostazione reale toccata).
               Exit 0 = PASS. Da lanciare prima di fidarsi degli apply su una macchina nuova.
+
+          wpep doctor
+              Riepilogo di prontezza: sistema, admin, giochi rilevati, verdetto
+              (quanti applicabili/già ottimali/placebo), self-test del motore e lettura
+              dello schema energetico. Tutto sola-lettura/sicuro.
 
         diag e bench richiedono terminale elevato (vincolo ETW di Windows).
         Misura (diag/bench/compare/analyze/advise) è SEMPRE sola lettura.

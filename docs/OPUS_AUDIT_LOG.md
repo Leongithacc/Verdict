@@ -348,6 +348,17 @@ KB 82→**85**, fonti primarie verificate (WebSearch):
 - Verificato live: HAGS (HKLM, gia ON) e mouse-precision (HKCU) → "gia al valore desiderato".
 - Test: 2 nuovi (IsAlreadyApplied true/false). Suite 125→**127**. App+CLI ripubblicati.
 
+### 24. `wpep doctor` — prontezza + valida read-only powercfg (2026-06-16)
+Nuovo comando aggregatore, tutto sola-lettura/sicuro: sistema (CPU/GPU), admin, giochi
+rilevati, verdetto (applicabili one-click / gia ottimali / placebo evitati), self-test del
+motore (registry, chiave usa-e-getta) e LETTURA dello schema energetico.
+- Bonus: esercita `RealPowerCfg.GetActiveScheme()` in lettura → valida il parsing del GUID
+  schema SENZA scrivere. Sul PC di Leon: PASS + schema 80e4528b-... (il suo BXTool) letto OK.
+  Chiude read-only parte del "DA RIVEDERE RealPowerCfg parsing".
+- Eseguito live: Ryzen 7 9800X3D · RTX 5080, giochi Fortnite/Valorant/CS2, 0 applicabili /
+  11 gia ottimali / 13 placebo (sistema gia super-tweakato), self-test PASS.
+- Aggregatore di pezzi gia testati → verificato live, niente unit test dedicato. 127 test.
+
 ## Stato a fine sessione Opus (AGGIORNATO 2026-06-16)
 - `dotnet test`: **127/127 verdi**. `dotnet build WPEP.sln -c Release`: 0 errori/0 warning.
   (Se un nodo MSBuild crasha in parallelo: `-m:1 --disable-build-servers`.)
