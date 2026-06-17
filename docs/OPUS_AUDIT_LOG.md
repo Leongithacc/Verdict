@@ -307,7 +307,9 @@ Chiuso il buco con un comando che e anche feature utile per il tool distribuibil
 - Verificato: report generato sul PC di Leon contiene il badge. App+CLI ripubblicati.
 
 ## Stato a fine sessione Opus (AGGIORNATO 2026-06-16)
-- `dotnet test`: **121/121 verdi**. `dotnet build WPEP.sln -c Release`: 0 errori/0 warning.
+- `dotnet test`: **123/123 verdi**. `dotnet build WPEP.sln -c Release`: 0 errori/0 warning.
+- `wpep selftest` valida sul campo il path di scrittura registry reale (PASS sul PC di Leon).
+- Report HTML: badge "one-click" sulle voci applicabili + sezione Changes da journal (GUI+CLI).
 - KB: **82 voci** (23 forti, 21 plausibili, 18 controverse, 13 placebo, 7 risky);
   **12 applicabili one-click** via registry/powercfg/bcdedit (con dry-run/journal/undo),
   il resto gui-only (deep-link "Open settings" dove possibile, o in-game/BIOS).
