@@ -336,6 +336,18 @@ KB 82→**85**, fonti primarie verificate (WebSearch):
   processi orfani. Risolto buildando a nodo singolo (`-m:1 --disable-build-servers`) dopo aver
   chiuso gli helper (MSBuild/VBCSCompiler/testhost). Per Fable: se ricapita, stesso rimedio.
 
+### 23. Rilevamento no-op + riordino gate admin (2026-06-16) — onesta UX
+- `ExecutionPlan.IsAlreadyApplied`: true quando ogni op ha gia il valore target
+  (ExistedBefore && Before==After). Applicare scriverebbe gli stessi byte → no-op.
+- GUI ApplyDialog: mostra "Gia al valore desiderato: nessuna modifica necessaria" e nasconde
+  "Apply now" (ShowApplyButton/CanConfirm escludono IsAlreadyApplied). Prima diceva
+  "Applied and verified" pur non cambiando nulla → ora onesto.
+- CLI `apply`: corto-circuito con lo stesso messaggio. INOLTRE riordinato: BuildPlan (sola
+  LETTURA, no admin) e check no-op PRIMA del gate admin → "HAGS gia attivo" si puo dire
+  senza terminale elevato (prima chiedeva admin solo per scoprire che non serviva nulla).
+- Verificato live: HAGS (HKLM, gia ON) e mouse-precision (HKCU) → "gia al valore desiderato".
+- Test: 2 nuovi (IsAlreadyApplied true/false). Suite 125→**127**. App+CLI ripubblicati.
+
 ## Stato a fine sessione Opus (AGGIORNATO 2026-06-16)
 - `dotnet test`: **125/125 verdi**. `dotnet build WPEP.sln -c Release`: 0 errori/0 warning.
 - `wpep selftest` / GUI "Verifica motore" validano sul campo il path di scrittura registry

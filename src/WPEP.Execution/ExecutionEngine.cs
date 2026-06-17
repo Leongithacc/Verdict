@@ -13,6 +13,12 @@ public sealed record ExecutionPlan(
 {
     public string Describe() => string.Join("\n", Operations.Select(o =>
         $"  {o.Path}\n    before: {(o.ExistedBefore ? o.Before : "<not set>")}  →  after: {o.After}"));
+
+    /// <summary>Every operation is already at its target value: applying would write
+    /// the same bytes back (a no-op). Callers surface this honestly instead of
+    /// claiming a change was made.</summary>
+    public bool IsAlreadyApplied => Operations.Count > 0 &&
+        Operations.All(o => o.ExistedBefore && string.Equals(o.Before, o.After, StringComparison.Ordinal));
 }
 
 public sealed class JournalEntry

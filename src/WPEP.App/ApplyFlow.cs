@@ -100,8 +100,9 @@ public sealed class ApplyDialogViewModel : ViewModelBase
     public bool IsBusy { get => _busy; set { Set(ref _busy, value); Raise(nameof(CanConfirm)); } }
     public bool AdminBlocked => NeedsAdmin && !ExecutionService.IsElevated;
     public bool HasPlan => _plan is not null;
-    public bool ShowApplyButton => HasPlan && !Applied;
-    public bool CanConfirm => _plan is not null && !Applied && !IsBusy && !AdminBlocked;
+    public bool IsAlreadyApplied => _plan?.IsAlreadyApplied == true;
+    public bool ShowApplyButton => HasPlan && !Applied && !IsAlreadyApplied;
+    public bool CanConfirm => _plan is not null && !Applied && !IsBusy && !AdminBlocked && !IsAlreadyApplied;
 
     public RelayCommand ConfirmCommand { get; }
     public RelayCommand CancelCommand { get; }
@@ -121,7 +122,9 @@ public sealed class ApplyDialogViewModel : ViewModelBase
             _plan = _exec.BuildPlan(entry);
             PlanText = _plan.Describe() +
                 (_plan.RequiresReboot ? "\n\nRequires a reboot to take effect." : "");
-            if (AdminBlocked)
+            if (_plan.IsAlreadyApplied)
+                Status = "Già al valore desiderato: nessuna modifica necessaria.";
+            else if (AdminBlocked)
                 Status = "This change writes to HKLM and needs administrator. " +
                          "Relaunch as administrator first.";
         }

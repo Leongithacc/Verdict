@@ -290,6 +290,32 @@ public class ExecutionEngineTests : IDisposable
     }
 
     [Fact]
+    public void BuildPlan_ValueAlreadyAtTarget_IsAlreadyApplied()
+    {
+        var registry = new FakeRegistry();
+        // Both target values already present and equal to value_after (0 and 1).
+        registry.Data[@"HKCU\Test\Key\ValueA"] = ("dword", "0");
+        registry.Data[@"HKCU\Test\Key\ValueB"] = ("dword", "1");
+        var engine = new ExecutionEngine(registry, _journalDir);
+
+        var plan = engine.BuildPlan(Entry());
+
+        Assert.True(plan.IsAlreadyApplied);
+    }
+
+    [Fact]
+    public void BuildPlan_ValueDiffers_IsNotAlreadyApplied()
+    {
+        var registry = new FakeRegistry();
+        registry.Data[@"HKCU\Test\Key\ValueA"] = ("dword", "1"); // target is 0
+        var engine = new ExecutionEngine(registry, _journalDir);
+
+        var plan = engine.BuildPlan(Entry());
+
+        Assert.False(plan.IsAlreadyApplied); // ValueB not set + ValueA mismatch
+    }
+
+    [Fact]
     public void ExecuteAll_AllSucceed_AppliesEachAndJournalsSeparately()
     {
         var engine = new ExecutionEngine(new FakeRegistry(), _journalDir);

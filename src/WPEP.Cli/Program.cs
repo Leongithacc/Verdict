@@ -707,21 +707,29 @@ static int RunApply(string[] args)
             $"({entry.Apply?.GuiOnlyReason ?? "placebo o solo manuale"}). 'wpep kb show {entry.Id}' per i passi manuali.");
         return 2;
     }
-    if (EntryNeedsAdmin(entry) && !Elevation.IsElevated())
-    {
-        Console.Error.WriteLine($"'{entry.Id}' scrive in HKLM/boot: serve un terminale amministratore.");
-        return 3;
-    }
-
+    // BuildPlan only READS the current value (no admin needed), so we can report
+    // "already applied" even for HKLM/boot tweaks without elevation. The admin gate
+    // applies only when a real write is actually required (below).
     var engine = NewEngine();
     WPEP.Execution.ExecutionPlan plan;
     try { plan = engine.BuildPlan(entry); }
     catch (Exception ex) { Console.Error.WriteLine($"Impossibile costruire il piano: {ex.Message}"); return 1; }
 
     Console.WriteLine($"\n{entry.Name}  [{entry.Id}]");
+    if (plan.IsAlreadyApplied)
+    {
+        Console.WriteLine("Già al valore desiderato: nessuna modifica necessaria.");
+        Console.WriteLine(plan.Describe());
+        return 0;
+    }
     Console.WriteLine("Dry run — esattamente cosa cambierà:");
     Console.WriteLine(plan.Describe());
     if (plan.RequiresReboot) Console.WriteLine("\n(richiede un riavvio per avere effetto)");
+    if (EntryNeedsAdmin(entry) && !Elevation.IsElevated())
+    {
+        Console.WriteLine($"\n'{entry.Id}' scrive in HKLM/boot: per applicarlo serve un terminale amministratore.");
+        return yes ? 3 : 0;
+    }
     bool risky = entry.Risk is WPEP.KnowledgeBase.RiskLevel.High or WPEP.KnowledgeBase.RiskLevel.Medium
                  || entry.EvidenceLevel == WPEP.KnowledgeBase.EvidenceLevel.Risky;
     if (risky && !string.IsNullOrWhiteSpace(entry.RiskNotes))
