@@ -320,6 +320,22 @@ Chiuso il buco con un comando che e anche feature utile per il tool distribuibil
   Ora -WarningAction SilentlyContinue + redirect anche stdout → output pulito ovunque.
 - Verificato: CLI selftest pulito (niente AVVISO), GUI si avvia col bottone (smoke 5s).
 
+### 22. KB DLSS Override + DirectStorage + config G-SYNC ottimale (2026-06-16)
+KB 82→**85**, fonti primarie verificate (WebSearch):
+- `nvidia-dlss-override-transformer` (evidence_strong, NVIDIA App support): forza il modello
+  'Latest' (transformer, Preset K) per Super Resolution/Ray Reconstruction. ONESTO: e QUALITA
+  d'immagine (stabilita temporale, meno ghosting), NON FPS/latenza; nessuno svantaggio competitivo.
+- `directstorage-game-dependent` (placebo, MS Learn GDK + GitHub): mito-buster. DirectStorage
+  e integrata in Win11 ma NON ha toggle utente; i benefici dipendono dal singolo gioco. prereq ssd:nvme.
+- `nvidia-optimal-gsync-vsync-reflex` (evidence_strong, NVIDIA guida latenza): la ricetta
+  COMBINATA G-SYNC + V-Sync pannello ON + in-game OFF + Reflex/cap-3. Le singole c'erano gia;
+  questa e il setup unico di frame-pacing, il piu impattante per il competitive.
+- prereq ssd:nvme/monitor:hdr: cadono nel default del switch Advisor (non gata) — verificato.
+- Build 0 err, **125 test verdi**. App+CLI ripubblicati (KB=85).
+- NOTA INFRA: il build server parallelo crashava i nodi MSBuild (MSB4166) per contesa di
+  processi orfani. Risolto buildando a nodo singolo (`-m:1 --disable-build-servers`) dopo aver
+  chiuso gli helper (MSBuild/VBCSCompiler/testhost). Per Fable: se ricapita, stesso rimedio.
+
 ## Stato a fine sessione Opus (AGGIORNATO 2026-06-16)
 - `dotnet test`: **125/125 verdi**. `dotnet build WPEP.sln -c Release`: 0 errori/0 warning.
 - `wpep selftest` / GUI "Verifica motore" validano sul campo il path di scrittura registry

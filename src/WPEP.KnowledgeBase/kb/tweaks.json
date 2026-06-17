@@ -2136,5 +2136,88 @@
       "undo": "manual-steps",
       "gui_only_reason": "NVIDIA App driver setting (RTX 50)"
     }
+  },
+  {
+    "id": "nvidia-dlss-override-transformer",
+    "name": "DLSS Override: forza il modello 'Latest' (transformer)",
+    "category": "gpu",
+    "description": "Dalla NVIDIA App (DLSS Override - Model Presets) puoi forzare il modello DLSS piu recente ('Latest' = Transformer, Preset K) per Super Resolution e Ray Reconstruction, anche nei giochi che spediscono un modello piu vecchio. NVIDIA documenta che il transformer migliora la stabilita temporale, riduce il ghosting e aumenta il dettaglio in movimento rispetto al vecchio modello CNN.",
+    "hardware_prerequisites": [
+      "gpu:nvidia"
+    ],
+    "expected_impact": "Migliore QUALITA d'immagine a parita di prestazioni (il modello gira sui Tensor core, costo trascurabile sulle RTX moderne). Non e un tweak di FPS o latenza: e qualita visiva. Nessuno svantaggio competitivo: si puo tenere su 'Latest'.",
+    "evidence_level": "evidence_strong",
+    "sources": [
+      "https://nvidia.custhelp.com/app/answers/detail/a_id/5620/~/enabling-dlss-4-overrides-in-nvidia-app"
+    ],
+    "risk": "none",
+    "risk_notes": "",
+    "rollback": "NVIDIA App -> Graphics -> DLSS Override - Model Presets -> torna a 'App Default'.",
+    "manual_steps": "NVIDIA App -> Graphics (globale o per-gioco) -> 'DLSS Override - Model Presets' -> Super Resolution e Ray Reconstruction su 'Latest' -> Apply. Verifica con overlay Alt+Z -> Statistics -> DLSS.",
+    "conflicts_with": [],
+    "measurable": false,
+    "apply": {
+      "method": "gui-only",
+      "operations": [],
+      "requires_reboot": false,
+      "undo": "manual-steps",
+      "gui_only_reason": "NVIDIA App setting"
+    }
+  },
+  {
+    "id": "directstorage-game-dependent",
+    "name": "DirectStorage: non si 'attiva' da Windows",
+    "category": "background",
+    "description": "DirectStorage e un'API Microsoft che fa caricare gli asset di gioco direttamente dall'NVMe alla GPU con meno overhead CPU. Punto chiave documentato da Microsoft: e integrato in Windows 11 ma NON ha un interruttore utente; i benefici arrivano SOLO se il singolo gioco la implementa. Non esiste un tweak di Windows che la 'accende' per i giochi che non la supportano.",
+    "hardware_prerequisites": [
+      "ssd:nvme"
+    ],
+    "expected_impact": "Per i giochi che la integrano: caricamenti piu rapidi e meno texture pop-in, automaticamente, senza nulla da impostare. Per tutti gli altri: zero, e nessuna impostazione di Windows puo cambiarlo. Cercare un 'tweak DirectStorage' e inutile.",
+    "evidence_level": "placebo",
+    "sources": [
+      "https://learn.microsoft.com/en-us/gaming/gdk/docs/features/console/storage/directstorage/directstorage-overview",
+      "https://github.com/microsoft/DirectStorage"
+    ],
+    "risk": "none",
+    "risk_notes": "",
+    "rollback": "Niente da annullare: non c'e nessun interruttore.",
+    "manual_steps": "Niente da fare: assicurati solo di avere il gioco su NVMe e driver GPU aggiornati. Il resto dipende dal gioco, non da te.",
+    "conflicts_with": [],
+    "measurable": false,
+    "apply": {
+      "method": "gui-only",
+      "operations": [],
+      "requires_reboot": false,
+      "undo": "manual-steps",
+      "gui_only_reason": "Feature dipendente dal gioco, nessun toggle di Windows"
+    }
+  },
+  {
+    "id": "nvidia-optimal-gsync-vsync-reflex",
+    "name": "Config G-SYNC ottimale (G-SYNC + V-Sync pannello ON + in-game OFF + Reflex/cap)",
+    "category": "gpu",
+    "description": "La combinazione documentata da NVIDIA per latenza bassa SENZA tearing su monitor VRR: G-SYNC attivo; V-Sync ON nel Pannello di Controllo NVIDIA (NON in gioco); V-Sync in-game OFF; e Reflex On (o, dove manca, un cap ~3 FPS sotto il refresh). Il V-Sync del pannello insieme a Reflex/ULLM cappa automaticamente sotto il refresh, eliminando il backpressure del V-Sync e il tearing senza aggiungere buffering. Le singole voci esistono gia separate; questa e la ricetta COMBINATA, che e cio che conta.",
+    "hardware_prerequisites": [
+      "gpu:nvidia",
+      "monitor:high-refresh"
+    ],
+    "expected_impact": "Frame pacing stabile, niente tearing, latenza bassa quando resti sotto il refresh. ONESTO: uncapped + Reflex senza V-Sync da latenza leggermente piu bassa ma con tearing; questa config e il miglior compromesso no-tearing. Il V-Sync del pannello agisce solo in fullscreen esclusivo.",
+    "evidence_level": "evidence_strong",
+    "sources": [
+      "https://www.nvidia.com/en-us/geforce/guides/system-latency-optimization-guide/"
+    ],
+    "risk": "none",
+    "risk_notes": "",
+    "rollback": "Rimetti V-Sync in gioco com'era e/o V-Sync del pannello su 'Usa impostazione applicazione 3D'.",
+    "manual_steps": "1) G-SYNC On (Pannello NVIDIA -> Imposta G-SYNC). 2) Pannello NVIDIA -> Gestisci impostazioni 3D -> V-Sync = On. 3) In gioco: V-Sync OFF. 4) Reflex On (o On+Boost); se il gioco non ha Reflex, cap FPS ~3 sotto il refresh (es. 237 per 240Hz).",
+    "conflicts_with": [],
+    "measurable": true,
+    "apply": {
+      "method": "gui-only",
+      "operations": [],
+      "requires_reboot": false,
+      "undo": "manual-steps",
+      "gui_only_reason": "Pannello NVIDIA + impostazioni in-game"
+    }
   }
 ]
