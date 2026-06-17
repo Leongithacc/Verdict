@@ -349,7 +349,9 @@ KB 82→**85**, fonti primarie verificate (WebSearch):
 - Test: 2 nuovi (IsAlreadyApplied true/false). Suite 125→**127**. App+CLI ripubblicati.
 
 ## Stato a fine sessione Opus (AGGIORNATO 2026-06-16)
-- `dotnet test`: **125/125 verdi**. `dotnet build WPEP.sln -c Release`: 0 errori/0 warning.
+- `dotnet test`: **127/127 verdi**. `dotnet build WPEP.sln -c Release`: 0 errori/0 warning.
+  (Se un nodo MSBuild crasha in parallelo: `-m:1 --disable-build-servers`.)
+- Apply onesto: rileva i no-op ("gia al valore desiderato"); gate admin solo se serve scrivere.
 - `wpep selftest` / GUI "Verifica motore" validano sul campo il path di scrittura registry
   reale (EngineSelfTest condiviso; PASS sul PC di Leon, output pulito).
 - Report HTML: badge "one-click" sulle voci applicabili + sezione Changes da journal (GUI+CLI).
