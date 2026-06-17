@@ -297,6 +297,15 @@ Chiuso il buco con un comando che e anche feature utile per il tool distribuibil
 - Restano DA PROVARE con un apply vero: RealPowerCfg e RealBcdEdit (scrivono su power/boot,
   non scratch-testabili). Il selftest lo dichiara esplicitamente nell'output.
 
+### 20. Report HTML arricchito (2026-06-16)
+- ReportBuilder: ogni voce advisor applicabile one-click (registry/powercfg/bcdedit, no
+  placebo) ora ha un badge "⚡ one-click" + riga riassuntiva "⚡ N applicabili in un clic".
+  Helper IsOneClick (stessa regola di engine/UI). Vale per GUI E CLI (e nel ReportBuilder).
+- CLI `wpep report`: ora popola AppliedChanges leggendo il journal (ReadAppliedChanges) →
+  la sezione "Changes applied by Verdict" appare anche da CLI (prima solo GUI la riempiva).
+- Test: 2 nuovi (placebo NON marcato; applicabile marcato + sezione changes). Suite 121→**123**.
+- Verificato: report generato sul PC di Leon contiene il badge. App+CLI ripubblicati.
+
 ## Stato a fine sessione Opus (AGGIORNATO 2026-06-16)
 - `dotnet test`: **121/121 verdi**. `dotnet build WPEP.sln -c Release`: 0 errori/0 warning.
 - KB: **82 voci** (23 forti, 21 plausibili, 18 controverse, 13 placebo, 7 risky);

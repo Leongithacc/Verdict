@@ -603,7 +603,8 @@ static int RunReport(string[] args)
                 BenchmarkRunStore.LoadDirectory(postDir));
 
         var html = WPEP.Reporting.ReportBuilder.BuildHtml(new WPEP.Reporting.ReportData(
-            DateTimeOffset.UtcNow, snapshot, recommendations, noise, comparison));
+            DateTimeOffset.UtcNow, snapshot, recommendations, noise, comparison,
+            ReadAppliedChanges()));
         File.WriteAllText(outPath, html);
         Console.WriteLine($"Report scritto: {Path.GetFullPath(outPath)}");
         return 0;
@@ -856,6 +857,30 @@ static int RunUndo(string[] args)
         Console.Error.WriteLine($"Undo fallito (serve admin per HKLM/boot?): {ex.Message}");
         return 1;
     }
+}
+
+// Riepilogo delle modifiche journaled per il report (tutte le sessioni, con stato).
+static IReadOnlyList<string>? ReadAppliedChanges()
+{
+    var sessions = WPEP.Execution.ExecutionEngine.ListSessions(
+        WPEP.Execution.ExecutionEngine.DefaultJournalDirectory);
+    var lines = new List<string>();
+    foreach (var f in sessions)
+    {
+        try
+        {
+            var s = JsonSerializer.Deserialize<WPEP.Execution.JournalSession>(File.ReadAllText(f));
+            if (s is null) continue;
+            foreach (var e in s.Entries)
+            {
+                string state = e.Undone ? "annullato" : e.Verified ? "applicato" : "fallito";
+                lines.Add($"{e.TweakId} · {e.Path}: " +
+                    $"{(e.ExistedBefore ? e.ValueBefore : "<non impostato>")} → {e.ValueAfter} [{state}]");
+            }
+        }
+        catch { /* una sessione illeggibile non deve rompere il report */ }
+    }
+    return lines.Count > 0 ? lines : null;
 }
 
 // Esercita il path di scrittura REALE (RealRegistryAccess + ExecutionEngine: write,

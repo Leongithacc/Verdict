@@ -1,6 +1,7 @@
 using System.Text;
 using WPEP.Advisor;
 using WPEP.Core.SystemInfo;
+using WPEP.KnowledgeBase;
 using WPEP.Statistics;
 
 namespace WPEP.Reporting;
@@ -81,12 +82,23 @@ public static class ReportBuilder
         }
 
         // — Advisor —
+        int oneClick = data.Recommendations.Count(r => IsOneClick(r.Entry));
         sb.Append("<h2>Advisor</h2>");
+        if (oneClick > 0)
+            sb.Append($"<p class=\"dim\"><span class=\"good\">⚡ {oneClick}</span> di queste voci sono " +
+                      "applicabili in un clic da Verdict (dry-run + journal + undo). Le altre richiedono " +
+                      "passi manuali (in-game / BIOS / pannello driver).</p>");
         foreach (var group in data.Recommendations.GroupBy(r => r.Classification))
         {
             sb.Append($"<h3 class=\"{CssFor(group.Key)}\">{Esc(Label(group.Key))}</h3><table>");
             foreach (var r in group)
-                sb.Append($"<tr><td><code>{Esc(r.Entry.Id)}</code></td><td>{Esc(r.Entry.Name)}</td><td class=\"dim\">{Esc(r.StateNote)}</td></tr>");
+            {
+                string badge = IsOneClick(r.Entry)
+                    ? "<span class=\"good\" title=\"Applicabile in un clic\">⚡ one-click</span>"
+                    : "";
+                sb.Append($"<tr><td><code>{Esc(r.Entry.Id)}</code></td><td>{Esc(r.Entry.Name)}</td>" +
+                          $"<td class=\"dim\">{Esc(r.StateNote)}</td><td>{badge}</td></tr>");
+            }
             sb.Append("</table>");
         }
 
@@ -148,6 +160,12 @@ public static class ReportBuilder
 
     private static void Row(StringBuilder sb, string k, string v) =>
         sb.Append($"<tr><th>{Esc(k)}</th><td>{v}</td></tr>");
+
+    /// <summary>True when Verdict can apply the tweak programmatically (same rule as the
+    /// engine/UI: a write method, never a placebo).</summary>
+    private static bool IsOneClick(TweakEntry e) =>
+        e.Apply is { Method: "registry" or "powercfg" or "powercfg-value" or "bcdedit" } &&
+        e.EvidenceLevel != EvidenceLevel.Placebo;
 
     private static string Label(Classification c) => c switch
     {

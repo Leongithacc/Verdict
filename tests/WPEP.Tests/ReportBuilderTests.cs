@@ -71,6 +71,54 @@ public class ReportBuilderTests
     }
 
     [Fact]
+    public void BuildHtml_PlaceboEntry_NotMarkedOneClick()
+    {
+        // Data() uses a placebo entry: it must never carry the one-click badge.
+        var html = ReportBuilder.BuildHtml(Data());
+        Assert.DoesNotContain("one-click", html);
+    }
+
+    [Fact]
+    public void BuildHtml_MarksOneClickApplicable_AndRendersAppliedChanges()
+    {
+        var applicable = new Recommendation(new TweakEntry
+        {
+            Id = "hags",
+            Name = "HAGS",
+            Category = "gpu",
+            Description = "d",
+            ExpectedImpact = "i",
+            EvidenceLevel = EvidenceLevel.Controversial,
+            Risk = RiskLevel.Low,
+            Rollback = "r",
+            ManualSteps = "m",
+            Measurable = true,
+            Apply = new ApplySpec
+            {
+                Method = "registry",
+                Operations = [new ApplyOperation
+                    { Path = @"HKLM\X\Y", ValueAfter = "2", Kind = "dword" }],
+            },
+        }, Classification.OptionalWithWarning, "stato");
+
+        var data = new ReportData(
+            DateTimeOffset.UnixEpoch,
+            new SystemSnapshot
+            {
+                CapturedAtUtc = DateTimeOffset.UnixEpoch,
+                CpuName = "c", GpuName = "g", PowerPlanName = "p",
+            },
+            [applicable], Noise: null, Comparison: null,
+            AppliedChanges: [@"game-dvr · HKCU\...\AppCaptureEnabled: 1 → 0 [applicato]"]);
+
+        var html = ReportBuilder.BuildHtml(data);
+
+        Assert.Contains("one-click", html);                  // badge present
+        Assert.Contains("Changes applied by Verdict", html); // section present
+        Assert.Contains("AppCaptureEnabled", html);          // the journaled change is shown
+    }
+
+    [Fact]
     public void BuildHtml_WithComparison_RendersVerdicts()
     {
         var comparison = new ComparisonEngine.ComparisonReport(5, 5, Conclusive: true,
