@@ -341,7 +341,7 @@ KB 82→**85**, fonti primarie verificate (WebSearch):
 - `wpep selftest` / GUI "Verifica motore" validano sul campo il path di scrittura registry
   reale (EngineSelfTest condiviso; PASS sul PC di Leon, output pulito).
 - Report HTML: badge "one-click" sulle voci applicabili + sezione Changes da journal (GUI+CLI).
-- KB: **82 voci** (23 forti, 21 plausibili, 18 controverse, 13 placebo, 7 risky);
+- KB: **85 voci** (25 forti, 21 plausibili, 18 controverse, 14 placebo, 7 risky);
   **12 applicabili one-click** via registry/powercfg/bcdedit (con dry-run/journal/undo),
   il resto gui-only (deep-link "Open settings" dove possibile, o in-game/BIOS).
 - Executors engine: registry + powercfg + powercfg-value + **bcdedit** (service: ancora TODO).
