@@ -2219,5 +2219,33 @@
       "undo": "manual-steps",
       "gui_only_reason": "Pannello NVIDIA + impostazioni in-game"
     }
+  },
+  {
+    "id": "cs2-reflex-on",
+    "name": "CS2: NVIDIA Reflex On",
+    "category": "gpu",
+    "game": "cs2",
+    "description": "Counter-Strike 2 (Source 2) integra NVIDIA Reflex, documentato da NVIDIA tra i titoli competitivi supportati. Reflex riduce la latenza di sistema allineando il lavoro della CPU/engine al rendering ed evitando l'accodamento di frame. In CS2, gioco spesso CPU-bound ad alti FPS, e la migliore opzione di latenza disponibile in-game.",
+    "hardware_prerequisites": [
+      "gpu:nvidia"
+    ],
+    "expected_impact": "Riduzione di latenza documentata dal vendor, da tenere On (o On+Boost). Nessuno svantaggio competitivo. Su GPU NVIDIA e la prima cosa da attivare in CS2.",
+    "evidence_level": "evidence_strong",
+    "sources": [
+      "https://www.nvidia.com/en-us/geforce/news/reflex-low-latency-apex-legends-valorant-fortnite-cs2/"
+    ],
+    "risk": "none",
+    "risk_notes": "",
+    "rollback": "Stessa impostazione -> Disabilitato.",
+    "manual_steps": "CS2 -> Impostazioni -> Video -> Avanzate -> NVIDIA Reflex Low Latency -> Abilitato (o Abilitato + Boost).",
+    "conflicts_with": [],
+    "measurable": false,
+    "apply": {
+      "method": "gui-only",
+      "operations": [],
+      "requires_reboot": false,
+      "undo": "manual-steps",
+      "gui_only_reason": "In-game setting"
+    }
   }
 ]

@@ -373,8 +373,9 @@ punti (ExecutionService App, helper CLI, e in parte ReportBuilder) e NON testata
   network-throttling(HKLM gia applicato)=AlreadyApplied senza admin, placebo=NotApplicable.
 
 ## Stato a fine sessione Opus (AGGIORNATO 2026-06-16)
-- `dotnet test`: **127/127 verdi**. `dotnet build WPEP.sln -c Release`: 0 errori/0 warning.
+- `dotnet test`: **141+/141+ verdi**. `dotnet build WPEP.sln -c Release`: 0 errori/0 warning.
   (Se un nodo MSBuild crasha in parallelo: `-m:1 --disable-build-servers`.)
+- Logica apply consolidata in `WPEP.Execution.ApplyPolicy` (unica fonte App+CLI). `wpep doctor`.
 - Apply onesto: rileva i no-op ("gia al valore desiderato"); gate admin solo se serve scrivere.
 - `wpep selftest` / GUI "Verifica motore" validano sul campo il path di scrittura registry
   reale (EngineSelfTest condiviso; PASS sul PC di Leon, output pulito).
