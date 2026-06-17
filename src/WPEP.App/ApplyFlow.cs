@@ -13,16 +13,9 @@ public sealed class ExecutionService
     private readonly ExecutionEngine _engine =
         new(new RealRegistryAccess(), ExecutionEngine.DefaultJournalDirectory);
 
-    public bool CanApply(TweakEntry entry) =>
-        entry.Apply is { Method: "registry" or "powercfg" or "powercfg-value" or "bcdedit" } &&
-        entry.EvidenceLevel != EvidenceLevel.Placebo;
-
-    public bool NeedsAdmin(TweakEntry entry) =>
-        // bcdedit always writes to the boot store: admin, always.
-        entry.Apply?.Method == "bcdedit" ||
-        (entry.Apply?.Operations.Any(o =>
-            o.Path.StartsWith("HKLM", StringComparison.OrdinalIgnoreCase) ||
-            o.Path.StartsWith("HKEY_LOCAL_MACHINE", StringComparison.OrdinalIgnoreCase)) ?? false);
+    // Single source of truth lives in WPEP.Execution.ApplyPolicy (shared with the CLI).
+    public bool CanApply(TweakEntry entry) => ApplyPolicy.CanApply(entry);
+    public bool NeedsAdmin(TweakEntry entry) => ApplyPolicy.NeedsAdmin(entry);
 
     public ExecutionPlan BuildPlan(TweakEntry entry) => _engine.BuildPlan(entry);
     public string Execute(ExecutionPlan plan) => _engine.Execute(plan);

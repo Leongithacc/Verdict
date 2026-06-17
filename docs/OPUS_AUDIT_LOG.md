@@ -359,6 +359,19 @@ motore (registry, chiave usa-e-getta) e LETTURA dello schema energetico.
   11 gia ottimali / 13 placebo (sistema gia super-tweakato), self-test PASS.
 - Aggregatore di pezzi gia testati → verificato live, niente unit test dedicato. 127 test.
 
+### 25. ApplyPolicy: unica fonte per CanApply/NeedsAdmin/DecideAction (2026-06-16)
+La logica safety-critical "posso applicare? serve admin? cosa faccio?" era DUPLICATA in 3
+punti (ExecutionService App, helper CLI, e in parte ReportBuilder) e NON testata nella CLI.
+- Nuovo `WPEP.Execution.ApplyPolicy`: CanApply, NeedsAdmin, e `DecideAction` (enum ApplyAction:
+  NotApplicable/AlreadyApplied/NeedsAdmin/DryRun/Execute) con precedenza esplicita
+  (already-applied batte il gate admin: dire "niente da fare" non richiede elevazione).
+- App ExecutionService e CLI ora delegano ad ApplyPolicy (no piu copie divergenti).
+  CLI RunApply riscritto attorno a DecideAction (hint admin preservato anche nel dry-run).
+- ReportBuilder.IsOneClick: lasciata locale (display, non decisione di scrittura) ma allineata.
+- Test: 14 nuovi (CanApply theory, NeedsAdmin HKLM/HKCU/bcdedit, DecideAction tutti i rami +
+  precedenza). Suite 127→**141**. Verificato live: HAGS=AlreadyApplied, StickyKeys=DryRun,
+  network-throttling(HKLM gia applicato)=AlreadyApplied senza admin, placebo=NotApplicable.
+
 ## Stato a fine sessione Opus (AGGIORNATO 2026-06-16)
 - `dotnet test`: **127/127 verdi**. `dotnet build WPEP.sln -c Release`: 0 errori/0 warning.
   (Se un nodo MSBuild crasha in parallelo: `-m:1 --disable-build-servers`.)

@@ -681,15 +681,9 @@ static WPEP.Execution.ExecutionEngine NewEngine() =>
     new(new WPEP.Execution.RealRegistryAccess(),
         WPEP.Execution.ExecutionEngine.DefaultJournalDirectory);
 
-static bool EntryNeedsAdmin(WPEP.KnowledgeBase.TweakEntry e) =>
-    e.Apply?.Method == "bcdedit" ||
-    (e.Apply?.Operations.Any(o =>
-        o.Path.StartsWith("HKLM", StringComparison.OrdinalIgnoreCase) ||
-        o.Path.StartsWith("HKEY_LOCAL_MACHINE", StringComparison.OrdinalIgnoreCase)) ?? false);
-
-static bool CanApplyEntry(WPEP.KnowledgeBase.TweakEntry e) =>
-    e.Apply is { Method: "registry" or "powercfg" or "powercfg-value" or "bcdedit" } &&
-    e.EvidenceLevel != WPEP.KnowledgeBase.EvidenceLevel.Placebo;
+// Regole condivise con la GUI: unica fonte in WPEP.Execution.ApplyPolicy.
+static bool EntryNeedsAdmin(WPEP.KnowledgeBase.TweakEntry e) => WPEP.Execution.ApplyPolicy.NeedsAdmin(e);
+static bool CanApplyEntry(WPEP.KnowledgeBase.TweakEntry e) => WPEP.Execution.ApplyPolicy.CanApply(e);
 
 static int RunApply(string[] args)
 {
@@ -717,27 +711,31 @@ static int RunApply(string[] args)
     try { plan = engine.BuildPlan(entry); }
     catch (Exception ex) { Console.Error.WriteLine($"Impossibile costruire il piano: {ex.Message}"); return 1; }
 
+    bool needsAdmin = EntryNeedsAdmin(entry);
+    var action = WPEP.Execution.ApplyPolicy.DecideAction(
+        canApply: true, plan.IsAlreadyApplied, needsAdmin, Elevation.IsElevated(), confirmYes: yes);
+
     Console.WriteLine($"\n{entry.Name}  [{entry.Id}]");
-    if (plan.IsAlreadyApplied)
+    if (action == WPEP.Execution.ApplyAction.AlreadyApplied)
     {
         Console.WriteLine("Già al valore desiderato: nessuna modifica necessaria.");
         Console.WriteLine(plan.Describe());
         return 0;
     }
+
     Console.WriteLine("Dry run — esattamente cosa cambierà:");
     Console.WriteLine(plan.Describe());
     if (plan.RequiresReboot) Console.WriteLine("\n(richiede un riavvio per avere effetto)");
-    if (EntryNeedsAdmin(entry) && !Elevation.IsElevated())
-    {
-        Console.WriteLine($"\n'{entry.Id}' scrive in HKLM/boot: per applicarlo serve un terminale amministratore.");
-        return yes ? 3 : 0;
-    }
     bool risky = entry.Risk is WPEP.KnowledgeBase.RiskLevel.High or WPEP.KnowledgeBase.RiskLevel.Medium
                  || entry.EvidenceLevel == WPEP.KnowledgeBase.EvidenceLevel.Risky;
     if (risky && !string.IsNullOrWhiteSpace(entry.RiskNotes))
         Console.WriteLine($"\n⚠ RISCHIO: {entry.RiskNotes}");
+    if (needsAdmin && !Elevation.IsElevated())
+        Console.WriteLine($"\n'{entry.Id}' scrive in HKLM/boot: per applicarlo serve un terminale amministratore.");
 
-    if (!yes)
+    if (action == WPEP.Execution.ApplyAction.NeedsAdmin)
+        return 3;
+    if (action == WPEP.Execution.ApplyAction.DryRun)
     {
         Console.WriteLine("\nNiente è stato scritto. Rilancia con --yes per applicare " +
             "(journaled; annulla con 'wpep undo').");
