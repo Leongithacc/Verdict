@@ -283,13 +283,21 @@ KB 80→**82**, fonti primarie NVIDIA verificate in sessione (WebSearch):
   CS2/Apex), solo dove la fluidita conta piu della reattivita.
 - Build 0 err, 121 test (KnowledgeBaseTests valida le 2 nuove). App+CLI ripubblicati (KB=82).
 
-## Stato a fine sessione Opus (2026-06-15)
-- `dotnet test`: **112/112 verdi**. `dotnet build WPEP.sln -c Release`: 0 errori.
-- KB: **75 voci** (20 forti, 20 plausibili, 17 controverse, 11 placebo, 7 risky);
-  **8 applicabili one-click** (4 HKCU/powercfg no-admin, 4 HKLM admin),
-  ~10 gui-only con deep-link "Open settings", il resto gui-only puro (BIOS/in-game).
-  NB: core-parking/usb gui-only (setting powercfg nascosti, non scriptabili).
-- Nessuna modifica distruttiva ai moduli core di Fable; engine/apply/detection sono additivi.
-- DA RIVEDERE da Fable con PRIORITÀ: tutto WPEP.Execution (scrive su registry+powercfg),
-  le 9 apply-spec registry + 1 powercfg in tweaks.json (path/valori uno a uno),
-  i probe di rilevamento giochi (path Riot/Steam), gli URL fonte delle voci KB nuove.
+## Stato a fine sessione Opus (AGGIORNATO 2026-06-16)
+- `dotnet test`: **121/121 verdi**. `dotnet build WPEP.sln -c Release`: 0 errori/0 warning.
+- KB: **82 voci** (23 forti, 21 plausibili, 18 controverse, 13 placebo, 7 risky);
+  **12 applicabili one-click** via registry/powercfg/bcdedit (con dry-run/journal/undo),
+  il resto gui-only (deep-link "Open settings" dove possibile, o in-game/BIOS).
+- Executors engine: registry + powercfg + powercfg-value + **bcdedit** (service: ancora TODO).
+- **CLI ora applica**: wpep apply/apply-all/changes/undo (dry-run di default, --yes per scrivere).
+- **apply-all** con conflict guard (ConflictResolver) e gating admin onesto.
+- Detection giochi: Fortnite/Valorant/CS2/**Apex**/**Overwatch2**.
+- Nessuna modifica distruttiva ai moduli core di Fable; tutto additivo.
+- DA RIVEDERE/TESTARE da Fable con PRIORITÀ:
+  - tutto WPEP.Execution (scrive su registry/powercfg/bcdedit) — vedi #1, #12.
+  - **RealBcdEdit** path reale (parsing /enum, casing) — mai testato con scrittura vera (#12).
+  - le apply-spec registry/powercfg/bcdedit in tweaks.json (path/valori uno a uno), inclusi
+    HwSchMode e StickyKeys Flags=506 (#15) e disabledynamictick (#12).
+  - gli URL fonte delle voci KB nuove (#2,#8,#14,#18).
+  - il pin TraceEvent 3.2.4 in WPEP.Diagnostics (#16).
+- Boundary Fable→Opus invariato: ultimo commit Fable `53e9fdc`. ~30 commit Opus dopo.
