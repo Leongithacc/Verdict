@@ -263,15 +263,21 @@ public sealed class ExecutionEngine(
     {
         try
         {
+            // -WarningAction SilentlyContinue: Windows rate-limits restore points to one
+            // per 24h and emits a WARNING when skipped; suppress it (best-effort anyway).
+            // Redirect BOTH streams so nothing leaks to the caller's console.
             var psi = new ProcessStartInfo("powershell",
                 $"-NoProfile -Command \"Checkpoint-Computer -Description '{description}' " +
-                "-RestorePointType MODIFY_SETTINGS -ErrorAction Stop\"")
+                "-RestorePointType MODIFY_SETTINGS -ErrorAction Stop -WarningAction SilentlyContinue\"")
             {
                 UseShellExecute = false,
                 CreateNoWindow = true,
                 RedirectStandardError = true,
+                RedirectStandardOutput = true,
             };
             using var p = Process.Start(psi)!;
+            p.StandardOutput.ReadToEnd();
+            p.StandardError.ReadToEnd();
             p.WaitForExit(30000);
             return p.ExitCode == 0;
         }

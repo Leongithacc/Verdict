@@ -1,5 +1,4 @@
 using System.Text.Json;
-using Microsoft.Win32;
 using WPEP.Benchmark;
 using WPEP.Core.Benchmark;
 using WPEP.Core.Diagnostics;
@@ -883,78 +882,22 @@ static IReadOnlyList<string>? ReadAppliedChanges()
     return lines.Count > 0 ? lines : null;
 }
 
-// Esercita il path di scrittura REALE (RealRegistryAccess + ExecutionEngine: write,
-// verify rileggendo, journal, undo) su una chiave USA-E-GETTA. Non tocca nessuna
-// impostazione reale e usa un journal temporaneo (non sporca 'wpep changes').
+// Verifica il motore di apply su QUESTO PC. Logica condivisa con la GUI in
+// WPEP.Execution.EngineSelfTest (chiave usa-e-getta, journal temp, cleanup totale).
 static int RunSelfTest()
 {
-    const string scratch = @"HKCU\Software\VerdictSelfTest\Probe";
-    var reg = new WPEP.Execution.RealRegistryAccess();
-    var tmpJournal = Path.Combine(Path.GetTempPath(), "verdict-selftest-journal");
-
     Console.WriteLine("Verdict self-test — verifica il motore di apply (write+verify+undo) su QUESTO PC.");
-    Console.WriteLine($"Chiave usa-e-getta: {scratch}  (nessuna impostazione reale viene toccata)\n");
+    Console.WriteLine($"Chiave usa-e-getta: {WPEP.Execution.EngineSelfTest.ScratchPath}  (nessuna impostazione reale viene toccata)\n");
 
-    bool ok = true;
-    try
-    {
-        reg.Delete(scratch); // pulisci eventuali residui di un run precedente
+    var result = WPEP.Execution.EngineSelfTest.RunReal();
+    int n = 0;
+    foreach (var step in result.Steps)
+        Console.WriteLine($"{++n}) {step.Name,-38} {(step.Ok ? "OK" : "FALLITO")}  ({step.Detail})");
 
-        var entry = new WPEP.KnowledgeBase.TweakEntry
-        {
-            Id = "selftest-probe",
-            Name = "Self-test probe",
-            Category = "background",
-            Description = "scratch",
-            ExpectedImpact = "scratch",
-            EvidenceLevel = WPEP.KnowledgeBase.EvidenceLevel.Plausible,
-            Sources = ["https://localhost"],
-            Risk = WPEP.KnowledgeBase.RiskLevel.None,
-            Rollback = "auto",
-            ManualSteps = "n/a",
-            Measurable = false,
-            Apply = new WPEP.KnowledgeBase.ApplySpec
-            {
-                Method = "registry",
-                Operations = [new WPEP.KnowledgeBase.ApplyOperation
-                    { Path = scratch, ValueAfter = "424242", Kind = "dword" }],
-            },
-        };
-
-        var engine = new WPEP.Execution.ExecutionEngine(reg, tmpJournal);
-
-        var plan = engine.BuildPlan(entry);
-        Console.WriteLine($"1) BuildPlan legge il valore corrente:  OK  (before: {(plan.Operations[0].ExistedBefore ? plan.Operations[0].Before : "<non impostato>")})");
-
-        var file = engine.Execute(plan);
-        var after = reg.Read(scratch);
-        bool wrote = after.Exists && after.Value == "424242";
-        Console.WriteLine($"2) Execute + verify rilettura:          {(wrote ? "OK  (scritto e riletto 424242)" : "FALLITO")}");
-        Console.WriteLine($"   journal scritto: {Path.GetFileName(file)}");
-        ok &= wrote;
-
-        int undone = engine.Undo(file);
-        bool gone = !reg.Read(scratch).Exists;
-        Console.WriteLine($"3) Undo ripristina lo stato precedente: {(undone > 0 && gone ? "OK  (valore rimosso, com'era prima)" : "FALLITO")}");
-        ok &= undone > 0 && gone;
-    }
-    catch (Exception ex)
-    {
-        Console.Error.WriteLine($"SELF-TEST ECCEZIONE: {ex.Message}");
-        ok = false;
-    }
-    finally
-    {
-        // Pulizia totale: valore, sottochiave scratch, journal temporaneo.
-        try { reg.Delete(scratch); } catch { }
-        try { Registry.CurrentUser.DeleteSubKeyTree(@"Software\VerdictSelfTest", throwOnMissingSubKey: false); } catch { }
-        try { if (Directory.Exists(tmpJournal)) Directory.Delete(tmpJournal, recursive: true); } catch { }
-    }
-
-    Console.WriteLine($"\nRisultato: {(ok ? "PASS — il motore di apply funziona su questo PC (registry write+verify+undo)." : "FAIL — vedi sopra.")}");
+    Console.WriteLine($"\nRisultato: {(result.Passed ? "PASS — il motore di apply funziona su questo PC (registry write+verify+undo)." : "FAIL — vedi sopra.")}");
     Console.WriteLine("NB: questo valida il metodo 'registry'. I path reali powercfg/bcdedit\n" +
                       "vanno verificati applicando un tweak vero (richiedono scrivere su power/boot).");
-    return ok ? 0 : 1;
+    return result.Passed ? 0 : 1;
 }
 
 static string ClassificationLabel(WPEP.Advisor.Classification c) => c switch

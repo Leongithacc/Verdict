@@ -379,6 +379,18 @@
           </ItemsControl.ItemTemplate>
         </ItemsControl>
         <TextBlock Style="{StaticResource Muted}" Text="{Binding Status}" Margin="0,8,0,0" />
+
+        <Border Style="{StaticResource Card}" Margin="0,20,0,0" Padding="16,14">
+          <StackPanel>
+            <TextBlock Style="{StaticResource Body}" Text="Verifica del motore di apply" />
+            <TextBlock Style="{StaticResource Muted}" Margin="0,2,0,8"
+                       Text="Esegue write→verify→undo su una chiave di registro usa-e-getta (nessuna impostazione reale toccata). Conferma che gli apply funzionano su questo PC." />
+            <Button Style="{StaticResource GhostButton}" Content="Verifica motore"
+                    HorizontalAlignment="Left" Command="{Binding SelfTestCommand}" />
+            <TextBlock Style="{StaticResource Mono}" FontSize="12" Margin="0,10,0,0"
+                       TextWrapping="Wrap" Text="{Binding SelfTestStatus}" />
+          </StackPanel>
+        </Border>
       </StackPanel>
     </DataTemplate>
 

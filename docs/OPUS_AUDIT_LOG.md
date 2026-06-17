@@ -306,6 +306,20 @@ Chiuso il buco con un comando che e anche feature utile per il tool distribuibil
 - Test: 2 nuovi (placebo NON marcato; applicabile marcato + sezione changes). Suite 121→**123**.
 - Verificato: report generato sul PC di Leon contiene il badge. App+CLI ripubblicati.
 
+### 21. EngineSelfTest condiviso + bottone GUI + fix rumore restore-point (2026-06-16)
+- Estratto il self-test da inline-CLI a `WPEP.Execution.EngineSelfTest`:
+  `Run(IRegistryAccess, journalDir)` testabile coi fake; `RunReal()` = produzione
+  (RealRegistryAccess + journal temp + cleanup totale subtree). Ritorna SelfTestResult/Steps.
+- CLI `RunSelfTest` ora e un thin printer di RunReal() (rimosso using Microsoft.Win32 inutile).
+- GUI: ChangesViewModel.SelfTestCommand (off-UI-thread) + bottone "Verifica motore" e esito
+  nella pagina Changes → la feature di fiducia ora e anche nell'interfaccia, non solo CLI.
+- Test: 2 nuovi (EngineSelfTest pass+cleanup coi fake; fail se le scritture non attecchiscono).
+  Suite 123→**125**.
+- FIX RUMORE: TryCreateRestorePoint rediretto solo stderr → l'AVVISO PowerShell di
+  Checkpoint-Computer (restore point rate-limited a 1/24h) trapelava in console ad OGNI apply.
+  Ora -WarningAction SilentlyContinue + redirect anche stdout → output pulito ovunque.
+- Verificato: CLI selftest pulito (niente AVVISO), GUI si avvia col bottone (smoke 5s).
+
 ## Stato a fine sessione Opus (AGGIORNATO 2026-06-16)
 - `dotnet test`: **123/123 verdi**. `dotnet build WPEP.sln -c Release`: 0 errori/0 warning.
 - `wpep selftest` valida sul campo il path di scrittura registry reale (PASS sul PC di Leon).

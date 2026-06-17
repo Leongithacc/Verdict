@@ -314,6 +314,24 @@ public sealed class ChangesViewModel : ViewModelBase
     public string Status { get => _status; set => Set(ref _status, value); }
     public bool IsEmpty => Sessions.Count == 0;
 
+    private string _selfTest = "";
+    public string SelfTestStatus { get => _selfTest; set => Set(ref _selfTest, value); }
+
+    /// <summary>Runs the engine self-test (scratch HKCU key, full cleanup) off the UI
+    /// thread, so users can confirm the apply engine works on their machine.</summary>
+    public RelayCommand SelfTestCommand => new(() =>
+    {
+        SelfTestStatus = "Verifica in corso…";
+        _ = System.Threading.Tasks.Task.Run(() =>
+        {
+            var r = Execution.EngineSelfTest.RunReal();
+            var detail = string.Join("  ·  ", r.Steps.Select(s => $"{s.Name}: {(s.Ok ? "OK" : "FALLITO")}"));
+            SelfTestStatus = (r.Passed
+                ? "✓ PASS — il motore di apply (write/verify/undo) funziona su questo PC."
+                : "✗ FAIL — vedi dettagli.") + "\n" + detail;
+        });
+    });
+
     public void Refresh()
     {
         Sessions.Clear();
