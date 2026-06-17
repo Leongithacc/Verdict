@@ -283,6 +283,20 @@ KB 80→**82**, fonti primarie NVIDIA verificate in sessione (WebSearch):
   CS2/Apex), solo dove la fluidita conta piu della reattivita.
 - Build 0 err, 121 test (KnowledgeBaseTests valida le 2 nuove). App+CLI ripubblicati (KB=82).
 
+### 19. `wpep selftest` — validato il path di scrittura REALE sul campo (2026-06-16)
+Fino ad ora TUTTO l'engine era testato solo con i fake (FakeRegistry/FakeBcdEdit/FakePowerCfg):
+il path di scrittura reale non era mai stato esercitato su una macchina vera in sessione.
+Chiuso il buco con un comando che e anche feature utile per il tool distribuibile.
+- `wpep selftest`: usa le classi di PRODUZIONE (RealRegistryAccess + ExecutionEngine) per
+  fare BuildPlan→Execute→verify→Undo su una chiave USA-E-GETTA `HKCU\Software\VerdictSelfTest`.
+  Journal in dir TEMP (non sporca 'wpep changes'). Cleanup totale: valore + sottochiave
+  (DeleteSubKeyTree) + journal temp. Exit 0 = PASS.
+- **ESEGUITO LIVE sul PC di Leon → PASS**: before=<non impostato>, scritto+riletto 424242,
+  undo rimosso, zero residui (Test-Path HKCU:\Software\VerdictSelfTest = false). Il metodo
+  'registry' (HAGS/StickyKeys/GameDVR/SystemResponsiveness/...) e ora provato sul campo.
+- Restano DA PROVARE con un apply vero: RealPowerCfg e RealBcdEdit (scrivono su power/boot,
+  non scratch-testabili). Il selftest lo dichiara esplicitamente nell'output.
+
 ## Stato a fine sessione Opus (AGGIORNATO 2026-06-16)
 - `dotnet test`: **121/121 verdi**. `dotnet build WPEP.sln -c Release`: 0 errori/0 warning.
 - KB: **82 voci** (23 forti, 21 plausibili, 18 controverse, 13 placebo, 7 risky);

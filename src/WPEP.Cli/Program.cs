@@ -1,4 +1,5 @@
 using System.Text.Json;
+using Microsoft.Win32;
 using WPEP.Benchmark;
 using WPEP.Core.Benchmark;
 using WPEP.Core.Diagnostics;
@@ -41,6 +42,8 @@ switch (args[0])
         return RunChanges();
     case "undo":
         return RunUndo(args.Skip(1).ToArray());
+    case "selftest":
+        return RunSelfTest();
     case "tools" when args.Length >= 2 && args[1] == "install-presentmon":
         return await InstallPresentMon();
     default:
@@ -855,6 +858,80 @@ static int RunUndo(string[] args)
     }
 }
 
+// Esercita il path di scrittura REALE (RealRegistryAccess + ExecutionEngine: write,
+// verify rileggendo, journal, undo) su una chiave USA-E-GETTA. Non tocca nessuna
+// impostazione reale e usa un journal temporaneo (non sporca 'wpep changes').
+static int RunSelfTest()
+{
+    const string scratch = @"HKCU\Software\VerdictSelfTest\Probe";
+    var reg = new WPEP.Execution.RealRegistryAccess();
+    var tmpJournal = Path.Combine(Path.GetTempPath(), "verdict-selftest-journal");
+
+    Console.WriteLine("Verdict self-test — verifica il motore di apply (write+verify+undo) su QUESTO PC.");
+    Console.WriteLine($"Chiave usa-e-getta: {scratch}  (nessuna impostazione reale viene toccata)\n");
+
+    bool ok = true;
+    try
+    {
+        reg.Delete(scratch); // pulisci eventuali residui di un run precedente
+
+        var entry = new WPEP.KnowledgeBase.TweakEntry
+        {
+            Id = "selftest-probe",
+            Name = "Self-test probe",
+            Category = "background",
+            Description = "scratch",
+            ExpectedImpact = "scratch",
+            EvidenceLevel = WPEP.KnowledgeBase.EvidenceLevel.Plausible,
+            Sources = ["https://localhost"],
+            Risk = WPEP.KnowledgeBase.RiskLevel.None,
+            Rollback = "auto",
+            ManualSteps = "n/a",
+            Measurable = false,
+            Apply = new WPEP.KnowledgeBase.ApplySpec
+            {
+                Method = "registry",
+                Operations = [new WPEP.KnowledgeBase.ApplyOperation
+                    { Path = scratch, ValueAfter = "424242", Kind = "dword" }],
+            },
+        };
+
+        var engine = new WPEP.Execution.ExecutionEngine(reg, tmpJournal);
+
+        var plan = engine.BuildPlan(entry);
+        Console.WriteLine($"1) BuildPlan legge il valore corrente:  OK  (before: {(plan.Operations[0].ExistedBefore ? plan.Operations[0].Before : "<non impostato>")})");
+
+        var file = engine.Execute(plan);
+        var after = reg.Read(scratch);
+        bool wrote = after.Exists && after.Value == "424242";
+        Console.WriteLine($"2) Execute + verify rilettura:          {(wrote ? "OK  (scritto e riletto 424242)" : "FALLITO")}");
+        Console.WriteLine($"   journal scritto: {Path.GetFileName(file)}");
+        ok &= wrote;
+
+        int undone = engine.Undo(file);
+        bool gone = !reg.Read(scratch).Exists;
+        Console.WriteLine($"3) Undo ripristina lo stato precedente: {(undone > 0 && gone ? "OK  (valore rimosso, com'era prima)" : "FALLITO")}");
+        ok &= undone > 0 && gone;
+    }
+    catch (Exception ex)
+    {
+        Console.Error.WriteLine($"SELF-TEST ECCEZIONE: {ex.Message}");
+        ok = false;
+    }
+    finally
+    {
+        // Pulizia totale: valore, sottochiave scratch, journal temporaneo.
+        try { reg.Delete(scratch); } catch { }
+        try { Registry.CurrentUser.DeleteSubKeyTree(@"Software\VerdictSelfTest", throwOnMissingSubKey: false); } catch { }
+        try { if (Directory.Exists(tmpJournal)) Directory.Delete(tmpJournal, recursive: true); } catch { }
+    }
+
+    Console.WriteLine($"\nRisultato: {(ok ? "PASS — il motore di apply funziona su questo PC (registry write+verify+undo)." : "FAIL — vedi sopra.")}");
+    Console.WriteLine("NB: questo valida il metodo 'registry'. I path reali powercfg/bcdedit\n" +
+                      "vanno verificati applicando un tweak vero (richiedono scrivere su power/boot).");
+    return ok ? 0 : 1;
+}
+
 static string ClassificationLabel(WPEP.Advisor.Classification c) => c switch
 {
     WPEP.Advisor.Classification.Recommended => "CONSIGLIATO (evidenza forte)",
@@ -1074,6 +1151,11 @@ static void PrintUsage()
           wpep undo <file|last>
               Annulla una sessione: ripristina i valori precedenti (o cancella ciò
               che non esisteva), verificando ogni ripristino.
+
+          wpep selftest
+              Verifica che il motore di apply funzioni su questo PC: write→verify→undo
+              su una chiave di registro usa-e-getta (nessuna impostazione reale toccata).
+              Exit 0 = PASS. Da lanciare prima di fidarsi degli apply su una macchina nuova.
 
         diag e bench richiedono terminale elevato (vincolo ETW di Windows).
         Misura (diag/bench/compare/analyze/advise) è SEMPRE sola lettura.
