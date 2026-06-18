@@ -104,3 +104,33 @@ Roba che NON si vede negli altri "ottimizzatori" — sfrutta il fatto che Verdic
 
 *Le ⭐⭐ sono quelle che secondo me "svoltano" davvero e sono fattibili col motore che abbiamo.*
 
+---
+
+## 🔑 DECISIONE ARCHITETTURALE (Léon, 2026-06-18)
+Léon ama TROPPE feature → non possono essere tutte sempre-attive per tutti (non clean).
+→ **Pagina "Features" / "Lab" nelle Impostazioni**: ogni feature/modulo premium è un TOGGLE
+(on/off). L'utente accende solo ciò che vuole. UI pulita + libreria enorme di feature opzionali.
+I moduli pesanti (watchdog, sentinel, overlay) sono off di default. Da costruire come framework
+di "feature flags" persistiti in settings.json. TUTTE le idee qui sotto diventano moduli toggle.
+
+## 🆕🆕 IDEE NUOVE — ROUND 3 (Léon ne vuole ancora)
+- ⭐⭐ **Placebo Museum** — galleria figa dei tweak-mito sfatati con l'evidenza. "Non ci sono
+  cascato." Condivisibile/virale, è l'onestà del progetto resa contenuto.
+- ⭐ **Explain my Stutter** — unisce diagnostica DPC/ISR + frame data e ti dice in italiano
+  semplice QUALE driver causa lo stutter. Usa dati che abbiamo già.
+- ⭐⭐ **Multi-monitor optimizer** — hai 3 monitor: sceglie il primary giusto, VRR per-display,
+  spegne quelli inutili per l'input lag (si lega al toggle Samsung che hai già!). Su misura per te.
+- ⭐ **Tweak Roulette / Challenge mode** — provi un tweak rischioso, misuri, tieni o annulli:
+  un "roguelike" dell'ottimizzazione. Gamification divertente sul motore bench+undo.
+- ⭐ **Network Duel** — test ping/jitter/bufferbloat verso i server DEI TUOI giochi, con voto.
+- ⭐ **AI co-pilot** — linguaggio naturale: "rendi Valorant più fluido" → Verdict spiega e propone.
+- **Trust mode** — mostra ESATTAMENTE cosa toccherà con un diff in stile security-review, per i
+  paranoici. On-brand (fiducia totale).
+- **Fresh-install score** — confronta col Windows pulito: "hai aggiunto 47 processi dall'installazione".
+- **Hotkey profilo** — un tasto globale attiva/disattiva il profilo competitive al volo.
+- **Boot impact** — cosa rallenta il boot, impatto delle app di avvio, con disabilitazioni safe.
+- **Achievement su guadagni VERI** — "hai migliorato i tuoi 1% low dell'8% (misurato)". Gamification
+  ONESTA, premia solo gain reali.
+- **Scheduled clean slate** — panic-restore automatico prima dei Windows Update (che spesso rompono).
+
+
