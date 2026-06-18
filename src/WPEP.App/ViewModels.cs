@@ -359,6 +359,9 @@ public sealed class VerdictViewModel(MainViewModel main) : ViewModelBase
 
 public sealed record DpcRow(string Driver, string Events, string MaxUs, string AvgUs, string Spikes);
 
+/// <summary>A translated "Explain my Stutter" line for the UI.</summary>
+public sealed record StutterRow(string ColorKey, string Component, string Plain, string Tip);
+
 public sealed class DiagnosticsViewModel(MainViewModel main) : ViewModelBase
 {
     private string _status = EtwDpcIsrCollector.IsElevated()
@@ -375,6 +378,14 @@ public sealed class DiagnosticsViewModel(MainViewModel main) : ViewModelBase
     public bool IsElevated => EtwDpcIsrCollector.IsElevated();
     public ObservableCollection<DpcRow> Rows { get; } = [];
 
+    // ── Explain my Stutter (Lab feature) ─────────────────────────────────────
+    private string _stutterHeadline = "", _stutterColor = "Ok";
+    public bool ShowStutterExplain => main.Settings.IsFeatureEnabled(FeatureCatalog.ExplainStutter);
+    public string StutterHeadline { get => _stutterHeadline; set => Set(ref _stutterHeadline, value); }
+    public string StutterColor { get => _stutterColor; set => Set(ref _stutterColor, value); }
+    public bool HasStutterResult => StutterHeadline.Length > 0;
+    public ObservableCollection<StutterRow> StutterFindings { get; } = [];
+
     public RelayCommand CaptureCommand => new(() => _ = CaptureAsync(), () => IsElevated && !IsRunning);
     public RelayCommand RelaunchAsAdminCommand => new(() => main.Measure.RelaunchAsAdminCommand.Execute(null));
 
@@ -384,11 +395,33 @@ public sealed class DiagnosticsViewModel(MainViewModel main) : ViewModelBase
         int seconds = Seconds;
         Status = $"Capturing DPC/ISR for {seconds} seconds…";
         Rows.Clear();
+        StutterFindings.Clear();
+        StutterHeadline = "";
         VerdictLine = "";
         try
         {
             var report = await Task.Run(() =>
                 new EtwDpcIsrCollector().Capture(TimeSpan.FromSeconds(seconds)));
+
+            // Explain my Stutter (Lab feature): translate the raw report into plain Italian.
+            Raise(nameof(ShowStutterExplain));
+            if (ShowStutterExplain)
+            {
+                var ex = StutterExplainer.Explain(report);
+                StutterHeadline = ex.Headline;
+                StutterColor = ex.Overall switch
+                {
+                    StutterSeverity.Severe => "Danger",
+                    StutterSeverity.Likely => "Warn",
+                    StutterSeverity.Minor => "Info",
+                    _ => "Ok",
+                };
+                foreach (var f in ex.Findings)
+                    StutterFindings.Add(new StutterRow(
+                        f.Severity switch { StutterSeverity.Severe => "Danger", StutterSeverity.Likely => "Warn", _ => "Info" },
+                        f.Component, f.Plain, f.Tip));
+                Raise(nameof(HasStutterResult));
+            }
 
             foreach (var d in report.Drivers.Take(12))
                 Rows.Add(new DpcRow(d.Driver, d.TotalCount.ToString("N0"),

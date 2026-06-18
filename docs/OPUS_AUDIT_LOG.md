@@ -489,6 +489,19 @@ Léon ha scelto questi due (cps). Entrambi: logica pura in lib (testabile) + GUI
   `ScanViewModel` ora prende `AppSettings`, refresh leggero su nav Scan. `DisplayScannerTests` (6).
 - NB: aggiunto ProjectReference WPEP.SystemAnalyzer al progetto test (mancava). **177/177 verdi**, build 0/0.
 
+### 33. V3 — Modulo Lab 4: EXPLAIN MY STUTTER (2026-06-18) — DPC/ISR in italiano
+Riusa il motore diagnostico esistente (nessuna nuova misura, nessuna scrittura).
+- `WPEP.Diagnostics/StutterExplainer.cs` (puro/testato): `Explain(DpcIsrReport)` → `StutterReport`
+  (Overall severity + headline + findings). Soglie: <400µs sano, 500µs+ o spike500 = Likely,
+  1000µs+ o spike1000 = Severe. Salta gli `<unresolved>`. `DescribeDriver` mappa il file driver →
+  componente in italiano (nvlddmkm→GPU NVIDIA, ndis/tcpip→scheda di rete, portcls/rtkvhd→audio,
+  stornvme→disco/SSD, usbxhci→USB, acpi→energia, ecc.) con fallback onesto "un driver di sistema".
+  Tip per categoria (aggiorna driver GPU/rete/audio...). Sul PC di Léon (nvlddmkm max 277µs, zero
+  spike) → "Nessun colpevole, sistema pulito" (coerente col risultato reale documentato).
+- GUI: card "Explain my Stutter" nella pagina Diagnostics (MultiDataTrigger su ShowStutterExplain
+  + HasStutterResult), headline colorata per severità + finding (componente/spiegazione/tip).
+  Popolata dopo la cattura DPC/ISR. `StutterExplainerTests` (8). **188/188 verdi**, build 0/0.
+
 ## Stato a fine sessione Opus (AGGIORNATO 2026-06-16)
 - `dotnet test`: **145/145 verdi**. `dotnet build WPEP.sln -c Release`: 0 errori/0 warning.
   (Se un nodo MSBuild crasha in parallelo: `-m:1 --disable-build-servers`.)
