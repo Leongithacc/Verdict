@@ -532,7 +532,7 @@ public sealed class SettingsViewModel : ViewModelBase
         ThemePresets.Apply(settings.Theme);
     }
 
-    public IReadOnlyList<string> Themes { get; } = [.. ThemePresets.All.Keys];
+    public IReadOnlyList<ThemeOption> Themes { get; } = ThemePresets.Options();
 
     public string SelectedTheme
     {

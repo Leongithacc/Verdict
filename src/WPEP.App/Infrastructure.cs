@@ -90,6 +90,11 @@ public sealed class AppSettings
 public sealed record ThemePreset(
     string Accent, string AccentDeep, string Bg, string Surface, string Surface2, string Line);
 
+/// <summary>A theme as shown in the picker: name + ready-made preview brushes.</summary>
+public sealed record ThemeOption(
+    string Name, System.Windows.Media.Brush Bg,
+    System.Windows.Media.Brush Surface, System.Windows.Media.Brush Accent);
+
 public static class ThemePresets
 {
     public static readonly IReadOnlyDictionary<string, ThemePreset> All =
@@ -107,7 +112,28 @@ public static class ThemePresets
             ["Ice"]      = new("#38BDF8", "#0E4F6E", "#070C0F", "#111A1F", "#18242B", "#25353E"),
             ["Gold"]     = new("#F5C542", "#7A5C12", "#0C0A06", "#1A1710", "#241F14", "#342A1C"),
             ["Mono"]     = new("#C7CBD4", "#3A3D45", "#090909", "#151515", "#1E1E1E", "#2C2C2C"),
+            ["Sakura"]   = new("#F472B6", "#831843", "#0C080A", "#1A1216", "#241921", "#33252C"),
+            ["Cyber"]    = new("#22D3EE", "#155E75", "#060B0D", "#0F1A1E", "#16252B", "#22353D"),
+            ["Royal"]    = new("#818CF8", "#312E81", "#08080F", "#131320", "#1B1B2E", "#28283F"),
+            ["Blood"]    = new("#DC2626", "#7F1D1D", "#0A0606", "#170F0F", "#1F1414", "#2E1D1D"),
+            ["Forest"]   = new("#4ADE80", "#14532D", "#070C08", "#111A13", "#18241A", "#243328"),
+            ["Vapor"]    = new("#C084FC", "#6B21A8", "#0A080F", "#16111F", "#1F182B", "#2D2440"),
         };
+
+    /// <summary>The themes as pickable options carrying their own preview swatches
+    /// (background stripe + accent), so the menu shows each theme's look inline.</summary>
+    public static IReadOnlyList<ThemeOption> Options()
+    {
+        static System.Windows.Media.SolidColorBrush B(string hex)
+        {
+            var br = new System.Windows.Media.SolidColorBrush(
+                (System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString(hex));
+            br.Freeze();
+            return br;
+        }
+        return [.. All.Select(kv => new ThemeOption(
+            kv.Key, B(kv.Value.Bg), B(kv.Value.Surface2), B(kv.Value.Accent)))];
+    }
 
     public static void Apply(string name)
     {

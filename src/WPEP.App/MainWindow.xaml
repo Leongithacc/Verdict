@@ -403,9 +403,24 @@
             <StackPanel>
               <TextBlock Style="{StaticResource H2}" Text="Theme" />
               <TextBlock Style="{StaticResource Muted}" Margin="0,2,0,8"
-                         Text="Accent only — semantic colors (ok/warn/danger) never change. Meaning is not customizable." />
-              <ComboBox ItemsSource="{Binding Themes}" SelectedItem="{Binding SelectedTheme}" Width="200"
-                        HorizontalAlignment="Left" />
+                         Text="Whole palette per theme — background, surfaces and accent. Semantic colors (ok/warn/danger) never change." />
+              <ComboBox ItemsSource="{Binding Themes}" SelectedValuePath="Name"
+                        SelectedValue="{Binding SelectedTheme}" Width="240" HorizontalAlignment="Left"
+                        MaxDropDownHeight="420">
+                <ComboBox.ItemTemplate>
+                  <DataTemplate>
+                    <!-- Each row previews the theme: background = theme Bg, an accent chip, the name. -->
+                    <Border Background="{Binding Bg}" CornerRadius="4" Padding="8,5" Margin="-2">
+                      <StackPanel Orientation="Horizontal">
+                        <Border Width="22" Height="14" CornerRadius="3" Background="{Binding Surface}"
+                                BorderBrush="{Binding Accent}" BorderThickness="2" VerticalAlignment="Center" />
+                        <TextBlock Text="{Binding Name}" Foreground="{Binding Accent}" FontWeight="SemiBold"
+                                   VerticalAlignment="Center" Margin="10,0,0,0" />
+                      </StackPanel>
+                    </Border>
+                  </DataTemplate>
+                </ComboBox.ItemTemplate>
+              </ComboBox>
             </StackPanel>
           </Border>
           <Border Style="{StaticResource Card}" Margin="0,0,0,8">
