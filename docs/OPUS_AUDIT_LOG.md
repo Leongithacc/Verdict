@@ -421,8 +421,10 @@ Leon ha eseguito gli apply reali (decisione sua, in chat). Risultati:
   logica identica al pattern registry/powercfg (gia provati) + coperta dai fake.
 - COSMETICO NOTO: il CLI in artifacts non si ripubblica se la GUI WPEP e aperta (Get-Process
   WPEP matcha sia wpep.exe CLI che WPEP.exe GUI → publish saltato). Ripubblicare a GUI chiusa.
-- IN SOSPESO (Leon, da fixare alla fine): Win+R "verdict" apre ancora una finestra cmd anche
-  dopo App Paths HKLM + rimozione verdict.cmd. Innocua. Root cause TBD.
+- ✅ **Launcher Win+R RISOLTO**: la cmd veniva da C:\Scripts\verdict.cmd (Run consulta App
+  Paths HKLM+PATH, NON HKCU). Fix no-admin: C:\Scripts\verdict.vbs (lancio nascosto via
+  WScript.Shell, wscript = no console) + rimosso verdict.cmd. Verificato: 0 console.
+  (File di launcher fuori dal repo; VBScript confermato attivo su 26200.)
 
 ## Stato a fine sessione Opus (AGGIORNATO 2026-06-16)
 - `dotnet test`: **145/145 verdi**. `dotnet build WPEP.sln -c Release`: 0 errori/0 warning.
