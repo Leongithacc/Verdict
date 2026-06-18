@@ -238,6 +238,11 @@ public sealed class ApplyAllViewModel : ViewModelBase
             try
             {
                 var plan = _exec.BuildPlan(e);
+                if (plan.IsAlreadyApplied)
+                {
+                    lines.Add($"• {e.Name}\n    [already at desired value — nothing to do]");
+                    continue;
+                }
                 _ready.Add((e, plan));
                 lines.Add($"• {e.Name}\n{plan.Describe()}");
                 if (plan.RequiresReboot)

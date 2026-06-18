@@ -789,7 +789,13 @@ static int RunApplyAll(string[] args)
             Console.WriteLine($"• {e.Name}\n    [serve amministratore — saltato]");
             continue;
         }
-        try { var p = engine.BuildPlan(e); ready.Add(p); Console.WriteLine($"• {e.Name}\n{p.Describe()}"); }
+        try
+        {
+            var p = engine.BuildPlan(e);
+            if (p.IsAlreadyApplied) { Console.WriteLine($"• {e.Name}\n    [già al valore desiderato — niente da fare]"); continue; }
+            ready.Add(p);
+            Console.WriteLine($"• {e.Name}\n{p.Describe()}");
+        }
         catch (Exception ex) { Console.WriteLine($"• {e.Name}\n    [non applicabile: {ex.Message}]"); }
     }
     if (adminSkipped > 0)

@@ -372,6 +372,14 @@ punti (ExecutionService App, helper CLI, e in parte ReportBuilder) e NON testata
   precedenza). Suite 127→**141**. Verificato live: HAGS=AlreadyApplied, StickyKeys=DryRun,
   network-throttling(HKLM gia applicato)=AlreadyApplied senza admin, placebo=NotApplicable.
 
+### 26. Coerenza no-op in apply-all + cs2-reflex (2026-06-16)
+- apply-all (GUI + CLI) ora salta i tweak gia al valore desiderato ("gia al valore
+  desiderato — niente da fare") come fa il single-apply. Difensivo: l'Advisor gia esclude
+  i "gia attivi" dai Recommended, ma per le voci senza detection di stato e piu onesto.
+  Auto-review: ConflictResolver in ApplyAllViewModel.Open verificato (kept/conflicts ok).
+- KB 85→86: `cs2-reflex-on` (evidence_strong, NVIDIA) — CS2 integra Reflex; compare in cima
+  alla sezione per-gioco CS2 del verdetto di Leon (verificato live con `wpep advise`).
+
 ## Stato a fine sessione Opus (AGGIORNATO 2026-06-16)
 - `dotnet test`: **141+/141+ verdi**. `dotnet build WPEP.sln -c Release`: 0 errori/0 warning.
   (Se un nodo MSBuild crasha in parallelo: `-m:1 --disable-build-servers`.)
