@@ -402,8 +402,9 @@ DOPO l'apply, l'undo glielo sovrascriveva in silenzio. Ora e drift-aware.
 tenuto (l'altro mai toccato). Suite 143→**145**.
 
 ## Stato a fine sessione Opus (AGGIORNATO 2026-06-16)
-- `dotnet test`: **143/143 verdi**. `dotnet build WPEP.sln -c Release`: 0 errori/0 warning.
+- `dotnet test`: **145/145 verdi**. `dotnet build WPEP.sln -c Release`: 0 errori/0 warning.
   (Se un nodo MSBuild crasha in parallelo: `-m:1 --disable-build-servers`.)
+- `wpep advise --json` per automazione. Test integrazione apply-all (pipeline completa).
 - Logica apply consolidata in `WPEP.Execution.ApplyPolicy` (unica fonte App+CLI). `wpep doctor`.
 - Undo drift-aware: non sovrascrive valori cambiati a mano dopo l'apply (UndoOutcome.Skipped).
 - Apply onesto: rileva i no-op ("gia al valore desiderato"); gate admin solo se serve scrivere.
