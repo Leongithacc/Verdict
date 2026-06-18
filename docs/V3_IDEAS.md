@@ -72,3 +72,35 @@ organizzata per tema. ⭐ = candidate "killer". Léon giudica, poi si costruisce
 8. ⭐ **Panic restore** — ✅ già fatto (base di fiducia).
 
 *Léon: segna quali ti accendono e in che ordine; le sviluppiamo.*
+
+---
+
+## 🆕 IDEE NUOVE / INEDITE (Léon: "le altre erano vecchie, proponimene di nuove")
+Roba che NON si vede negli altri "ottimizzatori" — sfrutta il fatto che Verdict misura ed è onesto.
+
+- ⭐⭐ **Ghost Tweak (A/B alla cieca su te stesso)** — Verdict applica un tweak SENZA dirti quale,
+  tu giochi, lui misura col bench, poi RIVELA se ha aiutato davvero. Doppio-cieco su te stesso →
+  uccide il placebo a livello psicologico. Nessun tool al mondo lo fa. È il progetto in una feature.
+- ⭐⭐ **Time Machine / "Cos'è cambiato"** — Verdict tiene una baseline del tuo sistema e ti mostra
+  una TIMELINE: "da ieri: driver NVIDIA aggiornato, EXPO si è spento, un tweak è saltato, temp +4°C".
+  Più un rewind a un punto qualsiasi. Premium + sicurezza, sul journal/scan già esistenti.
+- ⭐⭐ **Regression Sentinel** — dopo i tweak, ri-benchmarka da solo ogni tanto e ti AVVISA se le
+  prestazioni sono PEGGIORATE (un Windows Update ha rotto qualcosa). Nessuno ti dice quando regredisci.
+- ⭐ **Reaction Lab** — minigioco di reflex/aim integrato che misura la TUA latenza+reazione prima/dopo
+  i tweak (umano + sistema insieme). Si lega al tuo progetto aim-coach. Divertente + utile + unico.
+- ⭐ **GO / Rituale pre-partita** — UN bottone: applica profilo competitive + zittisce Discord/
+  notifiche + Non Disturbare + lancia il gioco. "Entra nella zona" in un click. Premium streamlined.
+- ⭐ **Evidence dalla community (onesta)** — dati anonimi aggregati: "questo tweak ha aiutato in modo
+  MISURABILE il 73% degli utenti con rig simile". Trasforma il motore di onestà in un grado di
+  evidenza CROWD-validato. Differenziatore enorme, network effect.
+- **Risk Slider** — una manopola safe ↔ estremo; Verdict seleziona automaticamente il set di tweak
+  adatto alla tua tolleranza al rischio. UX premium, niente liste infinite.
+- **Rig DNA** — un'arte/firma generativa unica creata dal tuo hardware+config esatto (card da
+  collezione). La build-sheet diventa un "trading card" figo da collezionare/condividere.
+- **Optimization Debt** — come il "debito tecnico": le ottimizzazioni non fatte sono un "debito" da
+  ripagare, con un numero che scende mentre sistemi. Framing che dà dipendenza buona.
+- **Thermals-aware** — non ti consiglia un tweak di power se le temp sono già al limite (usa temp GPU).
+  Consiglio intelligente e sicuro, non a tappeto.
+
+*Le ⭐⭐ sono quelle che secondo me "svoltano" davvero e sono fattibili col motore che abbiamo.*
+
