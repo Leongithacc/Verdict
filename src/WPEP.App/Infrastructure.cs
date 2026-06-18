@@ -116,18 +116,18 @@ public static class ThemePresets
         if (System.Windows.Application.Current is not { } app)
             return;
 
-        // Mutate the brush objects directly: this updates every consumer instantly,
-        // whether it referenced the brush via Static- or DynamicResource. (Updating the
-        // underlying Color resource alone does not reliably refresh realized brushes.)
-        static System.Windows.Media.Color C(string hex) =>
+        // REPLACE each brush resource with a fresh SolidColorBrush. The XAML brushes get
+        // frozen at load, so mutating their Color is a no-op; but every consumer references
+        // the brush via DynamicResource, so swapping the resource value refreshes the whole
+        // UI instantly. (Also keep the C.* color token in sync for completeness.)
+        System.Windows.Media.Color C(string hex) =>
             (System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString(hex);
 
         void SetBrush(string key, string hex)
         {
-            if (app.Resources[key] is System.Windows.Media.SolidColorBrush b && !b.IsFrozen)
-                b.Color = C(hex);
-            // keep the Color token in sync too (for any DynamicResource consumers)
-            app.Resources["C." + key] = C(hex);
+            var color = C(hex);
+            app.Resources["C." + key] = color;
+            app.Resources[key] = new System.Windows.Media.SolidColorBrush(color);
         }
 
         SetBrush("Accent", p.Accent);
