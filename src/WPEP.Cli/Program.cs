@@ -45,6 +45,8 @@ switch (args[0])
         return RunChanges();
     case "undo":
         return RunUndo(args.Skip(1).ToArray());
+    case "panic":
+        return RunPanic(args.Skip(1).ToArray());
     case "selftest":
         return RunSelfTest();
     case "doctor":
@@ -926,6 +928,29 @@ static int RunApplyProfile(string[] args)
     return stopped is null ? 0 : 1;
 }
 
+// V3 — Panic restore: annulla TUTTO il journaled in un colpo (drift-aware).
+static int RunPanic(string[] args)
+{
+    bool yes = args.Contains("--yes") || args.Contains("-y");
+    var sessions = WPEP.Execution.ExecutionEngine.ListSessions(
+        WPEP.Execution.ExecutionEngine.DefaultJournalDirectory);
+    if (sessions.Count == 0) { Console.WriteLine("Niente da ripristinare: Verdict non ha applicato nulla."); return 0; }
+
+    if (!yes)
+    {
+        Console.WriteLine($"PANIC RESTORE annullerebbe TUTTE le {sessions.Count} sessioni applicate da Verdict\n" +
+            "(ripristina i valori precedenti; salta ciò che hai cambiato a mano).\n" +
+            "Rilancia con --yes per ripristinare tutto.");
+        return 0;
+    }
+
+    var outcome = NewEngine().UndoAll();
+    Console.WriteLine($"Panic restore: ripristinate {outcome.Restored} modifiche.");
+    foreach (var s in outcome.Skipped)
+        Console.WriteLine($"  [saltato] {s}");
+    return 0;
+}
+
 static int RunChanges()
 {
     var sessions = WPEP.Execution.ExecutionEngine.ListSessions(
@@ -1339,6 +1364,10 @@ static void PrintUsage()
           wpep undo <file|last>
               Annulla una sessione: ripristina i valori precedenti (o cancella ciò
               che non esisteva), verificando ogni ripristino.
+
+          wpep panic [--yes]
+              PANIC RESTORE: annulla TUTTO ciò che Verdict ha applicato, in un colpo
+              (drift-aware). Senza --yes mostra solo quante sessioni annullerebbe.
 
           wpep selftest
               Verifica che il motore di apply funzioni su questo PC: write→verify→undo

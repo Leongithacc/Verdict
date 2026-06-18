@@ -46,6 +46,23 @@ public static class ProfileStore
                 "disable-enhance-pointer-precision",
             ],
             "Ritocchi leggeri di tutti i giorni (QoL, nessun rischio).", BuiltIn: true),
+        new("Single-player",
+            [
+                "power-plan-high-performance",
+                "hags-hardware-gpu-scheduling",
+                "disable-enhance-pointer-precision",
+            ],
+            "Giochi single-player: fluidità e qualità, niente estremismi di latenza.", BuiltIn: true),
+        new("Pulizia max",
+            [
+                "fast-startup-disable",
+                "network-throttling-index",
+                "systemresponsiveness-gpupriority-registry",
+                "disable-gamedvr-background-recording",
+                "hags-hardware-gpu-scheduling",
+                "qos-disable-user-presence",
+            ],
+            "Spegne più roba di background per un PC sempre reattivo.", BuiltIn: true),
     ];
 
     /// <summary>All profiles: built-ins first, then user profiles from disk (a user profile

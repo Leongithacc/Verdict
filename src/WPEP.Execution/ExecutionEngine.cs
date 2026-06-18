@@ -221,6 +221,25 @@ public sealed class ExecutionEngine(
         return new UndoOutcome(restored, skipped);
     }
 
+    /// <summary>Panic restore (V3): undo EVERY journaled session, newest first. Drift-aware
+    /// (skips what was changed outside Verdict). One button to put the system back.</summary>
+    public UndoOutcome UndoAll()
+    {
+        int restored = 0;
+        var skipped = new List<string>();
+        foreach (var file in ListSessions(journalDirectory).Reverse())
+        {
+            try
+            {
+                var o = Undo(file);
+                restored += o.Restored;
+                skipped.AddRange(o.Skipped);
+            }
+            catch (Exception ex) { skipped.Add($"{System.IO.Path.GetFileName(file)}: {ex.Message}"); }
+        }
+        return new UndoOutcome(restored, skipped);
+    }
+
     /// <summary>Reads the current live value for a journal entry (per method).</summary>
     private (bool Exists, string? Value) ReadCurrent(JournalEntry entry)
     {

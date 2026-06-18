@@ -368,6 +368,29 @@ public class ExecutionEngineTests : IDisposable
     }
 
     [Fact]
+    public void UndoAll_RestoresEveryJournaledSession()
+    {
+        var reg = new FakeRegistry();
+        reg.Data[@"HKCU\Test\Key\ValueA"] = ("dword", "1");
+        reg.Data[@"HKCU\T2\C"] = ("dword", "5");
+        var engine = new ExecutionEngine(reg, _journalDir);
+        engine.Execute(engine.BuildPlan(Entry("p1"))); // A:1→0, B:<new>→1
+        engine.Execute(engine.BuildPlan(Entry("p2", apply: new ApplySpec
+        {
+            Method = "registry",
+            Operations = [new ApplyOperation { Path = @"HKCU\T2\C", ValueAfter = "9", Kind = "dword" }],
+        })));
+        Assert.Equal(2, ExecutionEngine.ListSessions(_journalDir).Count);
+
+        var o = engine.UndoAll();
+
+        Assert.Equal("1", reg.Data[@"HKCU\Test\Key\ValueA"].Value);   // restored
+        Assert.False(reg.Data.ContainsKey(@"HKCU\Test\Key\ValueB"));  // deleted
+        Assert.Equal("5", reg.Data[@"HKCU\T2\C"].Value);              // restored
+        Assert.True(o.Restored >= 3);
+    }
+
+    [Fact]
     public void ExecuteAll_StopsAtFirstVerifyFailure()
     {
         var engine = new ExecutionEngine(new FakeRegistry { FailWrites = true }, _journalDir);
