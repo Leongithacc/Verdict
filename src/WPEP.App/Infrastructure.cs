@@ -3,6 +3,7 @@ using System.IO;
 using System.Runtime.CompilerServices;
 using System.Text.Json;
 using System.Windows.Input;
+using WPEP.Execution;
 
 namespace WPEP.App;
 
@@ -57,6 +58,25 @@ public sealed class AppSettings
     public int DefaultBenchmarkRuns { get; set; } = 5;
     public double NoiseGateThresholdPercent { get; set; } = 10;
     public bool CompactLists { get; set; }
+
+    /// <summary>Feature flags for the Lab page. Stores ONLY the user's explicit overrides;
+    /// a feature absent from the dictionary falls back to its catalog default. This keeps the
+    /// file small and lets us change defaults later without stomping user choices.</summary>
+    public Dictionary<string, bool> Features { get; set; } = new();
+
+    /// <summary>Is a Lab feature on? Honors the user's stored choice, else the catalog default.
+    /// The id is a <c>FeatureCatalog</c> constant.</summary>
+    public bool IsFeatureEnabled(string id) =>
+        Features.TryGetValue(id, out var on) ? on : (FeatureCatalog.Get(id)?.DefaultEnabled ?? false);
+
+    /// <summary>Turn a feature on/off and persist. Pass <c>isDefault</c> to clear the override
+    /// so the catalog default rules again (keeps the file from accumulating redundant entries).</summary>
+    public void SetFeature(string id, bool on)
+    {
+        var def = FeatureCatalog.Get(id)?.DefaultEnabled ?? false;
+        if (on == def) Features.Remove(id); else Features[id] = on;
+        Save();
+    }
 
     public static string DataDirectory => Path.Combine(AppContext.BaseDirectory, "data");
     private static string FilePath => Path.Combine(DataDirectory, "settings.json");

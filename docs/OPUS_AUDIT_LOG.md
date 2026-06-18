@@ -426,6 +426,28 @@ Leon ha eseguito gli apply reali (decisione sua, in chat). Risultati:
   WScript.Shell, wscript = no console) + rimosso verdict.cmd. Verificato: 0 console.
   (File di launcher fuori dal repo; VBScript confermato attivo su 26200.)
 
+### 30. V3 — Framework "Lab" a feature-flag (2026-06-18) — la fondazione richiesta da Leon
+Decisione architetturale di Leon: troppe feature premium → non tutte sempre-attive (non clean).
+Soluzione: una pagina **"Lab"** dove ogni modulo premium è un TOGGLE; l'utente accende solo ciò
+che vuole. Costruito il framework completo:
+- `WPEP.Execution/FeatureCatalog.cs` (dati puri, NO-WPF → testabile e condivisibile col CLI):
+  `FeatureModule(Id,Name,Tagline,Category,DefaultEnabled,Status,Heavy,Glyph)` + `FeatureStatus`
+  {Stable,Beta,Experimental}. Catalogo di 18 moduli (tutte le idee che Leon ha scelto: Score,
+  Ghost Tweak, Time Machine, Regression Sentinel, Watchdog, Ottimizza-per-gioco, Multi-monitor,
+  Explain-my-Stutter, Risk Slider, Reaction/Latency Lab, Network Duel, Rig DNA, AI co-pilot,
+  Trust mode, Fresh-install, Evidence community, Placebo Museum), raggruppati per categoria.
+- Persistenza in `AppSettings` (settings.json): `Dictionary<string,bool> Features` +
+  `IsFeatureEnabled(id)` (override utente, else default catalogo) + `SetFeature(id,on)` che
+  RIMUOVE la voce quando == default (file piccolo, default ri-modificabili in futuro senza
+  stompare le scelte). I moduli **pesanti** (Watchdog, Sentinel) partono OFF di default.
+- GUI: `LabViewModel`/`FeatureRow`/`FeatureGroup` + pagina XAML (nav "Lab") con card raggruppate,
+  badge stato (BETA/SPERIMENTALE) + badge BACKGROUND per i moduli heavy, contatore "N di M attivi".
+- Test: `FeatureCatalogTests` (no-dup id, moduli completi, heavy=>default OFF, costanti→modulo
+  reale, Get). **154/154 verdi.** Build App 0/0.
+- I MODULI sono ancora gusci: il framework c'è, le feature si "riempiono" una a una leggendo
+  `settings.IsFeatureEnabled(id)` nei rispettivi hook. Prossimo: implementare i primi moduli
+  backend-testabili (Multi-monitor, Explain-my-Stutter, Risk Slider, Ghost Tweak).
+
 ## Stato a fine sessione Opus (AGGIORNATO 2026-06-16)
 - `dotnet test`: **145/145 verdi**. `dotnet build WPEP.sln -c Release`: 0 errori/0 warning.
   (Se un nodo MSBuild crasha in parallelo: `-m:1 --disable-build-servers`.)

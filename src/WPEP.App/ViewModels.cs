@@ -28,6 +28,7 @@ public sealed class MainViewModel : ViewModelBase
     public ReportViewModel Report { get; }
     public ChangesViewModel Changes { get; }
     public SettingsViewModel SettingsPage { get; }
+    public LabViewModel Lab { get; }
     public ApplyDialogViewModel ApplyDialog { get; }
     public ApplyAllViewModel ApplyAll { get; }
 
@@ -52,6 +53,7 @@ public sealed class MainViewModel : ViewModelBase
         Report = new ReportViewModel(this);
         Changes = new ChangesViewModel(Execution);
         SettingsPage = new SettingsViewModel(Settings);
+        Lab = new LabViewModel(Settings);
         ApplyDialog = new ApplyDialogViewModel(this, Execution);
         ApplyAll = new ApplyAllViewModel(this, Execution);
         _currentPage = Verdict;
