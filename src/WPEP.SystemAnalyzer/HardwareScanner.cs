@@ -1,9 +1,14 @@
 using System.Management;
+using System.Text.RegularExpressions;
 
 namespace WPEP.SystemAnalyzer;
 
-public sealed record MemoryModule(string Slot, double CapacityGb, int? SpeedMtps, string Vendor, string Part);
+public sealed record MemoryModule(string Slot, double CapacityGb, int? SpeedMtps, int? RatedMtps, string Vendor, string Part);
 public sealed record DiskInfo(string Model, double CapacityGb, string Media);
+
+/// <summary>A diagnostic judgment about the setup (the "trova problemi" part). Ok=good,
+/// Warn=worth fixing, Info=neutral note.</summary>
+public sealed record Finding(string Level, string Text);
 
 /// <summary>A full, driver-free hardware inventory (V3 §1). Everything via WMI/CIM — no
 /// kernel driver, so it's safe with anti-cheat (the project's golden rule). Deep live
@@ -19,7 +24,8 @@ public sealed record HardwareInventory(
     double? RamTotalGb,
     IReadOnlyList<MemoryModule> Memory,
     IReadOnlyList<DiskInfo> Disks,
-    IReadOnlyList<string> Gpus);
+    IReadOnlyList<string> Gpus,
+    IReadOnlyList<Finding> Findings);
 
 public static class HardwareScanner
 {
@@ -29,6 +35,8 @@ public static class HardwareScanner
         var (bios, biosDate) = ReadBios();
         var (cpu, cores, threads) = ReadCpu();
         var mem = ReadMemory();
+        var disks = ReadDisks();
+        var gpus = ReadGpus();
         return new HardwareInventory(
             Motherboard: mb,
             Chipset: chipset,
@@ -39,8 +47,38 @@ public static class HardwareScanner
             Threads: threads,
             RamTotalGb: mem.Count > 0 ? mem.Sum(m => m.CapacityGb) : null,
             Memory: mem,
-            Disks: ReadDisks(),
-            Gpus: ReadGpus());
+            Disks: disks,
+            Gpus: gpus,
+            Findings: ComputeFindings(mem, biosDate, gpus));
+    }
+
+    /// <summary>Honest, conservative diagnostics — only flag what we can actually tell.</summary>
+    private static List<Finding> ComputeFindings(
+        List<MemoryModule> mem, string biosDate, List<string> gpus)
+    {
+        var f = new List<Finding>();
+
+        // RAM below its rated speed = XMP/EXPO not enabled. WMI rarely exposes the SPD/EXPO
+        // max, but the kit's part number usually encodes it (e.g. ...6000...), so use that.
+        var m0 = mem.FirstOrDefault();
+        if (m0?.SpeedMtps is { } cur)
+        {
+            int rated = Math.Max(m0.RatedMtps ?? 0, RatedFromPart(m0.Part) ?? 0);
+            if (rated > cur + 50)
+                f.Add(new Finding("Warn",
+                    $"RAM a {cur} MT/s ma il kit e rated {rated} — abilita EXPO/XMP nel BIOS (+{rated - cur} MT/s gratis)."));
+            else if (cur >= 6000)
+                f.Add(new Finding("Ok", $"RAM a {cur} MT/s (EXPO/XMP attivo)."));
+        }
+
+        // BIOS older than ~18 months: worth checking for an update.
+        if (biosDate.Length >= 4 && int.TryParse(biosDate[..4], out var year) && year <= 2024)
+            f.Add(new Finding("Info", $"BIOS del {biosDate}: valuta un aggiornamento se ce n'e uno piu recente."));
+
+        if (gpus.Any(g => g.Contains("NVIDIA", StringComparison.OrdinalIgnoreCase) || g.Contains("GeForce", StringComparison.OrdinalIgnoreCase)))
+            f.Add(new Finding("Ok", "GPU NVIDIA rilevata — Reflex / DLSS disponibili."));
+
+        return f;
     }
 
     private static (string, string) ReadBaseBoard()
@@ -70,9 +108,10 @@ public static class HardwareScanner
         foreach (var o in Query("SELECT DeviceLocator, Capacity, ConfiguredClockSpeed, Speed, Manufacturer, PartNumber FROM Win32_PhysicalMemory"))
         {
             double gb = (ToLong(o["Capacity"]) ?? 0) / 1024d / 1024d / 1024d;
-            int? speed = ToInt(o["ConfiguredClockSpeed"]) ?? ToInt(o["Speed"]);
-            list.Add(new MemoryModule(Str(o["DeviceLocator"]), Math.Round(gb), speed,
-                Str(o["Manufacturer"]).Trim(), Str(o["PartNumber"]).Trim()));
+            int? configured = ToInt(o["ConfiguredClockSpeed"]);
+            int? rated = ToInt(o["Speed"]); // SPD-rated max (often the EXPO/XMP speed)
+            list.Add(new MemoryModule(Str(o["DeviceLocator"]), Math.Round(gb),
+                configured ?? rated, rated, Str(o["Manufacturer"]).Trim(), Str(o["PartNumber"]).Trim()));
         }
         return list;
     }
@@ -92,10 +131,11 @@ public static class HardwareScanner
     private static List<string> ReadGpus()
     {
         var list = new List<string>();
+        string[] virt = ["Basic", "Virtual", "Meta", "Parsec", "Remote", "Mirror", "IddCx", "OBS"];
         foreach (var o in Query("SELECT Name FROM Win32_VideoController"))
         {
             var n = Str(o["Name"]).Trim();
-            if (n.Length > 0 && !n.Contains("Basic", StringComparison.OrdinalIgnoreCase))
+            if (n.Length > 0 && !virt.Any(v => n.Contains(v, StringComparison.OrdinalIgnoreCase)))
                 list.Add(n);
         }
         return list;
@@ -108,6 +148,16 @@ public static class HardwareScanner
         catch { yield break; } // WMI hiccup must never crash the scan
         foreach (ManagementBaseObject o in results)
             yield return o;
+    }
+
+    /// <summary>Pull the rated DDR5 speed out of a memory kit part number (e.g.
+    /// "CMH32GX5M2E6000Z36" → 6000). Returns null if no plausible speed token is found.</summary>
+    private static int? RatedFromPart(string part)
+    {
+        foreach (Match m in Regex.Matches(part, @"\d{4}"))
+            if (int.TryParse(m.Value, out var v) && v is >= 4800 and <= 8400)
+                return v;
+        return null;
     }
 
     private static string Str(object? v) => v?.ToString() ?? "";

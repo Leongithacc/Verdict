@@ -944,7 +944,17 @@ static int RunScan()
     foreach (var g in hw.Gpus)
         Console.WriteLine($"GPU          : {g}");
     foreach (var d in hw.Disks)
-        Console.WriteLine($"Disco        : {d.Model}  {d.CapacityGb:F0} GB  {d.Media}".TrimEnd());
+        Console.WriteLine($"Disco        : {d.Model}  {d.CapacityGb:F0} GB".TrimEnd());
+
+    if (hw.Findings.Count > 0)
+    {
+        Console.WriteLine("\nDiagnosi:");
+        foreach (var fi in hw.Findings)
+        {
+            string mark = fi.Level switch { "Warn" => "[!]", "Ok" => "[ok]", _ => "[i]" };
+            Console.WriteLine($"  {mark} {fi.Text}");
+        }
+    }
 
     Console.WriteLine("\n(Sensori live VRM/ventole/temp-CPU non inclusi: richiederebbero un driver kernel,\n vietato per anti-cheat. Temp/clock GPU: vedi 'wpep doctor'.)");
     return 0;
