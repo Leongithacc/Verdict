@@ -38,7 +38,11 @@ public partial class MainWindow : Window
         };
     }
 
-    private void OnNavVerdict(object s, RoutedEventArgs e) => _vm.CurrentPage = _vm.Verdict;
+    private void OnNavVerdict(object s, RoutedEventArgs e)
+    {
+        _vm.Verdict.RecomputeScore(); // reflect a Score toggle made in the Lab
+        _vm.CurrentPage = _vm.Verdict;
+    }
     private void OnNavScan(object s, RoutedEventArgs e) => _vm.CurrentPage = _vm.Scan;
 
     /// <summary>Render the build-sheet card to a PNG on the Desktop and open it.</summary>

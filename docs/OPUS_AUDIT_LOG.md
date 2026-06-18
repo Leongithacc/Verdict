@@ -448,6 +448,27 @@ che vuole. Costruito il framework completo:
   `settings.IsFeatureEnabled(id)` nei rispettivi hook. Prossimo: implementare i primi moduli
   backend-testabili (Multi-monitor, Explain-my-Stutter, Risk Slider, Ghost Tweak).
 
+### 31. V3 — Primo modulo Lab cablato: VERDICT SCORE (2026-06-18) — onesto, anti-placebo
+Prova end-to-end che il framework feature-flag funziona: il modulo `score` (default-ON) ora
+esiste davvero, non è più un guscio.
+- `WPEP.Execution/VerdictScore.cs` (puro, deterministico, testabile): `Compute(ScoreInput)` →
+  `ScoreResult(Score 0-100, Band, BandColor, Breakdown[], HonestyNote)`. Modello: parte da 100 e
+  sottrae solo deduzioni REALI ed evidence-backed: −6 per ogni tweak consigliato non fatto (cap 54,
+  non azzera mai da solo), −15 EXPO/XMP spento (perf gratis misurabile), −5 per tweak rischioso
+  attivo (cap 20). BAND: Eccellente≥90 / Buono≥75 / Discreto≥55 / Da sistemare. **L'ONESTÀ È LA
+  FEATURE**: i placebo NON muovono il numero (test lo prova) + nota esplicita "non gonfiamo il
+  punteggio". Nessun altro tool lo fa — è l'identità del progetto resa numero.
+- EXPO: aggiunto `HardwareInventory.ExpoEnabled` (tri-state) + `HardwareScanner.DetectExpo` (stessa
+  euristica del finding, esposta pulita). `ScanViewModel` espone `ExpoEnabled` + evento
+  `ScanCompleted` → la Verdict ricomputa lo Score quando lo scan hardware atterra (EXPO arriva dopo).
+- GUI: card "hero" nella pagina Verdict (numerone colorato per band via TokenBrush + breakdown
+  con delta firmati + nota onestà), gated da `ShowScore` (= `IsFeatureEnabled("score")`). Toggle
+  nel Lab → si riflette al rientro nella pagina Verdict (RecomputeScore in OnNavVerdict).
+- Onestà conservativa: RiskyActive/PlaceboActive passati a 0 perché NON possiamo confermare quali
+  tweak rischiosi/placebo siano davvero attivi ora → non penalizziamo ciò che non sappiamo provare.
+- Test: `VerdictScoreTests` (6: sistema perfetto=100, cap pending, EXPO=−15, placebo non muove,
+  clamp 0-100, EXPO unknown=no penalità). **160/160 verdi**, build App 0/0.
+
 ## Stato a fine sessione Opus (AGGIORNATO 2026-06-16)
 - `dotnet test`: **145/145 verdi**. `dotnet build WPEP.sln -c Release`: 0 errori/0 warning.
   (Se un nodo MSBuild crasha in parallelo: `-m:1 --disable-build-servers`.)

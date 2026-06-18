@@ -25,7 +25,8 @@ public sealed record HardwareInventory(
     IReadOnlyList<MemoryModule> Memory,
     IReadOnlyList<DiskInfo> Disks,
     IReadOnlyList<string> Gpus,
-    IReadOnlyList<Finding> Findings);
+    IReadOnlyList<Finding> Findings,
+    bool? ExpoEnabled);
 
 public static class HardwareScanner
 {
@@ -49,7 +50,20 @@ public static class HardwareScanner
             Memory: mem,
             Disks: disks,
             Gpus: gpus,
-            Findings: ComputeFindings(mem, biosDate, gpus));
+            Findings: ComputeFindings(mem, biosDate, gpus),
+            ExpoEnabled: DetectExpo(mem));
+    }
+
+    /// <summary>EXPO/XMP state from the first module: true=running at (or near) rated speed,
+    /// false=running below rated (profile off), null=can't tell (no speed or no rated info).
+    /// Same heuristic the EXPO finding uses, exposed as a clean tri-state for the Verdict Score.</summary>
+    public static bool? DetectExpo(IReadOnlyList<MemoryModule> mem)
+    {
+        var m0 = mem.FirstOrDefault();
+        if (m0?.SpeedMtps is not { } cur) return null;
+        int rated = Math.Max(m0.RatedMtps ?? 0, RatedFromPart(m0.Part) ?? 0);
+        if (rated <= 0) return null;          // no rated reference → honest "unknown"
+        return cur + 50 >= rated;             // within tolerance of rated = profile enabled
     }
 
     /// <summary>Honest, conservative diagnostics — only flag what we can actually tell.</summary>

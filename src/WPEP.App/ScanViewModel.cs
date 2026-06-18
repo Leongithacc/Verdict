@@ -25,6 +25,13 @@ public sealed class ScanViewModel : ViewModelBase
     public ObservableCollection<string> Gpus { get; } = [];
     public ObservableCollection<FindingRow> Findings { get; } = [];
 
+    /// <summary>RAM EXPO/XMP state from the last scan (tri-state, null until known). The Verdict
+    /// Score reads this; <see cref="ScanCompleted"/> lets it recompute when the scan finishes.</summary>
+    public bool? ExpoEnabled { get; private set; }
+
+    /// <summary>Raised on the UI thread after a hardware scan finishes (build-sheet ready).</summary>
+    public event Action? ScanCompleted;
+
     public RelayCommand RescanCommand => new(() => _ = ScanAsync());
 
     public async Task ScanAsync()
@@ -33,6 +40,7 @@ public sealed class ScanViewModel : ViewModelBase
         try
         {
             var hw = await Task.Run(HardwareScanner.Scan);
+            ExpoEnabled = hw.ExpoEnabled;
             Motherboard = hw.Motherboard;
             Bios = hw.Bios + (hw.BiosDate.Length > 0 ? $"  ({hw.BiosDate})" : "");
             Cpu = $"{hw.Cpu}  ·  {hw.Cores?.ToString() ?? "?"}C/{hw.Threads?.ToString() ?? "?"}T";
@@ -57,5 +65,6 @@ public sealed class ScanViewModel : ViewModelBase
         {
             IsScanning = false;
         }
+        ScanCompleted?.Invoke();
     }
 }

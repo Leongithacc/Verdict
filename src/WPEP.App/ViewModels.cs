@@ -5,6 +5,7 @@ using WPEP.Advisor;
 using WPEP.Core.Diagnostics;
 using WPEP.Core.SystemInfo;
 using WPEP.Diagnostics;
+using WPEP.Execution;
 using WPEP.KnowledgeBase;
 using WPEP.SystemAnalyzer;
 
@@ -54,6 +55,8 @@ public sealed class MainViewModel : ViewModelBase
         Changes = new ChangesViewModel(Execution);
         SettingsPage = new SettingsViewModel(Settings);
         Lab = new LabViewModel(Settings);
+        // EXPO state lands with the hardware scan → refresh the Verdict Score when it does.
+        Scan.ScanCompleted += () => Verdict.RecomputeScore();
         ApplyDialog = new ApplyDialogViewModel(this, Execution);
         ApplyAll = new ApplyAllViewModel(this, Execution);
         _currentPage = Verdict;
@@ -144,6 +147,18 @@ public sealed class VerdictViewModel(MainViewModel main) : ViewModelBase
     public int ApplicableRecommendedCount => _applicableRecommended.Count;
     public bool HasApplicableRecommended => _applicableRecommended.Count > 0;
     public string ApplyAllLabel => $"Apply all recommended ({_applicableRecommended.Count})";
+
+    // ── Verdict Score (Lab feature, default-ON) ──────────────────────────────
+    // The honest 0–100 number. Gated by the feature flag so the user can hide it.
+    private int _score;
+    private string _scoreBand = "", _scoreColor = "Ok", _honestyNote = "";
+    private int _scoreDone, _scorePending;
+    public bool ShowScore => main.Settings.IsFeatureEnabled(FeatureCatalog.Score);
+    public int Score { get => _score; private set => Set(ref _score, value); }
+    public string ScoreBand { get => _scoreBand; private set => Set(ref _scoreBand, value); }
+    public string ScoreColor { get => _scoreColor; private set => Set(ref _scoreColor, value); }
+    public string HonestyNote { get => _honestyNote; private set => Set(ref _honestyNote, value); }
+    public ObservableCollection<ScoreReason> ScoreBreakdown { get; } = [];
 
     public RelayCommand RescanCommand => new(() => _ = ScanAsync());
     public RelayCommand ApplyAllCommand => new(
@@ -260,6 +275,32 @@ public sealed class VerdictViewModel(MainViewModel main) : ViewModelBase
         if (snapshot.IsManagedDevice == true)
             SubHeader += "\n⚠ This looks like a company-managed device. Running third-party " +
                          "diagnostic tools may violate your organization's IT policy. Get IT approval first.";
+
+        // Verdict Score: remember the inputs we have now; EXPO arrives with the hardware scan,
+        // so recompute when that completes too (see ScanCompleted wiring in ScanAsync).
+        _scoreDone = optimal;
+        _scorePending = WorthDoing;
+        RecomputeScore();
+    }
+
+    /// <summary>Computes the honest 0–100 score from the latest advisor counts + EXPO state.
+    /// Cheap and idempotent: called after each advise and again when the hardware scan lands.</summary>
+    public void RecomputeScore()
+    {
+        Raise(nameof(ShowScore));
+        var result = VerdictScore.Compute(new ScoreInput(
+            RecommendedDone: _scoreDone,
+            RecommendedPending: _scorePending,
+            RiskyActive: 0,        // honest: we don't penalize risky tweaks we can't confirm are ON
+            PlaceboActive: 0,      // we don't claim to detect applied placebos — the note still holds
+            ExpoEnabled: main.Scan.ExpoEnabled));
+        Score = result.Score;
+        ScoreBand = result.Band;
+        ScoreColor = result.BandColor;
+        HonestyNote = result.HonestyNote;
+        ScoreBreakdown.Clear();
+        foreach (var r in result.Breakdown)
+            ScoreBreakdown.Add(r);
     }
 }
 
