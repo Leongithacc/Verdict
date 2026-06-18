@@ -37,6 +37,10 @@ switch (args[0])
         return RunApply(args.Skip(1).ToArray());
     case "apply-all":
         return RunApplyAll(args.Skip(1).ToArray());
+    case "profiles":
+        return RunProfiles();
+    case "apply-profile":
+        return RunApplyProfile(args.Skip(1).ToArray());
     case "changes":
         return RunChanges();
     case "undo":
@@ -844,6 +848,84 @@ static int RunApplyAll(string[] args)
     return stopped is null ? 0 : 1;
 }
 
+// V3 §2 — profili di tweak.
+static int RunProfiles()
+{
+    var profiles = WPEP.Execution.ProfileStore.All();
+    Console.WriteLine($"Profili ({profiles.Count}):\n");
+    foreach (var p in profiles)
+    {
+        Console.WriteLine($"  {p.Name}{(p.BuiltIn ? "  (predefinito)" : "")} — {p.Description}");
+        Console.WriteLine($"    {p.TweakIds.Count} tweak: {string.Join(", ", p.TweakIds)}\n");
+    }
+    Console.WriteLine("Applica: wpep apply-profile <nome> [--yes]");
+    return 0;
+}
+
+static int RunApplyProfile(string[] args)
+{
+    bool yes = args.Contains("--yes") || args.Contains("-y");
+    var name = args.FirstOrDefault(a => !a.StartsWith('-'));
+    if (name is null) { Console.Error.WriteLine("Uso: wpep apply-profile <nome> [--yes]"); return 2; }
+
+    var profile = WPEP.Execution.ProfileStore.Get(name);
+    if (profile is null) { Console.Error.WriteLine($"Profilo '{name}' non trovato. 'wpep profiles' per la lista."); return 2; }
+
+    IReadOnlyList<WPEP.KnowledgeBase.TweakEntry> kb;
+    try { kb = WPEP.KnowledgeBase.KnowledgeBaseLoader.Load(); }
+    catch (Exception ex) { Console.Error.WriteLine($"Caricamento KB fallito: {ex.Message}"); return 1; }
+
+    var entries = profile.TweakIds
+        .Select(id => kb.FirstOrDefault(e => e.Id.Equals(id, StringComparison.OrdinalIgnoreCase)))
+        .Where(e => e is not null && CanApplyEntry(e!)).Select(e => e!).ToList();
+    if (entries.Count == 0)
+    {
+        Console.WriteLine($"Profilo '{profile.Name}': nessun tweak applicabile automaticamente (gui-only o id non trovati).");
+        return 0;
+    }
+
+    bool elevated = Elevation.IsElevated();
+    var engine = NewEngine();
+    var (kept, conflicts) = WPEP.Advisor.ConflictResolver.Resolve(entries);
+    var ready = new List<WPEP.Execution.ExecutionPlan>();
+    int adminSkipped = 0;
+
+    Console.WriteLine($"Profilo '{profile.Name}' — dry run:\n");
+    foreach (var d in conflicts)
+        Console.WriteLine($"• {d.Entry.Name}\n    [saltato: {d.Reason}]");
+    foreach (var e in kept)
+    {
+        if (EntryNeedsAdmin(e) && !elevated)
+        {
+            adminSkipped++;
+            Console.WriteLine($"• {e.Name}\n    [serve amministratore — saltato]");
+            continue;
+        }
+        try
+        {
+            var p = engine.BuildPlan(e);
+            if (p.IsAlreadyApplied) { Console.WriteLine($"• {e.Name}\n    [già al valore desiderato]"); continue; }
+            ready.Add(p);
+            Console.WriteLine($"• {e.Name}\n{p.Describe()}");
+        }
+        catch (Exception ex) { Console.WriteLine($"• {e.Name}\n    [non applicabile: {ex.Message}]"); }
+    }
+    if (adminSkipped > 0)
+        Console.WriteLine($"\n{adminSkipped} richiedono un terminale amministratore (rilancia da admin per includerli).");
+    if (ready.Count == 0) { Console.WriteLine("\nNiente da applicare adesso."); return 0; }
+    if (!yes)
+    {
+        Console.WriteLine($"\nNiente scritto. Rilancia con --yes per applicare i {ready.Count} tweak del profilo " +
+            "(journaled, undo singolo).");
+        return 0;
+    }
+    var (applied, stopped) = engine.ExecuteAll(ready);
+    Console.WriteLine(stopped is null
+        ? $"\nProfilo '{profile.Name}' applicato: {applied} tweak. 'wpep changes' / 'wpep undo'."
+        : $"\nApplicati {applied}, poi FERMATO a {stopped}. I gia applicati restano annullabili.");
+    return stopped is null ? 0 : 1;
+}
+
 static int RunChanges()
 {
     var sessions = WPEP.Execution.ExecutionEngine.ListSessions(
@@ -1243,6 +1325,13 @@ static void PrintUsage()
               Dry-run (o, con --yes, applica) TUTTI i tweak consigliati E
               applicabili su questo PC. Ognuno journaled e annullabile singolarmente.
               Si ferma al primo verify fallito.
+
+          wpep profiles
+              Elenca i profili di tweak (predefiniti Competitive/Streaming/Daily + i tuoi).
+
+          wpep apply-profile <nome> [--yes]
+              Applica in blocco i tweak di un profilo (dry-run senza --yes). Conflict guard,
+              salto dei no-op e gating admin come apply-all; ognuno resta annullabile.
 
           wpep changes
               Elenca le sessioni journaled (cosa è stato applicato, e se annullato).
