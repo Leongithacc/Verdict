@@ -45,6 +45,8 @@ switch (args[0])
         return RunSelfTest();
     case "doctor":
         return RunDoctor();
+    case "scan":
+        return RunScan();
     case "tools" when args.Length >= 2 && args[1] == "install-presentmon":
         return await InstallPresentMon();
     default:
@@ -923,6 +925,29 @@ static IReadOnlyList<string>? ReadAppliedChanges()
         catch { /* una sessione illeggibile non deve rompere il report */ }
     }
     return lines.Count > 0 ? lines : null;
+}
+
+// V3 §1 — inventario hardware completo (WMI, zero driver).
+static int RunScan()
+{
+    Console.WriteLine("Verdict scan — inventario hardware (WMI, nessun driver kernel)\n");
+    WPEP.SystemAnalyzer.HardwareInventory hw;
+    try { hw = WPEP.SystemAnalyzer.HardwareScanner.Scan(); }
+    catch (Exception ex) { Console.Error.WriteLine($"Scan fallito: {ex.Message}"); return 1; }
+
+    Console.WriteLine($"Scheda madre : {hw.Motherboard}");
+    Console.WriteLine($"BIOS         : {hw.Bios}{(hw.BiosDate.Length > 0 ? $"  ({hw.BiosDate})" : "")}");
+    Console.WriteLine($"CPU          : {hw.Cpu}  {hw.Cores?.ToString() ?? "?"}C/{hw.Threads?.ToString() ?? "?"}T");
+    Console.WriteLine($"RAM          : {hw.RamTotalGb?.ToString("F0") ?? "?"} GB totali");
+    foreach (var m in hw.Memory)
+        Console.WriteLine($"   - {m.Slot,-12} {m.CapacityGb:F0} GB @ {m.SpeedMtps?.ToString() ?? "?"} MT/s  {m.Vendor} {m.Part}".TrimEnd());
+    foreach (var g in hw.Gpus)
+        Console.WriteLine($"GPU          : {g}");
+    foreach (var d in hw.Disks)
+        Console.WriteLine($"Disco        : {d.Model}  {d.CapacityGb:F0} GB  {d.Media}".TrimEnd());
+
+    Console.WriteLine("\n(Sensori live VRM/ventole/temp-CPU non inclusi: richiederebbero un driver kernel,\n vietato per anti-cheat. Temp/clock GPU: vedi 'wpep doctor'.)");
+    return 0;
 }
 
 // Riepilogo di prontezza: stato sistema + verdetto + diagnostica del motore.
