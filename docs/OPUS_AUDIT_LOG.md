@@ -436,19 +436,27 @@ Leon ha eseguito gli apply reali (decisione sua, in chat). Risultati:
 - `wpep selftest` / GUI "Verifica motore" validano sul campo il path di scrittura registry
   reale (EngineSelfTest condiviso; PASS sul PC di Leon, output pulito).
 - Report HTML: badge "one-click" sulle voci applicabili + sezione Changes da journal (GUI+CLI).
-- KB: **85 voci** (25 forti, 21 plausibili, 18 controverse, 14 placebo, 7 risky);
+- KB: **86 voci** (26 forti, 21 plausibili, 18 controverse, 14 placebo, 7 risky);
   **12 applicabili one-click** via registry/powercfg/bcdedit (con dry-run/journal/undo),
   il resto gui-only (deep-link "Open settings" dove possibile, o in-game/BIOS).
+- 🎯 **MOTORE VALIDATO SUL CAMPO (#29)**: Leon ha eseguito apply reali → registry WRITE+undo,
+  powercfg WRITE+undo, bcdedit READ tutti OK sul suo PC. NON e piu "solo testato coi fake".
 - Executors engine: registry + powercfg + powercfg-value + **bcdedit** (service: ancora TODO).
 - **CLI ora applica**: wpep apply/apply-all/changes/undo (dry-run di default, --yes per scrivere).
 - **apply-all** con conflict guard (ConflictResolver) e gating admin onesto.
 - Detection giochi: Fortnite/Valorant/CS2/**Apex**/**Overwatch2**.
 - Nessuna modifica distruttiva ai moduli core di Fable; tutto additivo.
-- DA RIVEDERE/TESTARE da Fable con PRIORITÀ:
-  - tutto WPEP.Execution (scrive su registry/powercfg/bcdedit) — vedi #1, #12.
-  - **RealBcdEdit** path reale (parsing /enum, casing) — mai testato con scrittura vera (#12).
-  - le apply-spec registry/powercfg/bcdedit in tweaks.json (path/valori uno a uno), inclusi
-    HwSchMode e StickyKeys Flags=506 (#15) e disabledynamictick (#12).
-  - gli URL fonte delle voci KB nuove (#2,#8,#14,#18).
+- DA RIVEDERE/TESTARE da Fable con PRIORITÀ (aggiornato dopo validazione sul campo #29):
+  - ✅ registry WRITE+undo e powercfg WRITE+undo: VALIDATI sul campo da Leon (#29) — non piu
+    priorita di test, ma la code-review resta utile.
+  - ⚠️ UNICO write path ancora NON provato dal vivo: **RealBcdEdit WRITE** (Set/Delete) —
+    il suo disabledynamictick e gia 'yes' quindi non scrivibile pulito; READ validato (#29),
+    pattern identico a registry/powercfg gia provati, coperto dai fake.
+  - Undo drift-aware (#27): rivedere la semantica skip-su-drift su powercfg/bcdedit.
+  - ApplyPolicy (#25): unica fonte CanApply/NeedsAdmin/DecideAction — verificare le regole.
+  - apply-spec in tweaks.json (path/valori), inclusi HwSchMode + StickyKeys Flags=506 (#15),
+    disabledynamictick (#12); URL fonte voci KB nuove (#2,#8,#14,#18,#22); cs2-reflex (#... 2026-06-18).
   - il pin TraceEvent 3.2.4 in WPEP.Diagnostics (#16).
-- Boundary Fable→Opus invariato: ultimo commit Fable `53e9fdc`. ~30 commit Opus dopo.
+- Launcher: C:\Scripts\verdict.vbs (no console), fuori dal repo. Tema GUI: +preset "Villain",
+  sfondo piu scuro; report HTML allineato.
+- Boundary Fable→Opus invariato: ultimo commit Fable `53e9fdc`. ~37 commit Opus dopo.
