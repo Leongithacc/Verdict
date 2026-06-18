@@ -3,10 +3,10 @@
 
   <!-- ============ TOKENS (DESIGN_DIRECTION: tutti i colori vivono qui) ============ -->
   <!-- Accent swappa coi preset; i SEMANTICI (Ok/Warn/Danger/badge) non cambiano mai. -->
-  <Color x:Key="C.Bg">#0F0F14</Color>
-  <Color x:Key="C.Surface">#1A1A22</Color>
-  <Color x:Key="C.Surface2">#22222C</Color>
-  <Color x:Key="C.Line">#2A2A38</Color>
+  <Color x:Key="C.Bg">#08080C</Color>
+  <Color x:Key="C.Surface">#14141B</Color>
+  <Color x:Key="C.Surface2">#1C1C26</Color>
+  <Color x:Key="C.Line">#272735</Color>
   <Color x:Key="C.Accent">#8B5CF6</Color>
   <Color x:Key="C.AccentDeep">#4A0080</Color>
   <Color x:Key="C.Text">#E6E6EC</Color>

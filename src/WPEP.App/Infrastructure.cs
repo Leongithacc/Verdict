@@ -92,6 +92,7 @@ public static class ThemePresets
         new Dictionary<string, (string, string)>
         {
             ["Violet"] = ("#8B5CF6", "#4A0080"),
+            ["Villain"] = ("#7C3AED", "#3A0A5C"),
             ["Stealth"] = ("#7C8CA0", "#3A4250"),
             ["Crimson"] = ("#D45D6A", "#6E1F2A"),
             ["Emerald"] = ("#34B98F", "#0F5C44"),
