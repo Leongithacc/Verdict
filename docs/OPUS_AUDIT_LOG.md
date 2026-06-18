@@ -395,6 +395,12 @@ DOPO l'apply, l'undo glielo sovrascriveva in silenzio. Ora e drift-aware.
 - DA RIVEDERE da Fable: la semantica drift su powercfg/bcdedit (logica condivisa, ma il path
   reale di quei due metodi resta da provare con un apply vero).
 
+### 28. Test d'integrazione apply-all (2026-06-18)
+`ApplyOrchestrationTests`: pinna l'INTERAZIONE del flusso che CLI/GUI eseguono
+(ConflictResolver → BuildPlan → ExecuteAll → Undo), non solo i pezzi singoli.
+2 scenari: apply-all+undo round-trip allo stato originale; conflitto → applica solo il lato
+tenuto (l'altro mai toccato). Suite 143→**145**.
+
 ## Stato a fine sessione Opus (AGGIORNATO 2026-06-16)
 - `dotnet test`: **143/143 verdi**. `dotnet build WPEP.sln -c Release`: 0 errori/0 warning.
   (Se un nodo MSBuild crasha in parallelo: `-m:1 --disable-build-servers`.)
