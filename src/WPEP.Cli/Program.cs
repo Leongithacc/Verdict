@@ -32,7 +32,7 @@ switch (args[0])
     case "report":
         return RunReport(args.Skip(1).ToArray());
     case "advise":
-        return RunAdvise();
+        return RunAdvise(args.Skip(1).ToArray());
     case "apply":
         return RunApply(args.Skip(1).ToArray());
     case "apply-all":
@@ -617,8 +617,10 @@ static int RunReport(string[] args)
     }
 }
 
-static int RunAdvise()
+static int RunAdvise(string[] args)
 {
+    bool json = args.Contains("--json");
+
     IReadOnlyList<WPEP.KnowledgeBase.TweakEntry> entries;
     try
     {
@@ -632,6 +634,29 @@ static int RunAdvise()
 
     var snapshot = WPEP.SystemAnalyzer.SnapshotBuilder.Build(DateTimeOffset.UtcNow);
     var all = WPEP.Advisor.AdvisorEngine.Advise(snapshot, entries);
+
+    if (json)
+    {
+        // Stable, machine-readable shape for automation on top of Verdict.
+        var items = all
+            .Where(r => r.Entry.Game is null || snapshot.GameInstalled(r.Entry.Game) != false)
+            .Select(r => new
+            {
+                id = r.Entry.Id,
+                name = r.Entry.Name,
+                category = r.Entry.Category,
+                game = r.Entry.Game,
+                classification = r.Classification.ToString(),
+                evidence = r.Entry.EvidenceLevel.ToString(),
+                applicable = WPEP.Execution.ApplyPolicy.CanApply(r.Entry),
+                needsAdmin = WPEP.Execution.ApplyPolicy.NeedsAdmin(r.Entry),
+                stateNote = r.StateNote,
+            });
+        Console.WriteLine(JsonSerializer.Serialize(items,
+            new JsonSerializerOptions { WriteIndented = true }));
+        return 0;
+    }
+
     var recommendations = all.Where(r => r.Entry.Game is null).ToArray();
     var gameSpecific = all.Where(r => r.Entry.Game is not null).ToArray();
 
@@ -1154,9 +1179,11 @@ static void PrintUsage()
               Snapshot read-only di hardware e config rilevante (CPU, GPU,
               monitor, power plan, HAGS, Game Mode, HVCI, pointer precision).
 
-          wpep advise
+          wpep advise [--json]
               Incrocia lo snapshot con la knowledge base: cosa è già a posto,
               cosa è consigliato, cosa è placebo, cosa è rischioso — su QUESTO pc.
+              Con --json: output strutturato (id, classificazione, evidenza, applicabile)
+              per automazione/integrazione.
 
           wpep kb [show <id>]
               Knowledge base dei tweak: grading di evidenza con fonti primarie,
