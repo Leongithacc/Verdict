@@ -40,10 +40,15 @@ public partial class MainWindow : Window
 
     private void OnNavVerdict(object s, RoutedEventArgs e)
     {
-        _vm.Verdict.RecomputeScore(); // reflect a Score toggle made in the Lab
+        _vm.Verdict.RecomputeScore();     // reflect a Score toggle made in the Lab
+        _vm.Verdict.RecomputeRiskScope(); // reflect a Risk Slider toggle made in the Lab
         _vm.CurrentPage = _vm.Verdict;
     }
-    private void OnNavScan(object s, RoutedEventArgs e) => _vm.CurrentPage = _vm.Scan;
+    private void OnNavScan(object s, RoutedEventArgs e)
+    {
+        _ = _vm.Scan.RefreshMultiMonitorAsync(); // reflect a Multi-monitor toggle from the Lab
+        _vm.CurrentPage = _vm.Scan;
+    }
 
     /// <summary>Render the build-sheet card to a PNG on the Desktop and open it.</summary>
     private void OnExportBuildSheet(object sender, RoutedEventArgs e)

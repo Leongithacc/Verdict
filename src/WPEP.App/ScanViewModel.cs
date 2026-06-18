@@ -11,8 +11,14 @@ public sealed record FindingRow(string Text, string ColorKey, string Mark);
 /// which has the visual to render).</summary>
 public sealed class ScanViewModel : ViewModelBase
 {
+    private readonly AppSettings _settings;
     private bool _isScanning;
     private string _motherboard = "—", _bios = "—", _cpu = "—", _ram = "—";
+
+    public ScanViewModel(AppSettings settings) => _settings = settings;
+
+    /// <summary>Multi-monitor optimizer (Lab feature): the Displays section only shows when on.</summary>
+    public bool ShowMultiMonitor => _settings.IsFeatureEnabled(WPEP.Execution.FeatureCatalog.MultiMonitor);
 
     public bool IsScanning { get => _isScanning; set => Set(ref _isScanning, value); }
     public string Motherboard { get => _motherboard; set => Set(ref _motherboard, value); }
@@ -24,6 +30,8 @@ public sealed class ScanViewModel : ViewModelBase
     public ObservableCollection<string> Disks { get; } = [];
     public ObservableCollection<string> Gpus { get; } = [];
     public ObservableCollection<FindingRow> Findings { get; } = [];
+    public ObservableCollection<string> Displays { get; } = [];
+    public ObservableCollection<FindingRow> MonitorFindings { get; } = [];
 
     /// <summary>RAM EXPO/XMP state from the last scan (tri-state, null until known). The Verdict
     /// Score reads this; <see cref="ScanCompleted"/> lets it recompute when the scan finishes.</summary>
@@ -57,9 +65,21 @@ public sealed class ScanViewModel : ViewModelBase
                 Gpus.Add(g);
             Findings.Clear();
             foreach (var f in hw.Findings)
-                Findings.Add(new FindingRow(f.Text,
-                    f.Level switch { "Warn" => "Warn", "Ok" => "Ok", _ => "Info" },
-                    f.Level switch { "Warn" => "⚠", "Ok" => "✓", _ => "ℹ" }));
+                Findings.Add(ToRow(f));
+
+            // Multi-monitor optimizer (Lab feature): only scan displays when the module is on.
+            Displays.Clear();
+            MonitorFindings.Clear();
+            Raise(nameof(ShowMultiMonitor));
+            if (ShowMultiMonitor)
+            {
+                var displays = await Task.Run(DisplayScanner.Enumerate);
+                foreach (var d in displays)
+                    Displays.Add($"{d.Name}   ·   {d.Width}×{d.Height} @ {d.RefreshHz} Hz" +
+                                 (d.IsPrimary ? "   ·   PRIMARIO" : ""));
+                foreach (var f in DisplayScanner.Analyze(displays))
+                    MonitorFindings.Add(ToRow(f));
+            }
         }
         finally
         {
@@ -67,4 +87,30 @@ public sealed class ScanViewModel : ViewModelBase
         }
         ScanCompleted?.Invoke();
     }
+
+    /// <summary>Cheap refresh of just the Displays section (no WMI) so toggling the Multi-monitor
+    /// module in the Lab takes effect when the user returns to the Scan page.</summary>
+    public async Task RefreshMultiMonitorAsync()
+    {
+        Raise(nameof(ShowMultiMonitor));
+        if (!ShowMultiMonitor)
+        {
+            Displays.Clear();
+            MonitorFindings.Clear();
+            return;
+        }
+        if (Displays.Count > 0) return; // already populated by the last full scan
+        var displays = await Task.Run(DisplayScanner.Enumerate);
+        Displays.Clear();
+        foreach (var d in displays)
+            Displays.Add($"{d.Name}   ·   {d.Width}×{d.Height} @ {d.RefreshHz} Hz" +
+                         (d.IsPrimary ? "   ·   PRIMARIO" : ""));
+        MonitorFindings.Clear();
+        foreach (var f in DisplayScanner.Analyze(displays))
+            MonitorFindings.Add(ToRow(f));
+    }
+
+    private static FindingRow ToRow(Finding f) => new(f.Text,
+        f.Level switch { "Warn" => "Warn", "Ok" => "Ok", _ => "Info" },
+        f.Level switch { "Warn" => "⚠", "Ok" => "✓", _ => "ℹ" });
 }

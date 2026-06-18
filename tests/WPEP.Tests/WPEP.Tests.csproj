@@ -13,6 +13,7 @@
     <ProjectReference Include="..\..\src\WPEP.Benchmark\WPEP.Benchmark.csproj" />
     <ProjectReference Include="..\..\src\WPEP.Statistics\WPEP.Statistics.csproj" />
     <ProjectReference Include="..\..\src\WPEP.KnowledgeBase\WPEP.KnowledgeBase.csproj" />
+    <ProjectReference Include="..\..\src\WPEP.SystemAnalyzer\WPEP.SystemAnalyzer.csproj" />
     <ProjectReference Include="..\..\src\WPEP.Advisor\WPEP.Advisor.csproj" />
     <ProjectReference Include="..\..\src\WPEP.Execution\WPEP.Execution.csproj" />
     <ProjectReference Include="..\..\src\WPEP.Reporting\WPEP.Reporting.csproj" />

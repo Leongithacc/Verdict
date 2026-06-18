@@ -59,6 +59,10 @@ public sealed class AppSettings
     public double NoiseGateThresholdPercent { get; set; } = 10;
     public bool CompactLists { get; set; }
 
+    /// <summary>Risk Slider (Lab feature): how far the user wants to go. Default Balanced =
+    /// the normal recommended set. Persisted so the choice sticks across launches.</summary>
+    public RiskTolerance RiskTolerance { get; set; } = RiskTolerance.Balanced;
+
     /// <summary>Feature flags for the Lab page. Stores ONLY the user's explicit overrides;
     /// a feature absent from the dictionary falls back to its catalog default. This keeps the
     /// file small and lets us change defaults later without stomping user choices.</summary>

@@ -22,7 +22,7 @@ public sealed class MainViewModel : ViewModelBase
     public AppSettings Settings { get; }
     public ExecutionService Execution { get; } = new();
     public VerdictViewModel Verdict { get; }
-    public ScanViewModel Scan { get; } = new();
+    public ScanViewModel Scan { get; }
     public MeasureWizardViewModel Measure { get; }
     public DiagnosticsViewModel Diagnostics { get; }
     public KbViewModel Kb { get; }
@@ -45,6 +45,7 @@ public sealed class MainViewModel : ViewModelBase
     public MainViewModel()
     {
         Settings = AppSettings.Load();
+        Scan = new ScanViewModel(Settings);
         Verdict = new VerdictViewModel(this);
         Measure = new MeasureWizardViewModel(this, Settings);
         Measure.InitCommands();
@@ -159,6 +160,29 @@ public sealed class VerdictViewModel(MainViewModel main) : ViewModelBase
     public string ScoreColor { get => _scoreColor; private set => Set(ref _scoreColor, value); }
     public string HonestyNote { get => _honestyNote; private set => Set(ref _honestyNote, value); }
     public ObservableCollection<ScoreReason> ScoreBreakdown { get; } = [];
+
+    // ── Risk Slider (Lab feature) ────────────────────────────────────────────
+    // One knob safe↔extreme deciding which tweaks are "in scope". Placebos never count.
+    private readonly List<(int RiskTier, bool IsPlacebo)> _scopeItems = [];
+    private string _riskName = "", _riskTagline = "", _riskColor = "Ok", _riskSummary = "";
+    public bool ShowRiskSlider => main.Settings.IsFeatureEnabled(FeatureCatalog.RiskSlider);
+    public string RiskName { get => _riskName; private set => Set(ref _riskName, value); }
+    public string RiskTagline { get => _riskTagline; private set => Set(ref _riskTagline, value); }
+    public string RiskColor { get => _riskColor; private set => Set(ref _riskColor, value); }
+    public string RiskSummary { get => _riskSummary; private set => Set(ref _riskSummary, value); }
+    public int RiskLevel
+    {
+        get => (int)main.Settings.RiskTolerance;
+        set
+        {
+            var tol = (RiskTolerance)Math.Clamp(value, 0, 3);
+            if (tol == main.Settings.RiskTolerance) return;
+            main.Settings.RiskTolerance = tol;
+            main.Settings.Save();
+            Raise();
+            RecomputeRiskScope();
+        }
+    }
 
     public RelayCommand RescanCommand => new(() => _ = ScanAsync());
     public RelayCommand ApplyAllCommand => new(
@@ -281,6 +305,33 @@ public sealed class VerdictViewModel(MainViewModel main) : ViewModelBase
         _scoreDone = optimal;
         _scorePending = WorthDoing;
         RecomputeScore();
+
+        // Risk Slider scope: every actionable tweak as (risk tier, is-placebo). AlreadyActive /
+        // NotApplicable aren't things to apply, so they don't count toward "in scope".
+        _scopeItems.Clear();
+        _scopeItems.AddRange(recommendations
+            .Where(r => r.Classification is not (Classification.AlreadyActive or Classification.NotApplicable))
+            .Select(r => ((int)r.Entry.Risk, r.Entry.EvidenceLevel == EvidenceLevel.Placebo)));
+        RecomputeRiskScope();
+    }
+
+    /// <summary>Updates the Risk Slider card: profile description + how many tweaks fall within the
+    /// chosen tolerance. Placebos are reported separately and never counted as in-scope.</summary>
+    public void RecomputeRiskScope()
+    {
+        Raise(nameof(ShowRiskSlider));
+        var tol = main.Settings.RiskTolerance;
+        var p = RiskSlider.Describe(tol);
+        RiskName = p.Name;
+        RiskTagline = p.Tagline;
+        RiskColor = p.Color;
+
+        int inScope = _scopeItems.Count(i => RiskSlider.Includes(tol, i.RiskTier, i.IsPlacebo));
+        int placebo = _scopeItems.Count(i => i.IsPlacebo);
+        int riskyOut = _scopeItems.Count(i => !i.IsPlacebo && !RiskSlider.Includes(tol, i.RiskTier, false));
+        RiskSummary = $"{inScope} tweak in ambito a questo livello" +
+            (riskyOut > 0 ? $" · {riskyOut} troppo rischiosi per ora" : "") +
+            (placebo > 0 ? $" · {placebo} placebo sempre esclusi" : "");
     }
 
     /// <summary>Computes the honest 0–100 score from the latest advisor counts + EXPO state.

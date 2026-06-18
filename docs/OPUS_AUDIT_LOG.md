@@ -469,6 +469,26 @@ esiste davvero, non è più un guscio.
 - Test: `VerdictScoreTests` (6: sistema perfetto=100, cap pending, EXPO=−15, placebo non muove,
   clamp 0-100, EXPO unknown=no penalità). **160/160 verdi**, build App 0/0.
 
+### 32. V3 — Moduli Lab 2 e 3: RISK SLIDER + MULTI-MONITOR (2026-06-18, scelti da Léon via cps)
+Léon ha scelto questi due (cps). Entrambi: logica pura in lib (testabile) + GUI gated dal flag.
+**Risk Slider** (`WPEP.Execution/RiskSlider.cs`): manopola `RiskTolerance` {Sicuro/Bilanciato/
+  Aggressivo/Estremo}. `Includes(tol, riskTier, isPlacebo)`: include i tweak il cui tier di rischio
+  KB (None=0..High=3) ≤ tolleranza; **i placebo MAI a nessun livello** (allarga quanto sei
+  RISCHIOSO, non quanto sei INUTILE). `Describe` per la UI. Persistito in `AppSettings.RiskTolerance`
+  (default Bilanciato). GUI: card con Slider 0-3 sulla pagina Verdict (gated `ShowRiskSlider`),
+  mostra profilo + "N tweak in ambito · M troppo rischiosi · K placebo esclusi" dai risultati
+  advise correnti. `RiskSliderTests` (11, inclusa monotonìa: alzare la tolleranza non toglie mai
+  nulla). Self-determina lo scope da `recommendations` in Apply().
+**Multi-monitor optimizer** (`WPEP.SystemAnalyzer/DisplayScanner.cs`): enumera i display via Win32
+  `EnumDisplayDevices`/`EnumDisplaySettings` (P/Invoke, **NO driver kernel** → anti-cheat safe, solo
+  lettura) → `DisplayInfo(Name,W,H,RefreshHz,IsPrimary)`. `Analyze` (puro, testato): consigli onesti
+  per gaming — gioca/imposta-primario il pannello a Hz più alto, avviso refresh misti (micro-stutter
+  su alcune GPU), suggerimento Win+P "solo schermo PC" in competitiva (meno carico compositore/input
+  lag), nudge VRR/G-SYNC per-display. Verdict NON cambia la config display, rimanda alle impostazioni
+  Windows. GUI: sezione "MONITOR" nel build-sheet della pagina Scan (gated `ShowMultiMonitor`);
+  `ScanViewModel` ora prende `AppSettings`, refresh leggero su nav Scan. `DisplayScannerTests` (6).
+- NB: aggiunto ProjectReference WPEP.SystemAnalyzer al progetto test (mancava). **177/177 verdi**, build 0/0.
+
 ## Stato a fine sessione Opus (AGGIORNATO 2026-06-16)
 - `dotnet test`: **145/145 verdi**. `dotnet build WPEP.sln -c Release`: 0 errori/0 warning.
   (Se un nodo MSBuild crasha in parallelo: `-m:1 --disable-build-servers`.)
