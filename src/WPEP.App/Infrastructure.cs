@@ -84,28 +84,57 @@ public sealed class AppSettings
     }
 }
 
-/// <summary>The 4 curated theme presets (DESIGN_DIRECTION). Only the accent
-/// changes — semantic colors never do.</summary>
+/// <summary>A full dark palette. Each theme changes the WHOLE look (background, surfaces,
+/// lines, accent) — not just the accent — so switching is clearly visible. Semantic colors
+/// (Ok/Warn/Danger) never change. All backgrounds stay near-black with light text.</summary>
+public sealed record ThemePreset(
+    string Accent, string AccentDeep, string Bg, string Surface, string Surface2, string Line);
+
 public static class ThemePresets
 {
-    public static readonly IReadOnlyDictionary<string, (string Accent, string AccentDeep)> All =
-        new Dictionary<string, (string, string)>
+    public static readonly IReadOnlyDictionary<string, ThemePreset> All =
+        new Dictionary<string, ThemePreset>
         {
-            ["Violet"] = ("#8B5CF6", "#4A0080"),
-            ["Villain"] = ("#7C3AED", "#3A0A5C"),
-            ["Stealth"] = ("#7C8CA0", "#3A4250"),
-            ["Crimson"] = ("#D45D6A", "#6E1F2A"),
-            ["Emerald"] = ("#34B98F", "#0F5C44"),
+            // name          accent      deep        bg          surface     surface2    line
+            ["Violet"]   = new("#8B5CF6", "#4A0080", "#0A0A0F", "#15151C", "#1C1C25", "#262633"),
+            ["Villain"]  = new("#7C3AED", "#3A0A5C", "#08070C", "#161019", "#1F1528", "#2C1F3C"),
+            ["Stealth"]  = new("#90A4C0", "#3A4250", "#0A0B0D", "#15171C", "#1D2027", "#2A2F3A"),
+            ["Crimson"]  = new("#E0525F", "#6E1F2A", "#0C0809", "#1A1315", "#241A1D", "#34262A"),
+            ["Emerald"]  = new("#34D399", "#0F5C44", "#070C0A", "#121A16", "#19241E", "#26332C"),
+            ["Midnight"] = new("#5B8DEF", "#1E3A6E", "#070A10", "#11151F", "#181F2C", "#252E42"),
+            ["Inferno"]  = new("#F97316", "#7C2D12", "#0C0907", "#1A1410", "#241B14", "#34281C"),
+            ["Toxic"]    = new("#A3E635", "#3F6212", "#090C07", "#161A12", "#1F2618", "#2D3422"),
+            ["Ice"]      = new("#38BDF8", "#0E4F6E", "#070C0F", "#111A1F", "#18242B", "#25353E"),
+            ["Gold"]     = new("#F5C542", "#7A5C12", "#0C0A06", "#1A1710", "#241F14", "#342A1C"),
+            ["Mono"]     = new("#C7CBD4", "#3A3D45", "#090909", "#151515", "#1E1E1E", "#2C2C2C"),
         };
 
     public static void Apply(string name)
     {
-        if (!All.TryGetValue(name, out var preset))
-            preset = All["Violet"];
-        var app = System.Windows.Application.Current;
-        app.Resources["C.Accent"] =
-            (System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString(preset.Accent);
-        app.Resources["C.AccentDeep"] =
-            (System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString(preset.AccentDeep);
+        if (!All.TryGetValue(name, out var p))
+            p = All["Violet"];
+        if (System.Windows.Application.Current is not { } app)
+            return;
+
+        // Mutate the brush objects directly: this updates every consumer instantly,
+        // whether it referenced the brush via Static- or DynamicResource. (Updating the
+        // underlying Color resource alone does not reliably refresh realized brushes.)
+        static System.Windows.Media.Color C(string hex) =>
+            (System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString(hex);
+
+        void SetBrush(string key, string hex)
+        {
+            if (app.Resources[key] is System.Windows.Media.SolidColorBrush b && !b.IsFrozen)
+                b.Color = C(hex);
+            // keep the Color token in sync too (for any DynamicResource consumers)
+            app.Resources["C." + key] = C(hex);
+        }
+
+        SetBrush("Accent", p.Accent);
+        SetBrush("AccentDeep", p.AccentDeep);
+        SetBrush("Bg", p.Bg);
+        SetBrush("Surface", p.Surface);
+        SetBrush("Surface2", p.Surface2);
+        SetBrush("Line", p.Line);
     }
 }
