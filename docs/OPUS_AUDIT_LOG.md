@@ -401,6 +401,20 @@ DOPO l'apply, l'undo glielo sovrascriveva in silenzio. Ora e drift-aware.
 2 scenari: apply-all+undo round-trip allo stato originale; conflitto → applica solo il lato
 tenuto (l'altro mai toccato). Suite 143→**145**.
 
+### 29. VALIDAZIONE SUL CAMPO con Leon (2026-06-18) — chiude diversi "DA TESTARE"
+Leon ha eseguito gli apply reali (decisione sua, in chat). Risultati:
+- ✅ **Scrittura registry reale**: `wpep apply disable-sticky-keys-gaming --yes` → before 510 →
+  after 506, "Applicato e verificato", journal creato; `wpep undo last` → "Annullate 1
+  modifiche". Il ciclo write→verify→journal→undo funziona DAL COMANDO VERO (non solo selftest).
+- ✅ **RealBcdEdit in LETTURA**: `wpep apply disable-dynamic-tick` (admin) → "Già al valore
+  desiderato, before yes → after yes". Query/parsing del boot config reale OK + no-op su bcdedit.
+- ✅ **Launcher Win+R "verdict"** apre l'app. NOTA: lasciava una finestra cmd (Run usa
+  C:\Scripts\verdict.cmd via PATH; App Paths HKCU ignorato dal Run, conferma il vecchio dubbio).
+  FIX dato a Leon: App Paths in HKLM (admin) + rimozione verdict.cmd → lancio diretto WPEP.exe.
+- FIX cosmetico: col `--yes` la CLI stampava ancora "Dry run —"; ora "Applico ora — modifiche:".
+- ANCORA DA PROVARE: RealPowerCfg WRITE (SetActiveScheme) e RealBcdEdit WRITE (richiedono un
+  apply che cambi davvero piano/boot — il suo disabledynamictick e gia 'yes').
+
 ## Stato a fine sessione Opus (AGGIORNATO 2026-06-16)
 - `dotnet test`: **145/145 verdi**. `dotnet build WPEP.sln -c Release`: 0 errori/0 warning.
   (Se un nodo MSBuild crasha in parallelo: `-m:1 --disable-build-servers`.)

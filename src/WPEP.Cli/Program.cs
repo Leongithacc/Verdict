@@ -748,7 +748,9 @@ static int RunApply(string[] args)
         return 0;
     }
 
-    Console.WriteLine("Dry run — esattamente cosa cambierà:");
+    Console.WriteLine(action == WPEP.Execution.ApplyAction.Execute
+        ? "Applico ora — modifiche:"
+        : "Dry run — esattamente cosa cambierà:");
     Console.WriteLine(plan.Describe());
     if (plan.RequiresReboot) Console.WriteLine("\n(richiede un riavvio per avere effetto)");
     bool risky = entry.Risk is WPEP.KnowledgeBase.RiskLevel.High or WPEP.KnowledgeBase.RiskLevel.Medium
