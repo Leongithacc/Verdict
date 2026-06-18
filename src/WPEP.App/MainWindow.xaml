@@ -348,6 +348,87 @@
     </DataTemplate>
 
     <!-- ============ CHANGES (undo journal) ============ -->
+    <!-- ============ SCAN (build-sheet) ============ -->
+    <DataTemplate DataType="{x:Type local:ScanViewModel}">
+      <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <StackPanel Margin="32,24" MaxWidth="720" HorizontalAlignment="Left">
+          <DockPanel Margin="0,0,0,12">
+            <Button DockPanel.Dock="Right" Style="{StaticResource GhostButton}" Content="Rescan"
+                    Command="{Binding RescanCommand}" VerticalAlignment="Top" />
+            <Button DockPanel.Dock="Right" Style="{StaticResource PrimaryButton}" Content="Esporta PNG"
+                    Click="OnExportBuildSheet" VerticalAlignment="Top" Margin="0,0,8,0" />
+            <StackPanel>
+              <TextBlock Style="{StaticResource H1}" Text="Scan" />
+              <TextBlock Style="{StaticResource Muted}"
+                         Text="Inventario hardware completo (WMI, nessun driver) — esportabile come immagine." />
+            </StackPanel>
+          </DockPanel>
+
+          <!-- The exported card: only this element is rendered to PNG. -->
+          <Border x:Name="BuildSheet" Background="{DynamicResource Bg}" CornerRadius="14"
+                  BorderBrush="{DynamicResource Accent}" BorderThickness="1" Padding="24">
+            <StackPanel>
+              <TextBlock Text="LÉON'S RIG" FontSize="13" FontWeight="Bold" Opacity="0.7"
+                         Foreground="{DynamicResource Accent}" />
+              <TextBlock Text="{Binding Cpu}" Style="{StaticResource H2}" Margin="0,2,0,0" />
+              <ItemsControl ItemsSource="{Binding Gpus}" Margin="0,2,0,0">
+                <ItemsControl.ItemTemplate>
+                  <DataTemplate>
+                    <TextBlock Text="{Binding}" Foreground="{DynamicResource Text}" FontWeight="SemiBold" />
+                  </DataTemplate>
+                </ItemsControl.ItemTemplate>
+              </ItemsControl>
+
+              <Border Height="1" Background="{DynamicResource Line}" Margin="0,14" />
+
+              <Grid>
+                <Grid.ColumnDefinitions><ColumnDefinition Width="120"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                  <RowDefinition/><RowDefinition/><RowDefinition/><RowDefinition/>
+                </Grid.RowDefinitions>
+                <TextBlock Grid.Row="0" Grid.Column="0" Text="Scheda madre" Style="{StaticResource Muted}" />
+                <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding Motherboard}" Foreground="{DynamicResource Text}" />
+                <TextBlock Grid.Row="1" Grid.Column="0" Text="BIOS" Style="{StaticResource Muted}" Margin="0,6,0,0" />
+                <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding Bios}" Foreground="{DynamicResource Text}" Margin="0,6,0,0" />
+                <TextBlock Grid.Row="2" Grid.Column="0" Text="RAM" Style="{StaticResource Muted}" Margin="0,6,0,0" />
+                <StackPanel Grid.Row="2" Grid.Column="1" Margin="0,6,0,0">
+                  <TextBlock Text="{Binding Ram}" Foreground="{DynamicResource Text}" />
+                  <ItemsControl ItemsSource="{Binding MemoryModules}">
+                    <ItemsControl.ItemTemplate><DataTemplate>
+                      <TextBlock Text="{Binding}" Style="{StaticResource Mono}" FontSize="11"
+                                 Foreground="{DynamicResource TextMuted}" />
+                    </DataTemplate></ItemsControl.ItemTemplate>
+                  </ItemsControl>
+                </StackPanel>
+                <TextBlock Grid.Row="3" Grid.Column="0" Text="Dischi" Style="{StaticResource Muted}" Margin="0,6,0,0" />
+                <ItemsControl Grid.Row="3" Grid.Column="1" ItemsSource="{Binding Disks}" Margin="0,6,0,0">
+                  <ItemsControl.ItemTemplate><DataTemplate>
+                    <TextBlock Text="{Binding}" Foreground="{DynamicResource Text}" />
+                  </DataTemplate></ItemsControl.ItemTemplate>
+                </ItemsControl>
+              </Grid>
+
+              <Border Height="1" Background="{DynamicResource Line}" Margin="0,14" />
+              <ItemsControl ItemsSource="{Binding Findings}">
+                <ItemsControl.ItemTemplate>
+                  <DataTemplate>
+                    <StackPanel Orientation="Horizontal" Margin="0,2">
+                      <TextBlock Text="{Binding Mark}" Foreground="{Binding ColorKey, Converter={StaticResource TokenBrush}}"
+                                 FontWeight="Bold" Width="18" />
+                      <TextBlock Text="{Binding Text}" Foreground="{DynamicResource Text}" TextWrapping="Wrap" />
+                    </StackPanel>
+                  </DataTemplate>
+                </ItemsControl.ItemTemplate>
+              </ItemsControl>
+
+              <TextBlock Text="Verdict — scan" FontSize="10" Opacity="0.4"
+                         Foreground="{DynamicResource TextMuted}" Margin="0,14,0,0" HorizontalAlignment="Right" />
+            </StackPanel>
+          </Border>
+        </StackPanel>
+      </ScrollViewer>
+    </DataTemplate>
+
     <DataTemplate DataType="{x:Type local:ChangesViewModel}">
       <StackPanel Margin="32,24" MaxWidth="820" HorizontalAlignment="Left">
         <TextBlock Style="{StaticResource H1}" Text="Changes" />
@@ -470,6 +551,8 @@
           <StackPanel>
             <RadioButton x:Name="NavVerdict" Style="{StaticResource NavButton}" Content="Verdict"
                          IsChecked="True" Checked="OnNavVerdict" />
+            <RadioButton x:Name="NavScan" Style="{StaticResource NavButton}" Content="Scan"
+                         Checked="OnNavScan" />
             <RadioButton x:Name="NavMeasure" Style="{StaticResource NavButton}" Content="Measure"
                          Checked="OnNavMeasure" />
             <RadioButton x:Name="NavDiagnostics" Style="{StaticResource NavButton}" Content="Diagnostics"

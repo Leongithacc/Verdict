@@ -1,4 +1,8 @@
+using System.Diagnostics;
+using System.IO;
 using System.Windows;
+using System.Windows.Media;
+using System.Windows.Media.Imaging;
 
 namespace WPEP.App;
 
@@ -20,6 +24,7 @@ public partial class MainWindow : Window
             var radio = _vm.CurrentPage switch
             {
                 VerdictViewModel => NavVerdict,
+                ScanViewModel => NavScan,
                 MeasureWizardViewModel => NavMeasure,
                 DiagnosticsViewModel => NavDiagnostics,
                 KbViewModel => NavKb,
@@ -34,6 +39,46 @@ public partial class MainWindow : Window
     }
 
     private void OnNavVerdict(object s, RoutedEventArgs e) => _vm.CurrentPage = _vm.Verdict;
+    private void OnNavScan(object s, RoutedEventArgs e) => _vm.CurrentPage = _vm.Scan;
+
+    /// <summary>Render the build-sheet card to a PNG on the Desktop and open it.</summary>
+    private void OnExportBuildSheet(object sender, RoutedEventArgs e)
+    {
+        try
+        {
+            // BuildSheet lives inside a DataTemplate (own namescope), so find it in the tree.
+            if (FindByName(this, "BuildSheet") is not FrameworkElement el
+                || el.ActualWidth < 1 || el.ActualHeight < 1)
+                return;
+            const double scale = 2.0;
+            var rtb = new RenderTargetBitmap(
+                (int)(el.ActualWidth * scale), (int)(el.ActualHeight * scale),
+                96 * scale, 96 * scale, PixelFormats.Pbgra32);
+            rtb.Render(el);
+            var png = new PngBitmapEncoder();
+            png.Frames.Add(BitmapFrame.Create(rtb));
+            var path = Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.Desktop), "verdict-buildsheet.png");
+            using (var fs = File.Create(path))
+                png.Save(fs);
+            Process.Start(new ProcessStartInfo(path) { UseShellExecute = true });
+        }
+        catch { /* export must never crash the app */ }
+    }
+
+    private static DependencyObject? FindByName(DependencyObject root, string name)
+    {
+        if (root is FrameworkElement fe && fe.Name == name)
+            return root;
+        int count = VisualTreeHelper.GetChildrenCount(root);
+        for (int i = 0; i < count; i++)
+        {
+            var found = FindByName(VisualTreeHelper.GetChild(root, i), name);
+            if (found is not null)
+                return found;
+        }
+        return null;
+    }
     private void OnNavMeasure(object s, RoutedEventArgs e) => _vm.CurrentPage = _vm.Measure;
     private void OnNavDiagnostics(object s, RoutedEventArgs e) => _vm.CurrentPage = _vm.Diagnostics;
     private void OnNavKb(object s, RoutedEventArgs e) => _vm.CurrentPage = _vm.Kb;

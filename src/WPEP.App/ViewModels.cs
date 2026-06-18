@@ -21,6 +21,7 @@ public sealed class MainViewModel : ViewModelBase
     public AppSettings Settings { get; }
     public ExecutionService Execution { get; } = new();
     public VerdictViewModel Verdict { get; }
+    public ScanViewModel Scan { get; } = new();
     public MeasureWizardViewModel Measure { get; }
     public DiagnosticsViewModel Diagnostics { get; }
     public KbViewModel Kb { get; }
@@ -71,6 +72,7 @@ public sealed class MainViewModel : ViewModelBase
         {
             _ = Verdict.ScanAsync();
         }
+        _ = Scan.ScanAsync(); // hardware inventory in the background
     }
 
     /// <summary>Jump to a KB entry from anywhere (Verdict "How to" buttons).</summary>
