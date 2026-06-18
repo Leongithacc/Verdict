@@ -412,8 +412,17 @@ Leon ha eseguito gli apply reali (decisione sua, in chat). Risultati:
   C:\Scripts\verdict.cmd via PATH; App Paths HKCU ignorato dal Run, conferma il vecchio dubbio).
   FIX dato a Leon: App Paths in HKLM (admin) + rimozione verdict.cmd → lancio diretto WPEP.exe.
 - FIX cosmetico: col `--yes` la CLI stampava ancora "Dry run —"; ora "Applico ora — modifiche:".
-- ANCORA DA PROVARE: RealPowerCfg WRITE (SetActiveScheme) e RealBcdEdit WRITE (richiedono un
-  apply che cambi davvero piano/boot — il suo disabledynamictick e gia 'yes').
+- ✅ **Scrittura powercfg reale** (Task 4): `wpep apply power-plan-high-performance --yes` →
+  schema attivo 80e4528b (BXTool) → 8c5e7fda (High Perf), "Applicato e verificato",
+  `powercfg /getactivescheme` conferma "Prestazioni elevate"; `undo last` → ripristina BXTool.
+  RealPowerCfg.SetActiveScheme WRITE + undo drift-aware VALIDATI sul campo.
+- BILANCIO: ora validati SUL PC reale → registry WRITE+undo, powercfg WRITE+undo, bcdedit READ.
+  Resta solo RealBcdEdit WRITE (Set/Delete): non testabile pulito sul suo PC (gia 'yes');
+  logica identica al pattern registry/powercfg (gia provati) + coperta dai fake.
+- COSMETICO NOTO: il CLI in artifacts non si ripubblica se la GUI WPEP e aperta (Get-Process
+  WPEP matcha sia wpep.exe CLI che WPEP.exe GUI → publish saltato). Ripubblicare a GUI chiusa.
+- IN SOSPESO (Leon, da fixare alla fine): Win+R "verdict" apre ancora una finestra cmd anche
+  dopo App Paths HKLM + rimozione verdict.cmd. Innocua. Root cause TBD.
 
 ## Stato a fine sessione Opus (AGGIORNATO 2026-06-16)
 - `dotnet test`: **145/145 verdi**. `dotnet build WPEP.sln -c Release`: 0 errori/0 warning.
