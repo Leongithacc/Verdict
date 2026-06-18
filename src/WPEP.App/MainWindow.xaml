@@ -409,15 +409,12 @@
                         MaxDropDownHeight="420">
                 <ComboBox.ItemTemplate>
                   <DataTemplate>
-                    <!-- Each row previews the theme: background = theme Bg, an accent chip, the name. -->
-                    <Border Background="{Binding Bg}" CornerRadius="4" Padding="8,5" Margin="-2">
-                      <StackPanel Orientation="Horizontal">
-                        <Border Width="22" Height="14" CornerRadius="3" Background="{Binding Surface}"
-                                BorderBrush="{Binding Accent}" BorderThickness="2" VerticalAlignment="Center" />
-                        <TextBlock Text="{Binding Name}" Foreground="{Binding Accent}" FontWeight="SemiBold"
-                                   VerticalAlignment="Center" Margin="10,0,0,0" />
-                      </StackPanel>
-                    </Border>
+                    <!-- Clean: a small accent swatch + the name. Nothing else. -->
+                    <StackPanel Orientation="Horizontal" Margin="0,1">
+                      <Border Width="12" Height="12" CornerRadius="3" Background="{Binding Accent}"
+                              VerticalAlignment="Center" />
+                      <TextBlock Text="{Binding Name}" VerticalAlignment="Center" Margin="9,0,0,0" />
+                    </StackPanel>
                   </DataTemplate>
                 </ComboBox.ItemTemplate>
               </ComboBox>
