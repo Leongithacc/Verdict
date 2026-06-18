@@ -205,7 +205,7 @@ public class ExecutionEngineTests : IDisposable
         var engine = new ExecutionEngine(registry, _journalDir);
         var file = engine.Execute(engine.BuildPlan(Entry()));
 
-        int restored = engine.Undo(file);
+        int restored = engine.Undo(file).Restored;
 
         Assert.Equal(2, restored);
         Assert.Equal(("dword", "1"), registry.Data[@"HKCU\Test\Key\ValueA"]); // restored
@@ -220,9 +220,47 @@ public class ExecutionEngineTests : IDisposable
         var file = engine.Execute(engine.BuildPlan(Entry()));
 
         engine.Undo(file);
-        int second = engine.Undo(file);
+        int second = engine.Undo(file).Restored;
 
         Assert.Equal(0, second);
+    }
+
+    [Fact]
+    public void Undo_ValueChangedOutsideVerdict_SkipsItAndKeepsTheManualEdit()
+    {
+        var registry = new FakeRegistry();
+        registry.Data[@"HKCU\Test\Key\ValueA"] = ("dword", "1"); // before=1, target=0
+        var engine = new ExecutionEngine(registry, _journalDir);
+        var file = engine.Execute(engine.BuildPlan(Entry())); // A:1→0, B:<new>→1
+
+        // User edits ValueA outside Verdict AFTER the apply.
+        registry.Data[@"HKCU\Test\Key\ValueA"] = ("dword", "5");
+
+        var outcome = engine.Undo(file);
+
+        // ValueA drifted → skipped, manual edit (5) preserved. ValueB unchanged → restored.
+        Assert.Equal(("dword", "5"), registry.Data[@"HKCU\Test\Key\ValueA"]);
+        Assert.False(registry.Data.ContainsKey(@"HKCU\Test\Key\ValueB"));
+        Assert.Equal(1, outcome.Restored);
+        Assert.Single(outcome.Skipped);
+        Assert.Contains("ValueA", outcome.Skipped[0]);
+    }
+
+    [Fact]
+    public void Undo_AlreadyReverted_IsNoOpNotDrift()
+    {
+        var registry = new FakeRegistry();
+        registry.Data[@"HKCU\Test\Key\ValueA"] = ("dword", "1");
+        var engine = new ExecutionEngine(registry, _journalDir);
+        var file = engine.Execute(engine.BuildPlan(Entry()));
+
+        // User manually reverts ValueA back to its original value (1) before undo.
+        registry.Data[@"HKCU\Test\Key\ValueA"] = ("dword", "1");
+
+        var outcome = engine.Undo(file);
+
+        Assert.Empty(outcome.Skipped); // already-at-before is a no-op, never a drift
+        Assert.Equal(("dword", "1"), registry.Data[@"HKCU\Test\Key\ValueA"]);
     }
 
     [Fact]

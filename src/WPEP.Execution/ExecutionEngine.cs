@@ -42,6 +42,11 @@ public sealed class JournalSession
     public List<JournalEntry> Entries { get; set; } = [];
 }
 
+/// <summary>Result of an undo: how many entries were restored, and which were SKIPPED
+/// because their current value no longer matches what Verdict wrote (changed outside
+/// Verdict) — those are left untouched so a manual edit isn't silently clobbered.</summary>
+public sealed record UndoOutcome(int Restored, IReadOnlyList<string> Skipped);
+
 /// <summary>
 /// The V2 execution engine, EXECUTION_ENGINE_V2 principles enforced in code:
 /// only KB apply specs, dry-run plan with live before-values, journal-before-write,
@@ -170,56 +175,109 @@ public sealed class ExecutionEngine(
         return (applied, null);
     }
 
-    /// <summary>Undo a journaled session: reverse order, restore the previous
-    /// value (or delete what did not exist), verify each restore.</summary>
-    public int Undo(string journalFile)
+    /// <summary>Undo a journaled session: reverse order, restore the previous value (or
+    /// delete what did not exist), verify each restore. DRIFT-AWARE: an entry whose
+    /// current value is neither what Verdict wrote nor the original "before" value was
+    /// changed outside Verdict — it is SKIPPED (not clobbered) and reported, leaving the
+    /// user's manual edit intact. Already-reverted entries are a no-op.</summary>
+    public UndoOutcome Undo(string journalFile)
     {
         var session = JsonSerializer.Deserialize<JournalSession>(
             System.IO.File.ReadAllText(journalFile))
             ?? throw new InvalidDataException($"Journal illeggibile: {journalFile}");
 
         int restored = 0;
+        var skipped = new List<string>();
         foreach (var entry in Enumerable.Reverse(session.Entries))
         {
             if (entry.Undone)
                 continue;
-            switch (entry.Method)
+
+            var (exists, value) = ReadCurrent(entry);
+            bool isCreate = entry.Method is "registry" or "bcdedit" && !entry.ExistedBefore;
+            bool alreadyReverted = isCreate ? !exists : (exists && value == entry.ValueBefore);
+            bool matchesOurWrite = exists && value == entry.ValueAfter;
+
+            if (alreadyReverted)
             {
-                case "registry" when entry.ExistedBefore:
-                    registry.Write(entry.Path, entry.Kind, entry.ValueBefore!);
-                    if (registry.Read(entry.Path).Value != entry.ValueBefore)
-                        throw new InvalidOperationException($"Undo VERIFY fallita su {entry.Path}.");
-                    break;
-                case "registry":
-                    registry.Delete(entry.Path);
-                    break;
-                case "powercfg":
-                    _powerCfg.SetActiveScheme(entry.ValueBefore!);
-                    if (_powerCfg.GetActiveScheme() != entry.ValueBefore)
-                        throw new InvalidOperationException("Undo VERIFY fallita sullo schema energetico.");
-                    break;
-                case "powercfg-value":
-                    var (sg, st) = SplitPowerPath(entry.Path);
-                    _powerCfg.SetSettingIndex(sg, st, int.Parse(entry.ValueBefore!));
-                    if (_powerCfg.QuerySettingIndex(sg, st).ToString() != entry.ValueBefore)
-                        throw new InvalidOperationException($"Undo VERIFY fallita su {entry.Path}.");
-                    break;
-                case "bcdedit" when entry.ExistedBefore:
-                    _bcdEdit.Set(entry.Path, entry.ValueBefore!);
-                    if (_bcdEdit.Query(entry.Path).Value != entry.ValueBefore)
-                        throw new InvalidOperationException($"Undo VERIFY fallita su {entry.Path} (bcdedit).");
-                    break;
-                case "bcdedit":
-                    _bcdEdit.Delete(entry.Path); // back to Windows default
-                    if (_bcdEdit.Query(entry.Path).Exists)
-                        throw new InvalidOperationException($"Undo VERIFY fallita su {entry.Path}: elemento ancora presente.");
-                    break;
+                // Nothing to do: the system is already in its pre-Verdict state.
             }
+            else if (matchesOurWrite)
+            {
+                RestoreOne(entry); // restore previous value / delete; throws on verify fail
+            }
+            else
+            {
+                // Drift: someone changed this since Verdict applied it. Don't clobber.
+                skipped.Add($"{entry.Path}: valore attuale " +
+                    $"'{(exists ? value : "<non impostato>")}' modificato fuori da Verdict, non ripristinato");
+                continue;
+            }
+
             entry.Undone = true;
             restored++;
             Save(journalFile, session);
         }
-        return restored;
+        return new UndoOutcome(restored, skipped);
+    }
+
+    /// <summary>Reads the current live value for a journal entry (per method).</summary>
+    private (bool Exists, string? Value) ReadCurrent(JournalEntry entry)
+    {
+        switch (entry.Method)
+        {
+            case "registry":
+                var r = registry.Read(entry.Path);
+                return (r.Exists, r.Value);
+            case "powercfg":
+                return (true, _powerCfg.GetActiveScheme());
+            case "powercfg-value":
+                var (sg, st) = SplitPowerPath(entry.Path);
+                return (true, _powerCfg.QuerySettingIndex(sg, st).ToString());
+            case "bcdedit":
+                var b = _bcdEdit.Query(entry.Path);
+                return (b.Exists, b.Value);
+            default:
+                return (false, null);
+        }
+    }
+
+    /// <summary>Performs one restore (previous value, or delete what we created) and
+    /// verifies it. Only called when the current value is still what Verdict wrote.</summary>
+    private void RestoreOne(JournalEntry entry)
+    {
+        switch (entry.Method)
+        {
+            case "registry" when entry.ExistedBefore:
+                registry.Write(entry.Path, entry.Kind, entry.ValueBefore!);
+                if (registry.Read(entry.Path).Value != entry.ValueBefore)
+                    throw new InvalidOperationException($"Undo VERIFY fallita su {entry.Path}.");
+                break;
+            case "registry":
+                registry.Delete(entry.Path);
+                break;
+            case "powercfg":
+                _powerCfg.SetActiveScheme(entry.ValueBefore!);
+                if (_powerCfg.GetActiveScheme() != entry.ValueBefore)
+                    throw new InvalidOperationException("Undo VERIFY fallita sullo schema energetico.");
+                break;
+            case "powercfg-value":
+                var (sg, st) = SplitPowerPath(entry.Path);
+                _powerCfg.SetSettingIndex(sg, st, int.Parse(entry.ValueBefore!));
+                if (_powerCfg.QuerySettingIndex(sg, st).ToString() != entry.ValueBefore)
+                    throw new InvalidOperationException($"Undo VERIFY fallita su {entry.Path}.");
+                break;
+            case "bcdedit" when entry.ExistedBefore:
+                _bcdEdit.Set(entry.Path, entry.ValueBefore!);
+                if (_bcdEdit.Query(entry.Path).Value != entry.ValueBefore)
+                    throw new InvalidOperationException($"Undo VERIFY fallita su {entry.Path} (bcdedit).");
+                break;
+            case "bcdedit":
+                _bcdEdit.Delete(entry.Path); // back to Windows default
+                if (_bcdEdit.Query(entry.Path).Exists)
+                    throw new InvalidOperationException($"Undo VERIFY fallita su {entry.Path}: elemento ancora presente.");
+                break;
+        }
     }
 
     public static IReadOnlyList<string> ListSessions(string journalDirectory) =>

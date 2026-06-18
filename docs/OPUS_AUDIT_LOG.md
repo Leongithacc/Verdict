@@ -380,6 +380,21 @@ punti (ExecutionService App, helper CLI, e in parte ReportBuilder) e NON testata
 - KB 85→86: `cs2-reflex-on` (evidence_strong, NVIDIA) — CS2 integra Reflex; compare in cima
   alla sezione per-gioco CS2 del verdetto di Leon (verificato live con `wpep advise`).
 
+### 27. Undo drift-aware (2026-06-18) — non clobbera le modifiche manuali
+Prima `Undo` riscriveva SEMPRE il valore "before": se l'utente cambiava quel valore a mano
+DOPO l'apply, l'undo glielo sovrascriveva in silenzio. Ora e drift-aware.
+- `Undo` ritorna `UndoOutcome(Restored, Skipped)`. Per ogni voce legge il valore CORRENTE:
+  - == before (gia ripristinato) → no-op;
+  - == quello che Verdict ha scritto (ValueAfter) → ripristina + verify (comportamento storico);
+  - altro (DRIFT, cambiato fuori da Verdict) → SALTA, lascia la modifica manuale, lo riporta.
+- Refactor: estratti `ReadCurrent` (valore live per metodo) e `RestoreOne` (ripristino+verify).
+- Chiamanti aggiornati: ExecutionService, ChangesViewModel (GUI mostra gli skip), CLI RunUndo
+  (stampa "[saltato] ..."), EngineSelfTest (.Restored).
+- Test: 2 nuovi (drift → skip + preserva il valore manuale; gia-ripristinato → no-op non drift).
+  Suite 141→**143**. Verify storico preservato; selftest live ancora PASS.
+- DA RIVEDERE da Fable: la semantica drift su powercfg/bcdedit (logica condivisa, ma il path
+  reale di quei due metodi resta da provare con un apply vero).
+
 ## Stato a fine sessione Opus (AGGIORNATO 2026-06-16)
 - `dotnet test`: **141+/141+ verdi**. `dotnet build WPEP.sln -c Release`: 0 errori/0 warning.
   (Se un nodo MSBuild crasha in parallelo: `-m:1 --disable-build-servers`.)

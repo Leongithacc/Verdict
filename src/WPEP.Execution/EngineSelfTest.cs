@@ -38,7 +38,7 @@ public static class EngineSelfTest
                       : $"atteso {ScratchValue}, letto {(after.Exists ? after.Value : "<niente>")}"));
             ok &= wrote;
 
-            int undone = engine.Undo(file);
+            int undone = engine.Undo(file).Restored;
             bool gone = !registry.Read(ScratchPath).Exists;
             steps.Add(new SelfTestStep("Undo ripristina lo stato precedente", undone > 0 && gone,
                 gone ? "valore rimosso, com'era prima" : "valore ancora presente"));

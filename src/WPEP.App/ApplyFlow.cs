@@ -21,7 +21,7 @@ public sealed class ExecutionService
     public string Execute(ExecutionPlan plan) => _engine.Execute(plan);
     public (int Applied, string? StoppedAt) ExecuteAll(IReadOnlyList<ExecutionPlan> plans) =>
         _engine.ExecuteAll(plans);
-    public int Undo(string journalFile) => _engine.Undo(journalFile);
+    public UndoOutcome Undo(string journalFile) => _engine.Undo(journalFile);
     public IReadOnlyList<string> Sessions() =>
         ExecutionEngine.ListSessions(ExecutionEngine.DefaultJournalDirectory);
 
@@ -368,10 +368,13 @@ public sealed class ChangesViewModel : ViewModelBase
     {
         try
         {
-            int n = _exec.Undo(session.File);
-            Status = n > 0
-                ? $"Undone {n} change(s) from {session.Display}."
+            var outcome = _exec.Undo(session.File);
+            Status = outcome.Restored > 0
+                ? $"Undone {outcome.Restored} change(s) from {session.Display}."
                 : $"{session.Display} was already undone.";
+            if (outcome.Skipped.Count > 0)
+                Status += $"\n{outcome.Skipped.Count} skipped (changed outside Verdict): "
+                    + string.Join("; ", outcome.Skipped);
             Refresh();
         }
         catch (Exception ex)

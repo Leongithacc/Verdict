@@ -859,10 +859,12 @@ static int RunUndo(string[] args)
     var engine = NewEngine();
     try
     {
-        int n = engine.Undo(file);
-        Console.WriteLine(n > 0
-            ? $"Annullate {n} modifiche da {Path.GetFileName(file)}."
-            : "Era già annullata.");
+        var outcome = engine.Undo(file);
+        Console.WriteLine(outcome.Restored > 0
+            ? $"Annullate {outcome.Restored} modifiche da {Path.GetFileName(file)}."
+            : "Niente da ripristinare (gia annullata o gia allo stato precedente).");
+        foreach (var s in outcome.Skipped)
+            Console.WriteLine($"  [saltato] {s}");
         return 0;
     }
     catch (Exception ex)
