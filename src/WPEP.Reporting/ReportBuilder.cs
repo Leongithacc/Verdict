@@ -31,19 +31,19 @@ public static class ReportBuilder
             <html lang="it"><head><meta charset="utf-8">
             <title>Verdict Report</title>
             <style>
-              :root { --bg:#0e0e13; --panel:#16161f; --text:#d8d8e0; --dim:#8a8a96;
+              :root { --bg:#08080c; --panel:#14141b; --line:#272735; --text:#e6e6ec; --dim:#8a8a96;
                       --accent:#8b5cf6; --good:#34d399; --warn:#fbbf24; --bad:#f87171; }
               body { background:var(--bg); color:var(--text); font:15px/1.55 "Segoe UI",system-ui,sans-serif;
                      max-width:960px; margin:2rem auto; padding:0 1rem; }
               h1 { color:var(--accent); font-weight:600; }
-              h2 { color:var(--accent); border-bottom:1px solid #2a2a38; padding-bottom:.3rem; margin-top:2.2rem; }
+              h2 { color:var(--accent); border-bottom:1px solid var(--line); padding-bottom:.3rem; margin-top:2.2rem; }
               table { border-collapse:collapse; width:100%; margin:.8rem 0; }
-              th,td { text-align:left; padding:.45rem .7rem; border-bottom:1px solid #23232f; vertical-align:top; }
+              th,td { text-align:left; padding:.45rem .7rem; border-bottom:1px solid var(--line); vertical-align:top; }
               th { color:var(--dim); font-weight:600; }
               .dim { color:var(--dim); } .good { color:var(--good); }
               .warn { color:var(--warn); } .bad { color:var(--bad); }
-              .panel { background:var(--panel); border:1px solid #23232f; border-radius:10px; padding:1rem 1.2rem; margin:1rem 0; }
-              code { background:#1d1d29; padding:.1rem .4rem; border-radius:4px; }
+              .panel { background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:1rem 1.2rem; margin:1rem 0; }
+              code { background:#1c1c26; padding:.1rem .4rem; border-radius:4px; }
               footer { color:var(--dim); margin-top:3rem; font-size:.85em; }
             </style></head><body>
             <h1>Verdict — Report di sistema</h1>
