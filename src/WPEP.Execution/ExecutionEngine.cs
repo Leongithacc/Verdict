@@ -47,6 +47,9 @@ public sealed class JournalSession
 /// Verdict) — those are left untouched so a manual edit isn't silently clobbered.</summary>
 public sealed record UndoOutcome(int Restored, IReadOnlyList<string> Skipped);
 
+/// <summary>An applied tweak whose live value drifted away from what Verdict wrote.</summary>
+public sealed record DriftItem(string TweakId, string Path, string Expected, string Actual);
+
 /// <summary>
 /// The V2 execution engine, EXECUTION_ENGINE_V2 principles enforced in code:
 /// only KB apply specs, dry-run plan with live before-values, journal-before-write,
@@ -238,6 +241,32 @@ public sealed class ExecutionEngine(
             catch (Exception ex) { skipped.Add($"{System.IO.Path.GetFileName(file)}: {ex.Message}"); }
         }
         return new UndoOutcome(restored, skipped);
+    }
+
+    /// <summary>Read-only drift check (Watchdog): across every journaled session, find applied
+    /// tweaks whose live value no longer matches what Verdict wrote — i.e. something reverted them
+    /// (a Windows update, a driver reinstall, a manual edit). Writes nothing; just reports.</summary>
+    public IReadOnlyList<DriftItem> DetectDrift()
+    {
+        var drifted = new List<DriftItem>();
+        foreach (var file in ListSessions(journalDirectory))
+        {
+            JournalSession? session;
+            try { session = JsonSerializer.Deserialize<JournalSession>(System.IO.File.ReadAllText(file)); }
+            catch { continue; }
+            if (session is null) continue;
+
+            foreach (var entry in session.Entries)
+            {
+                if (entry.Undone) continue;
+                var (exists, value) = ReadCurrent(entry);
+                bool stillApplied = exists && value == entry.ValueAfter;
+                if (!stillApplied)
+                    drifted.Add(new DriftItem(entry.TweakId, entry.Path,
+                        entry.ValueAfter, exists ? value ?? "" : "<non impostato>"));
+            }
+        }
+        return drifted;
     }
 
     /// <summary>Reads the current live value for a journal entry (per method).</summary>

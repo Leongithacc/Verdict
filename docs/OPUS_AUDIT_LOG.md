@@ -629,6 +629,21 @@ PC reale → dati veri + due bug scoperti e fixati.
 - **246/246 verdi**, solution build 0/0. (Snapshot GpuName era già corretto = NVIDIA, doctor lo conferma;
   il bug GPU era solo in RigDna/timeline che usavano Gpus[0].)
 
+### 43. V3 — Modulo Lab 13: WATCHDOG (core + CLI) (2026-06-18)
+Il modulo "funziona da solo": sorveglia le derive di un sistema messo a punto. Costruito il MOTORE
+(puro/testabile) + comando CLI; il loop tray continuo è una shell sottile da aggiungere con Léon al PC.
+- `WPEP.Execution/WatchdogCheck.cs` (puro/testato): `Evaluate(WatchInputs)` → `WatchAlert(Level,
+  Title,Detail)[]`. Rileva: EXPO passato da on→off (regressione), tweak applicati ANNULLATI (drift),
+  crescita degli avvii (≥3 nuovi). `Worst()` per il colore icona. Read-only: segnala, non "ripara"
+  di nascosto.
+- `ExecutionEngine.DetectDrift()` (nuovo, READ-ONLY): per ogni voce journaled non annullata, confronta
+  il valore live con `ValueAfter` → `DriftItem(TweakId,Path,Expected,Actual)` se non regge più
+  (riusa `ReadCurrent`, nessuna scrittura). Esposto da `ExecutionService.DetectDrift`.
+- CLI `wpep watch`: raccoglie EXPO (scan) + baseline (Time Machine) + startup + drift (journal) →
+  Evaluate. Guida a `wpep timeline` se manca la baseline. Help aggiornato.
+- `WatchdogCheckTests` (7). **253/253 verdi**, App+CLI build 0/0.
+- DA FARE (con Léon al PC): GUI Watchdog (sezione/tray) — è cross-cutting (scan+execution), meglio a video.
+
 ## Stato a fine sessione Opus (AGGIORNATO 2026-06-16)
 - `dotnet test`: **145/145 verdi**. `dotnet build WPEP.sln -c Release`: 0 errori/0 warning.
   (Se un nodo MSBuild crasha in parallelo: `-m:1 --disable-build-servers`.)

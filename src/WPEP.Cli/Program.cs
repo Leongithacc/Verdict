@@ -69,6 +69,8 @@ switch (args[0])
         return RunGames();
     case "optimize":
         return RunOptimize(args.Skip(1).ToArray());
+    case "watch":
+        return RunWatch();
     case "tools" when args.Length >= 2 && args[1] == "install-presentmon":
         return await InstallPresentMon();
     default:
@@ -1217,6 +1219,39 @@ static int RunOptimize(string[] args)
     return 0;
 }
 
+static int RunWatch()
+{
+    Console.WriteLine("Watchdog — controlla derive: EXPO, tweak annullati, bloat all'avvio (sola lettura)\n");
+    var hw = WPEP.SystemAnalyzer.HardwareScanner.Scan();
+    int startupNow = WPEP.SystemAnalyzer.FreshInstallScanner.EnumerateStartup().Count(i => !i.IsMicrosoft);
+    var baseline = WPEP.SystemAnalyzer.SystemTimeline.LoadAll().LastOrDefault();
+
+    var engine = new WPEP.Execution.ExecutionEngine(
+        new WPEP.Execution.RealRegistryAccess(), WPEP.Execution.ExecutionEngine.DefaultJournalDirectory);
+    var reverted = engine.DetectDrift();
+
+    var inputs = new WPEP.Execution.WatchInputs(
+        ExpoBaseline: baseline?.ExpoEnabled, ExpoNow: hw.ExpoEnabled,
+        StartupBaseline: baseline?.ThirdPartyStartup ?? startupNow, StartupNow: startupNow,
+        Reverted: reverted);
+    var alerts = WPEP.Execution.WatchdogCheck.Evaluate(inputs);
+
+    foreach (var a in alerts)
+    {
+        string mark = a.Level switch
+        {
+            WPEP.Execution.WatchLevel.Warn => "[!]",
+            WPEP.Execution.WatchLevel.Info => "[i]",
+            _ => "[ok]",
+        };
+        Console.WriteLine($"  {mark} {a.Title}");
+        Console.WriteLine($"      {a.Detail}");
+    }
+    if (baseline is null)
+        Console.WriteLine("\n(Nessuna baseline: esegui 'wpep timeline' una volta per dare al watchdog un riferimento.)");
+    return 0;
+}
+
 // EXPO senza propagare eccezioni WMI: la Score resta utile anche se il banco non si legge.
 static bool? SafeExpo()
 {
@@ -1542,6 +1577,7 @@ static void PrintUsage()
           wpep fresh        Fresh-install score: avvii di terze parti vs Windows pulito.
           wpep network      Network Duel: ping/jitter/loss verso anchor pubblici, con voto.
           wpep timeline     Time Machine: cos'è cambiato dall'ultima istantanea.
+          wpep watch        Watchdog: deriva EXPO, tweak annullati, bloat all'avvio.
           wpep museum       Placebo Museum: i miti sfatati con l'evidenza.
           wpep games        Giochi con un piano dedicato.
           wpep optimize <gioco>   Piano su misura: tweak di sistema + impostazioni in-game.

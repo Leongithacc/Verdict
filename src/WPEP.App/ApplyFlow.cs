@@ -22,6 +22,7 @@ public sealed class ExecutionService
     public (int Applied, string? StoppedAt) ExecuteAll(IReadOnlyList<ExecutionPlan> plans) =>
         _engine.ExecuteAll(plans);
     public UndoOutcome Undo(string journalFile) => _engine.Undo(journalFile);
+    public IReadOnlyList<DriftItem> DetectDrift() => _engine.DetectDrift();
     public IReadOnlyList<string> Sessions() =>
         ExecutionEngine.ListSessions(ExecutionEngine.DefaultJournalDirectory);
 
