@@ -42,6 +42,7 @@ public partial class MainWindow : Window
     {
         _vm.Verdict.RecomputeScore();     // reflect a Score toggle made in the Lab
         _vm.Verdict.RecomputeRiskScope(); // reflect a Risk Slider toggle made in the Lab
+        _vm.Verdict.RefreshGames();       // reflect an Optimize-for-game toggle made in the Lab
         _vm.CurrentPage = _vm.Verdict;
     }
     private void OnNavScan(object s, RoutedEventArgs e)

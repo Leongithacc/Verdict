@@ -128,6 +128,9 @@ public sealed class VerdictGroup(string label, string badgeColorKey)
     public int Count => Items.Count;
 }
 
+/// <summary>An in-game/driver setting row for the Optimize-for-game panel.</summary>
+public sealed record GameSettingRow(string Name, string Detail);
+
 public sealed class VerdictViewModel(MainViewModel main) : ViewModelBase
 {
     private string _header = "Scanning…";
@@ -188,6 +191,41 @@ public sealed class VerdictViewModel(MainViewModel main) : ViewModelBase
     public RelayCommand ApplyAllCommand => new(
         () => main.ApplyAll.Open(_applicableRecommended),
         () => _applicableRecommended.Count > 0);
+
+    // ── Optimize for [game] (Lab feature) ────────────────────────────────────
+    private IReadOnlyList<TweakEntry> _kbCache = [];
+    private string? _selectedGame;
+    public bool ShowOptimizeForGame => main.Settings.IsFeatureEnabled(FeatureCatalog.OptimizeForGame);
+    public ObservableCollection<string> Games { get; } = [];
+    public ObservableCollection<string> GameSystemTweaks { get; } = [];
+    public ObservableCollection<GameSettingRow> GameInGameSettings { get; } = [];
+    public string? SelectedGame
+    {
+        get => _selectedGame;
+        set { if (Set(ref _selectedGame, value)) RebuildGamePlan(); }
+    }
+
+    /// <summary>Loads the game list for the optimizer (cached KB). Cheap; safe to call on nav.</summary>
+    public void RefreshGames()
+    {
+        Raise(nameof(ShowOptimizeForGame));
+        if (!ShowOptimizeForGame) return;
+        if (_kbCache.Count == 0)
+            try { _kbCache = KnowledgeBaseLoader.Load(); } catch { return; }
+        if (Games.Count == 0)
+            foreach (var g in OptimizeForGame.AvailableGames(_kbCache)) Games.Add(g);
+    }
+
+    private void RebuildGamePlan()
+    {
+        GameSystemTweaks.Clear();
+        GameInGameSettings.Clear();
+        if (_selectedGame is null || _kbCache.Count == 0) return;
+        var plan = OptimizeForGame.Build(_selectedGame, _kbCache);
+        foreach (var t in plan.SystemTweaks) GameSystemTweaks.Add(t.Name);
+        foreach (var s in plan.InGameSettings)
+            GameInGameSettings.Add(new GameSettingRow(s.Name, s.ExpectedImpact));
+    }
 
     public void SetIdle(string header)
     {

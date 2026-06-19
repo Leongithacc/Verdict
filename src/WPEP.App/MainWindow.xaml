@@ -96,6 +96,52 @@
             </StackPanel>
           </Border>
 
+          <!-- Optimize for [game] (Lab feature): pick a title, see its tailored plan. -->
+          <Border Style="{StaticResource Card}" Margin="0,12,0,0" Padding="18,14"
+                  Visibility="{Binding ShowOptimizeForGame, Converter={StaticResource BoolToVis}}">
+            <StackPanel>
+              <StackPanel Orientation="Horizontal">
+                <TextBlock Text="🎯" FontSize="16" VerticalAlignment="Center" />
+                <TextBlock Text="Ottimizza per gioco" Style="{StaticResource H2}" Margin="8,0,0,0" />
+                <ComboBox ItemsSource="{Binding Games}" SelectedItem="{Binding SelectedGame}"
+                          Width="180" Margin="16,0,0,0" VerticalAlignment="Center" />
+              </StackPanel>
+              <TextBlock Style="{StaticResource Muted}" Margin="0,6,0,0" TextWrapping="Wrap"
+                         Text="Scegli un titolo: Verdict raccoglie i tweak di sistema con evidenza + le impostazioni in-game/driver ottimali per QUEL gioco." />
+              <Grid Margin="0,12,0,0"
+                    Visibility="{Binding SelectedGame, Converter={StaticResource NullToVis}}">
+                <Grid.ColumnDefinitions>
+                  <ColumnDefinition Width="*" />
+                  <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <StackPanel Grid.Column="0" Margin="0,0,8,0">
+                  <TextBlock Text="TWEAK DI SISTEMA" FontSize="11" FontWeight="SemiBold"
+                             Foreground="{DynamicResource Accent}" Margin="0,0,0,4" />
+                  <ItemsControl ItemsSource="{Binding GameSystemTweaks}">
+                    <ItemsControl.ItemTemplate><DataTemplate>
+                      <TextBlock Text="{Binding}" Foreground="{DynamicResource Text}"
+                                 TextWrapping="Wrap" Margin="0,2" />
+                    </DataTemplate></ItemsControl.ItemTemplate>
+                  </ItemsControl>
+                </StackPanel>
+                <StackPanel Grid.Column="1" Margin="8,0,0,0">
+                  <TextBlock Text="IN-GAME / DRIVER" FontSize="11" FontWeight="SemiBold"
+                             Foreground="{DynamicResource Accent}" Margin="0,0,0,4" />
+                  <ItemsControl ItemsSource="{Binding GameInGameSettings}">
+                    <ItemsControl.ItemTemplate><DataTemplate>
+                      <StackPanel Margin="0,2">
+                        <TextBlock Text="{Binding Name}" Foreground="{DynamicResource Text}"
+                                   FontWeight="SemiBold" TextWrapping="Wrap" />
+                        <TextBlock Text="{Binding Detail}" Style="{StaticResource Muted}"
+                                   FontSize="11" TextWrapping="Wrap" />
+                      </StackPanel>
+                    </DataTemplate></ItemsControl.ItemTemplate>
+                  </ItemsControl>
+                </StackPanel>
+              </Grid>
+            </StackPanel>
+          </Border>
+
           <UniformGrid Columns="3" Margin="0,24,0,0">
             <Border Style="{StaticResource Card}" Margin="0,0,8,0">
               <StackPanel>

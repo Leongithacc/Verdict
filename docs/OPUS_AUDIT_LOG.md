@@ -572,6 +572,16 @@ L'onestà del progetto resa contenuto virale: i tweak che tutti consigliano ma n
   band + headline + chip dei programmi di terze parti (WrapPanel). EnsureLabSectionsAsync esteso.
 - **220/220 verdi**, build 0/0. STATO LAB: **9 moduli VIVI su 18** (metà!).
 
+### 39. V3 — Modulo Lab 10: OPTIMIZE FOR [GAME] (2026-06-18) — piano su misura per titolo
+- `WPEP.Advisor/OptimizeForGame.cs` (puro/testato, proiezione KB): `AvailableGames(entries)` (giochi
+  con entry dedicate) + `Build(game, entries)` → `GameOptimization(Game, SystemTweaks[], InGameSettings[])`.
+  SystemTweaks = entry di sistema (Game==null) strong+plausible (NO placebo/risky). InGameSettings =
+  entry per quel gioco. `OptimizeForGameTests` (4). Léon NON ha access PC (remote control fino 4:30) →
+  modulo backend-testabile, GUI a basso rischio.
+- GUI: card "Ottimizza per gioco" sulla pagina Verdict (gated `ShowOptimizeForGame`): ComboBox giochi
+  + due colonne (tweak di sistema / impostazioni in-game-driver). VerdictViewModel cache KB +
+  RefreshGames su nav. **224/224 verdi**, build 0/0. STATO LAB: **10 moduli VIVI su 18**.
+
 ## Stato a fine sessione Opus (AGGIORNATO 2026-06-16)
 - `dotnet test`: **145/145 verdi**. `dotnet build WPEP.sln -c Release`: 0 errori/0 warning.
   (Se un nodo MSBuild crasha in parallelo: `-m:1 --disable-build-servers`.)
