@@ -30,6 +30,17 @@ public sealed class ScanViewModel : ViewModelBase
     public System.Windows.Media.Brush RigTint { get => _rigTint; set => Set(ref _rigTint, value); }
     public ObservableCollection<string> RigTraits { get; } = [];
 
+    // ── Fresh-install score (Lab feature): third-party startup drift ──
+    private int _freshScore;
+    private string _freshBand = "", _freshColor = "Ok", _freshHeadline = "";
+    public bool ShowFreshInstall => _settings.IsFeatureEnabled(WPEP.Execution.FeatureCatalog.FreshInstall);
+    public int FreshScore { get => _freshScore; set => Set(ref _freshScore, value); }
+    public string FreshBand { get => _freshBand; set => Set(ref _freshBand, value); }
+    public string FreshColor { get => _freshColor; set => Set(ref _freshColor, value); }
+    public string FreshHeadline { get => _freshHeadline; set => Set(ref _freshHeadline, value); }
+    public bool HasFreshResult => FreshHeadline.Length > 0;
+    public ObservableCollection<string> FreshThirdParty { get; } = [];
+
     public bool IsScanning { get => _isScanning; set => Set(ref _isScanning, value); }
     public string Motherboard { get => _motherboard; set => Set(ref _motherboard, value); }
     public string Bios { get => _bios; set => Set(ref _bios, value); }
@@ -90,6 +101,22 @@ public sealed class ScanViewModel : ViewModelBase
                 foreach (var tr in dna.Traits) RigTraits.Add(tr);
             }
 
+            // Fresh-install score (Lab feature): count third-party startup drift (WMI).
+            Raise(nameof(ShowFreshInstall));
+            FreshThirdParty.Clear();
+            FreshHeadline = "";
+            if (ShowFreshInstall)
+            {
+                var report = await Task.Run(() =>
+                    FreshInstallScanner.Analyze(FreshInstallScanner.EnumerateStartup()));
+                FreshScore = report.Score;
+                FreshBand = report.Band;
+                FreshColor = report.BandColor;
+                FreshHeadline = report.Headline;
+                foreach (var i in report.ThirdParty) FreshThirdParty.Add(i.Name);
+                Raise(nameof(HasFreshResult));
+            }
+
             // Multi-monitor optimizer (Lab feature): only scan displays when the module is on.
             Displays.Clear();
             MonitorFindings.Clear();
@@ -118,12 +145,15 @@ public sealed class ScanViewModel : ViewModelBase
     {
         Raise(nameof(ShowMultiMonitor));
         Raise(nameof(ShowRigDna));
+        Raise(nameof(ShowFreshInstall));
         if (!ShowMultiMonitor) { Displays.Clear(); MonitorFindings.Clear(); }
         if (!ShowRigDna) { RigTraits.Clear(); RigCode = ""; }
+        if (!ShowFreshInstall) { FreshThirdParty.Clear(); FreshHeadline = ""; }
 
         bool needMon = ShowMultiMonitor && Displays.Count == 0;
         bool needRig = ShowRigDna && RigCode.Length == 0;
-        if ((needMon || needRig) && !IsScanning)
+        bool needFresh = ShowFreshInstall && FreshHeadline.Length == 0;
+        if ((needMon || needRig || needFresh) && !IsScanning)
             await ScanAsync(); // full rescan repopulates every section from one inventory
     }
 

@@ -561,6 +561,17 @@ L'onestà del progetto resa contenuto virale: i tweak che tutti consigliano ma n
   badge PLACEBO + "Il mito:" / "La verità:" (rosso). KbViewModel ora prende AppSettings.
 - **212/212 verdi**, build 0/0. STATO LAB: **8 moduli VIVI su 18**.
 
+### 38. V3 — Modulo Lab 9: FRESH-INSTALL SCORE (2026-06-18) — drift avvii di terze parti
+- `WPEP.SystemAnalyzer/FreshInstallScanner.cs`: `EnumerateStartup` (WMI Win32_StartupCommand, no
+  driver) → `StartupItem(Name,Command,Location,IsMicrosoft)`. `IsMicrosoft` euristica path
+  (\windows\/system32/microsoft/windowsapps). `Analyze` (puro/testato): score = clamp(100 − terze
+  parti×6), band Pulito/Normale/Affollato/Sovraccarico, headline onesta ("N programmi di terze parti
+  all'avvio oltre al Windows base"). Framing onesto: contiamo il drift di terze parti, non fingiamo
+  un diff con un'immagine pulita specifica. `FreshInstallScannerTests` (5, 8 casi).
+- GUI: sezione "FRESH-INSTALL" nel build-sheet (pagina Scan, gated `ShowFreshInstall`): score/100 +
+  band + headline + chip dei programmi di terze parti (WrapPanel). EnsureLabSectionsAsync esteso.
+- **220/220 verdi**, build 0/0. STATO LAB: **9 moduli VIVI su 18** (metà!).
+
 ## Stato a fine sessione Opus (AGGIORNATO 2026-06-16)
 - `dotnet test`: **145/145 verdi**. `dotnet build WPEP.sln -c Release`: 0 errori/0 warning.
   (Se un nodo MSBuild crasha in parallelo: `-m:1 --disable-build-servers`.)
