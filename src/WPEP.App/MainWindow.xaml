@@ -191,7 +191,15 @@
                               <ColumnDefinition Width="Auto" />
                             </Grid.ColumnDefinitions>
                             <StackPanel>
-                              <TextBlock Style="{StaticResource Body}" Text="{Binding Name}" />
+                              <StackPanel Orientation="Horizontal">
+                                <Border CornerRadius="3" Padding="5,1" VerticalAlignment="Center" Margin="0,0,7,0"
+                                        Background="{Binding KindColor, Converter={StaticResource TokenBrush}}">
+                                  <TextBlock Text="{Binding KindLabel}" FontSize="9" FontWeight="Bold"
+                                             Foreground="#0F0F14" />
+                                </Border>
+                                <TextBlock Style="{StaticResource Body}" Text="{Binding Name}"
+                                           VerticalAlignment="Center" />
+                              </StackPanel>
                               <TextBlock Style="{StaticResource Mono}" FontSize="11"
                                          Foreground="{DynamicResource TextMuted}" Text="{Binding Id}" />
                             </StackPanel>

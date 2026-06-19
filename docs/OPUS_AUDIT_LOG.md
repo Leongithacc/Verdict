@@ -737,7 +737,12 @@ hardware/consigli, 7 placebo. → la via per crescere le basi: (A) NUOVI tweak r
 SystemParametersInfoA): `foreground-lock-timeout-off` (il gioco prende il fuoco subito — gaming),
 `menu-show-delay-instant`, `disable-window-animations`. KB 86→89, one-click 12→15. KB valida (12/12
 test KB). Le scritture restano da field-validare da Léon come da prassi.
-PROSSIMO: FASE C (UX core apply) poi FASE B (NVAPI DRS, read-only prima per testare sulla sua RTX 5080).
+**FASE C (UX core apply)** — `VerdictItem.KindLabel`/`KindColor`: badge esplicito su ogni tweak
+nella pagina Verdict → "1-CLICK" (verde, applicabile da Verdict) / "IMPOSTAZIONI" (apre la pagina
+Windows) / "MANUALE". Ora l'utente vede a colpo d'occhio cosa l'app sa fare da sola — risolve la
+percezione "non applica niente". I 3 nuovi tweak (Optional) appaiono nel gruppo "Maybe" con badge
+1-CLICK + bottone Apply (applicabili uno a uno, come Léon voleva). Build App 0/0.
+PROSSIMO: FASE B (NVAPI DRS, read-only prima per testare sulla sua RTX 5080).
 
 ## Stato a fine sessione Opus (AGGIORNATO 2026-06-16)
 - `dotnet test`: **145/145 verdi**. `dotnet build WPEP.sln -c Release`: 0 errori/0 warning.

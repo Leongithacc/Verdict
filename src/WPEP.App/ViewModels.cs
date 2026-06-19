@@ -118,6 +118,12 @@ public sealed class VerdictItem
     public bool CanApply => _main.Execution.CanApply(_entry);
     // Show "Open settings" only for gui-only tweaks (applicable ones get Apply).
     public bool CanOpenSettings => !CanApply && _entry.Apply?.SettingsUri is not null;
+
+    /// <summary>At-a-glance capability badge so the user instantly sees what Verdict can do for this
+    /// tweak: apply it itself, jump to the right Windows page, or only explain the manual steps.</summary>
+    public string KindLabel => CanApply ? "1-CLICK" : CanOpenSettings ? "IMPOSTAZIONI" : "MANUALE";
+    public string KindColor => CanApply ? "Ok" : CanOpenSettings ? "Info" : "Neutral";
+
     public RelayCommand HowToCommand { get; }
     public RelayCommand ApplyCommand { get; }
     public RelayCommand OpenSettingsCommand { get; }
