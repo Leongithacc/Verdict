@@ -94,7 +94,11 @@ public partial class MainWindow : Window
         _vm.Measure.Ghost.RefreshFlag(); // reflect a Lab toggle
         _vm.CurrentPage = _vm.Measure;
     }
-    private void OnNavDiagnostics(object s, RoutedEventArgs e) => _vm.CurrentPage = _vm.Diagnostics;
+    private void OnNavDiagnostics(object s, RoutedEventArgs e)
+    {
+        _vm.Diagnostics.RefreshNetworkFlag(); // Network Duel (Lab feature)
+        _vm.CurrentPage = _vm.Diagnostics;
+    }
     private void OnNavKb(object s, RoutedEventArgs e)
     {
         _vm.Kb.RefreshMuseumFlag(); // Placebo Museum (Lab feature)

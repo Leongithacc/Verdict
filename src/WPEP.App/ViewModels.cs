@@ -424,6 +424,33 @@ public sealed class DiagnosticsViewModel(MainViewModel main) : ViewModelBase
     public bool HasStutterResult => StutterHeadline.Length > 0;
     public ObservableCollection<StutterRow> StutterFindings { get; } = [];
 
+    // ── Network Duel (Lab feature) ───────────────────────────────────────────
+    private bool _netRunning;
+    private string _netStatus = "Misura ping, jitter e perdita verso anchor pubblici (route quality).";
+    public bool ShowNetworkDuel => main.Settings.IsFeatureEnabled(FeatureCatalog.NetworkDuel);
+    public bool NetRunning { get => _netRunning; set => Set(ref _netRunning, value); }
+    public string NetStatus { get => _netStatus; set => Set(ref _netStatus, value); }
+    public ObservableCollection<NetworkResult> NetResults { get; } = [];
+    public RelayCommand RunNetworkDuelCommand => new(() => _ = RunNetworkDuelAsync(), () => !NetRunning);
+    public void RefreshNetworkFlag() => Raise(nameof(ShowNetworkDuel));
+
+    private async Task RunNetworkDuelAsync()
+    {
+        NetRunning = true;
+        NetResults.Clear();
+        NetStatus = "Test in corso… (ICMP, ~pochi secondi)";
+        try
+        {
+            var results = await Task.Run(() =>
+                NetworkDuel.Anchors.Select(a =>
+                    NetworkDuel.Analyze(a.Target, a.Host, NetworkDuel.PingHost(a.Host, 10))).ToList());
+            foreach (var r in results) NetResults.Add(r);
+            NetStatus = "Fatto. Nota: molti server di gioco bloccano l'ICMP — questi sono anchor di rotta, non il match server.";
+        }
+        catch (Exception ex) { NetStatus = $"Test fallito: {ex.Message}"; }
+        finally { NetRunning = false; }
+    }
+
     public RelayCommand CaptureCommand => new(() => _ = CaptureAsync(), () => IsElevated && !IsRunning);
     public RelayCommand RelaunchAsAdminCommand => new(() => main.Measure.RelaunchAsAdminCommand.Execute(null));
 

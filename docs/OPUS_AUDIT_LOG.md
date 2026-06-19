@@ -595,6 +595,18 @@ L'onestà del progetto resa contenuto virale: i tweak che tutti consigliano ma n
   Lab minigioco) o infra/servizi (AI co-pilot=LLM, Evidence community=server, Watchdog/Regression
   Sentinel=background tray). Backend-autonomo resta solo Network Duel.
 
+### 41. V3 — Modulo Lab 12: NETWORK DUEL (2026-06-18) — qualità rete con voto
+- `WPEP.SystemAnalyzer/NetworkDuel.cs`: `Anchors` (Cloudflare/Google baseline + CDN Riot/Steam/Epic),
+  `PingHost` (ICMP best-effort, null=loss), `Analyze` PURO/testato → `NetworkResult(avg, jitter=media
+  |diff consecutivi|, loss%, Grade A-F + colore). Soglie gaming. Framing ONESTO: molti server di
+  gioco bloccano ICMP → sono anchor di rotta, non il match server. `NetworkDuelTests` (6).
+- GUI: card "Network Duel" nella pagina Diagnostics (gated `ShowNetworkDuel`) con bottone "Test rete"
+  + righe target/avg/jitter/loss/grade. Diagnostics ora in ScrollViewer. **236/236 verdi**, build 0/0.
+- **STATO LAB: 12 moduli VIVI su 18.** I 6 rimasti NON sono autonomi: Latency Lab (grafici, serve
+  occhio), Reaction Lab (minigioco interattivo), AI co-pilot (LLM), Evidence community (server — non
+  costruire fake), Watchdog + Regression Sentinel (servizi tray background). → da fare con Léon al PC
+  o come lavori dedicati più grandi.
+
 ## Stato a fine sessione Opus (AGGIORNATO 2026-06-16)
 - `dotnet test`: **145/145 verdi**. `dotnet build WPEP.sln -c Release`: 0 errori/0 warning.
   (Se un nodo MSBuild crasha in parallelo: `-m:1 --disable-build-servers`.)
