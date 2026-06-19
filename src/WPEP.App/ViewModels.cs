@@ -53,7 +53,7 @@ public sealed class MainViewModel : ViewModelBase
         Diagnostics = new DiagnosticsViewModel(this);
         Kb = new KbViewModel();
         Report = new ReportViewModel(this);
-        Changes = new ChangesViewModel(Execution);
+        Changes = new ChangesViewModel(Execution, Settings);
         SettingsPage = new SettingsViewModel(Settings);
         Lab = new LabViewModel(Settings);
         // EXPO state lands with the hardware scan → refresh the Verdict Score when it does.

@@ -303,17 +303,44 @@ public sealed record ChangeSession(string File, string Display, string Detail, b
 public sealed class ChangesViewModel : ViewModelBase
 {
     private readonly ExecutionService _exec;
+    private readonly AppSettings _settings;
     private string _status = "";
 
-    public ChangesViewModel(ExecutionService exec)
+    public ChangesViewModel(ExecutionService exec, AppSettings settings)
     {
         _exec = exec;
+        _settings = settings;
         Refresh();
     }
 
     public ObservableCollection<ChangeSession> Sessions { get; } = [];
     public string Status { get => _status; set => Set(ref _status, value); }
     public bool IsEmpty => Sessions.Count == 0;
+
+    // ── Trust mode (Lab feature): the full "what Verdict could touch" manifest ──
+    public bool ShowTrustMode => _settings.IsFeatureEnabled(WPEP.Execution.FeatureCatalog.TrustMode);
+    public ObservableCollection<TrustEntry> TrustEntries { get; } = [];
+    private string _trustSummary = "";
+    public string TrustSummary { get => _trustSummary; set => Set(ref _trustSummary, value); }
+
+    /// <summary>Builds the read-only Trust manifest from the KB apply specs (no system access).
+    /// Cheap; rebuilt on each Changes-page visit so a toggle in the Lab takes effect.</summary>
+    public void RefreshTrustManifest()
+    {
+        Raise(nameof(ShowTrustMode));
+        TrustEntries.Clear();
+        TrustSummary = "";
+        if (!ShowTrustMode) return;
+        try
+        {
+            var kb = KnowledgeBaseLoader.Load();
+            var manifest = TrustManifest.Build(kb);
+            foreach (var t in manifest)
+                TrustEntries.Add(t);
+            TrustSummary = TrustManifest.Summarize(manifest);
+        }
+        catch { /* KB unreadable must never break the page */ }
+    }
 
     private string _selfTest = "";
     public string SelfTestStatus { get => _selfTest; set => Set(ref _selfTest, value); }

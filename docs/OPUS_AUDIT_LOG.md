@@ -502,6 +502,21 @@ Riusa il motore diagnostico esistente (nessuna nuova misura, nessuna scrittura).
   + HasStutterResult), headline colorata per severità + finding (componente/spiegazione/tip).
   Popolata dopo la cattura DPC/ISR. `StutterExplainerTests` (8). **188/188 verdi**, build 0/0.
 
+### 34. V3 — Modulo Lab 5: TRUST MODE (2026-06-18) — manifesto security-review, on-brand
+Per i paranoici: mostra ESATTAMENTE cosa Verdict scriverebbe, prima di fidarsi. Solo lettura.
+- `WPEP.Execution/TrustManifest.cs` (puro/testato, NESSUN accesso al sistema): `Build(tweaks)` →
+  `TrustEntry(TweakId,TweakName,Operations[])` dove `ChangeOperation(Method,Target,NewValue,Kind,
+  NeedsAdmin,Reversible,RequiresReboot)`. Costruito staticamente dalle ApplySpec della KB; include
+  solo gli applicabili (riusa `ApplyPolicy.CanApply`/`NeedsAdmin`); reversibile = undo≠none; metodi
+  senza operations path-based (es. powercfg plan switch) ottengono comunque una riga (mai nascondere
+  nulla). `Summarize` → "N tweak · M operazioni · tutte reversibili · K richiedono admin".
+- GUI: sezione "Trust mode" nella pagina Changes (gated `ShowTrustMode`), card per tweak con badge
+  metodo + target/valore mono + badge admin/reversibile/reboot. Changes ora in ScrollViewer.
+  Rebuild del manifesto su nav Changes. ChangesViewModel ora prende anche AppSettings.
+- `TrustManifestTests` (6). **194/194 verdi**, build 0/0.
+- STATO LAB: 5 moduli VIVI su 18 → Verdict Score, Risk Slider, Multi-monitor, Explain-my-Stutter,
+  Trust mode. Pattern consolidato (logica pura in lib + test + Show<Feature> flag + GUI gated + refresh su nav).
+
 ## Stato a fine sessione Opus (AGGIORNATO 2026-06-16)
 - `dotnet test`: **145/145 verdi**. `dotnet build WPEP.sln -c Release`: 0 errori/0 warning.
   (Se un nodo MSBuild crasha in parallelo: `-m:1 --disable-build-servers`.)

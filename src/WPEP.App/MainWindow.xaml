@@ -568,6 +568,7 @@
     </DataTemplate>
 
     <DataTemplate DataType="{x:Type local:ChangesViewModel}">
+      <ScrollViewer VerticalScrollBarVisibility="Auto">
       <StackPanel Margin="32,24" MaxWidth="820" HorizontalAlignment="Left">
         <TextBlock Style="{StaticResource H1}" Text="Changes" />
         <TextBlock Style="{StaticResource Muted}" Margin="0,4,0,16"
@@ -610,7 +611,74 @@
                        TextWrapping="Wrap" Text="{Binding SelfTestStatus}" />
           </StackPanel>
         </Border>
+
+        <!-- Trust mode (Lab feature): the full security-review manifest of what Verdict could touch. -->
+        <StackPanel Margin="0,28,0,0"
+                    Visibility="{Binding ShowTrustMode, Converter={StaticResource BoolToVis}}">
+          <StackPanel Orientation="Horizontal">
+            <TextBlock Style="{StaticResource H2}" Text="Trust mode" />
+            <Border Background="{DynamicResource Surface2}" CornerRadius="3" Padding="6,2"
+                    VerticalAlignment="Center" Margin="10,2,0,0">
+              <TextBlock Text="{Binding TrustSummary}" FontSize="11"
+                         Foreground="{DynamicResource TextMuted}" />
+            </Border>
+          </StackPanel>
+          <TextBlock Style="{StaticResource Muted}" Margin="0,2,0,8" TextWrapping="Wrap"
+                     Text="Esattamente cosa Verdict scriverebbe, voce per voce. Solo lettura: questo è un manifesto, non applica niente. Per chi vuole vedere il diff prima di fidarsi." />
+          <ItemsControl ItemsSource="{Binding TrustEntries}">
+            <ItemsControl.ItemTemplate>
+              <DataTemplate>
+                <Border Style="{StaticResource Card}" Margin="0,0,0,6" Padding="14,10">
+                  <StackPanel>
+                    <TextBlock Text="{Binding TweakName}" FontWeight="SemiBold"
+                               Foreground="{DynamicResource Text}" />
+                    <TextBlock Text="{Binding TweakId}" Style="{StaticResource Mono}" FontSize="11"
+                               Foreground="{DynamicResource TextMuted}" Margin="0,0,0,4" />
+                    <ItemsControl ItemsSource="{Binding Operations}">
+                      <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                          <Grid Margin="0,3,0,0">
+                            <Grid.ColumnDefinitions>
+                              <ColumnDefinition Width="Auto" />
+                              <ColumnDefinition Width="*" />
+                              <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <Border Grid.Column="0" Background="{DynamicResource AccentDeep}" CornerRadius="3"
+                                    Padding="6,1" VerticalAlignment="Top" Margin="0,1,10,0">
+                              <TextBlock Text="{Binding Method}" FontSize="10" FontWeight="SemiBold"
+                                         Foreground="{DynamicResource Accent}" />
+                            </Border>
+                            <StackPanel Grid.Column="1">
+                              <TextBlock Text="{Binding Target}" Style="{StaticResource Mono}" FontSize="12"
+                                         Foreground="{DynamicResource Text}" TextWrapping="Wrap" />
+                              <TextBlock Style="{StaticResource Mono}" FontSize="11"
+                                         Foreground="{DynamicResource TextMuted}">
+                                <Run Text="→ " /><Run Text="{Binding NewValue}" /><Run Text="  (" /><Run Text="{Binding Kind}" /><Run Text=")" />
+                              </TextBlock>
+                            </StackPanel>
+                            <StackPanel Grid.Column="2" HorizontalAlignment="Right">
+                              <TextBlock Text="admin" FontSize="10" Foreground="{DynamicResource Warn}"
+                                         HorizontalAlignment="Right"
+                                         Visibility="{Binding NeedsAdmin, Converter={StaticResource BoolToVis}}" />
+                              <TextBlock Text="reversibile" FontSize="10" Foreground="{DynamicResource Ok}"
+                                         HorizontalAlignment="Right"
+                                         Visibility="{Binding Reversible, Converter={StaticResource BoolToVis}}" />
+                              <TextBlock Text="reboot" FontSize="10" Foreground="{DynamicResource TextMuted}"
+                                         HorizontalAlignment="Right"
+                                         Visibility="{Binding RequiresReboot, Converter={StaticResource BoolToVis}}" />
+                            </StackPanel>
+                          </Grid>
+                        </DataTemplate>
+                      </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                  </StackPanel>
+                </Border>
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+        </StackPanel>
       </StackPanel>
+      </ScrollViewer>
     </DataTemplate>
 
     <!-- ============ SETTINGS ============ -->
