@@ -75,6 +75,8 @@ switch (args[0])
         return RunWatch();
     case "sentinel":
         return RunSentinel(args.Skip(1).ToArray());
+    case "nvidia":
+        return RunNvidia();
     case "tools" when args.Length >= 2 && args[1] == "install-presentmon":
         return await InstallPresentMon();
     default:
@@ -1267,6 +1269,16 @@ static int RunSentinel(string[] args)
     catch (Exception ex) { Console.Error.WriteLine($"Sentinel fallito: {ex.Message}"); return 1; }
 }
 
+static int RunNvidia()
+{
+    Console.WriteLine("NVIDIA — prova interop NVAPI (user-mode, anti-cheat safe, sola lettura)\n");
+    var probe = WPEP.SystemAnalyzer.NvApi.Probe();
+    Console.WriteLine($"  {(probe.Available ? "[ok]" : "[!]")} {probe.Message}");
+    if (probe.Available)
+        Console.WriteLine("\n  → Fondazione OK: si puo costruire l'automazione del pannello NVIDIA (Reflex,\n    Low Latency, Power Management) via DRS, con field-validation di Leon sulle scritture.");
+    return probe.Available ? 0 : 1;
+}
+
 static int RunWatch()
 {
     Console.WriteLine("Watchdog — controlla derive: EXPO, tweak annullati, bloat all'avvio (sola lettura)\n");
@@ -1628,6 +1640,7 @@ static void PrintUsage()
           wpep watch        Watchdog: deriva EXPO, tweak annullati, bloat all'avvio.
           wpep sentinel --baseline <dir> --now <dir>
                             Regression Sentinel: rileva se le prestazioni sono peggiorate.
+          wpep nvidia       Prova l'interop NVAPI (fondazione per automatizzare il pannello NVIDIA).
           wpep museum       Placebo Museum: i miti sfatati con l'evidenza.
           wpep games        Giochi con un piano dedicato.
           wpep optimize <gioco>   Piano su misura: tweak di sistema + impostazioni in-game.

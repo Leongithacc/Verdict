@@ -744,6 +744,22 @@ percezione "non applica niente". I 3 nuovi tweak (Optional) appaiono nel gruppo 
 1-CLICK + bottone Apply (applicabili uno a uno, come Léon voleva). Build App 0/0.
 PROSSIMO: FASE B (NVAPI DRS, read-only prima per testare sulla sua RTX 5080).
 
+### 51. BASI/FASE B — Fondazione NVAPI PROVATA sulla RTX 5080 di Léon (2026-06-18)
+La via per i tweak del pannello NVIDIA (Reflex, Low Latency, Power Management) = NVAPI user-mode
+(anti-cheat safe, è il canale dei tool NVIDIA). Era l'incognita: l'interop funziona?
+- `WPEP.SystemAnalyzer/NvApi.cs`: wrapper sul meccanismo NVAPI (un solo export `nvapi_QueryInterface(id)`
+  → function pointer → delegate). `Probe()` read-only: Initialize → GetInterfaceVersionString → Unload.
+  Gestisce DllNotFound (no GPU NVIDIA). CLI `wpep nvidia`.
+- ✅ **TESTATO SUL CAMPO**: `wpep nvidia` sulla RTX 5080 → "NVAPI operativa — interfaccia NVidia
+  Complete Version 1.10". L'interop P/Invoke FUNZIONA sul suo hardware reale. Incognita critica risolta.
+- PROSSIMO PASSO DRS (non fatto, per disciplina): leggere/scrivere le impostazioni del pannello serve
+  marshalling delle struct DRS (NVDRS_SETTING ~12KB, version-encoded, union binarie) — interop delicato
+  da ITERARE con cura. Piano: NvAPI_DRS_CreateSession→LoadSettings→GetBaseProfile→GetSetting (READ
+  prima, incrociando i valori col pannello NVIDIA reale di Léon per validare la mappatura), poi
+  SetSetting→SaveSettings (WRITE, field-validate da Léon). Ids noti: CreateSession 0x0694D52E,
+  LoadSettings 0x375DBD6B, GetBaseProfile 0xDA8466A0, GetSetting 0x73BF8338, SetSetting 0x577DD202,
+  SaveSettings 0xFCBC7E14, DestroySession 0xDAD9CFF8. Setting PREFERRED_PSTATE 0x1057EB71.
+
 ## Stato a fine sessione Opus (AGGIORNATO 2026-06-16)
 - `dotnet test`: **145/145 verdi**. `dotnet build WPEP.sln -c Release`: 0 errori/0 warning.
   (Se un nodo MSBuild crasha in parallelo: `-m:1 --disable-build-servers`.)
