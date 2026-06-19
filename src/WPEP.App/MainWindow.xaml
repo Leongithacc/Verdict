@@ -1015,12 +1015,18 @@
                                   <TextBlock Text="{Binding HeavyLabel}" FontSize="9"
                                              Foreground="{DynamicResource Warn}" />
                                 </Border>
+                                <Border Background="{DynamicResource AccentDeep}" CornerRadius="3"
+                                        Padding="5,1" Margin="6,0,0,0" VerticalAlignment="Center"
+                                        Visibility="{Binding IsComingSoon, Converter={StaticResource BoolToVis}}">
+                                  <TextBlock Text="IN ARRIVO" FontSize="9"
+                                             Foreground="{DynamicResource Accent}" />
+                                </Border>
                               </StackPanel>
                               <TextBlock Text="{Binding Tagline}" Style="{StaticResource Muted}"
                                          TextWrapping="Wrap" Margin="0,3,12,0" />
                             </StackPanel>
                             <CheckBox Grid.Column="2" IsChecked="{Binding Enabled}"
-                                      VerticalAlignment="Center" />
+                                      IsEnabled="{Binding IsAvailable}" VerticalAlignment="Center" />
                           </Grid>
                         </Border>
                       </DataTemplate>

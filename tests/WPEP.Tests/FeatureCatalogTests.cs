@@ -41,6 +41,21 @@ public class FeatureCatalogTests
     }
 
     [Fact]
+    public void ComingSoonModules_AreNeverDefaultEnabled()
+    {
+        // A not-yet-built module must not ship on.
+        Assert.All(FeatureCatalog.All.Where(f => !f.Available), f =>
+            Assert.False(f.DefaultEnabled, $"{f.Id} is unavailable but defaults ON"));
+    }
+
+    [Fact]
+    public void ImplementedModules_AreMajority()
+    {
+        // Sanity: most of the catalog is actually built (14 of 18 at time of writing).
+        Assert.True(FeatureCatalog.All.Count(f => f.Available) >= 12);
+    }
+
+    [Fact]
     public void PublicConstants_AllResolveToARealModule()
     {
         // Every id constant must point at an actual catalog entry (guards typos/renames).

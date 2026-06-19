@@ -69,9 +69,15 @@ public sealed class AppSettings
     public Dictionary<string, bool> Features { get; set; } = new();
 
     /// <summary>Is a Lab feature on? Honors the user's stored choice, else the catalog default.
-    /// The id is a <c>FeatureCatalog</c> constant.</summary>
-    public bool IsFeatureEnabled(string id) =>
-        Features.TryGetValue(id, out var on) ? on : (FeatureCatalog.Get(id)?.DefaultEnabled ?? false);
+    /// A not-yet-implemented module ("In arrivo") is always off, even if an old settings file had
+    /// it on — so a stale flag can never light up a module that doesn't exist yet. Id is a
+    /// <c>FeatureCatalog</c> constant.</summary>
+    public bool IsFeatureEnabled(string id)
+    {
+        var module = FeatureCatalog.Get(id);
+        if (module is not { Available: true }) return false;
+        return Features.TryGetValue(id, out var on) ? on : module.DefaultEnabled;
+    }
 
     /// <summary>Turn a feature on/off and persist. Pass <c>isDefault</c> to clear the override
     /// so the catalog default rules again (keeps the file from accumulating redundant entries).</summary>

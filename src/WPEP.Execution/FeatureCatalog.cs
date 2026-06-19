@@ -17,7 +17,8 @@ public sealed record FeatureModule(
     bool DefaultEnabled = false,
     FeatureStatus Status = FeatureStatus.Experimental,
     bool Heavy = false,
-    string Glyph = "");
+    string Glyph = "",
+    bool Available = true); // false = catalogued but not yet implemented ("In arrivo")
 
 /// <summary>The catalog of premium/élite modules. Order within a category is the display order.
 /// Adding a feature here makes it appear in the Lab automatically — the feature's own hooks read
@@ -48,10 +49,10 @@ public static class FeatureCatalog
         // ── Identità & misura (la "faccia premium") ─────────────────────────────
         new(Score, "Verdict Score", "Un numero 0–100 dello stato del PC, in homepage.",
             "Identità", DefaultEnabled: true, Status: FeatureStatus.Beta, Glyph: "◆"),
-        new(LatencyLab, "Latency Lab", "Test before/after guidato con grafici. Dimostra che il tweak funziona.",
-            "Misura", Status: FeatureStatus.Beta, Glyph: "📈"),
+        new(LatencyLab, "Latency Lab", "Test before/after guidato con grafici premium. Dimostra che il tweak funziona.",
+            "Misura", Status: FeatureStatus.Experimental, Glyph: "📈", Available: false),
         new(ReactionLab, "Reaction Lab", "Minigioco reflex+aim: misura la TUA latenza umana+sistema prima/dopo.",
-            "Misura", Status: FeatureStatus.Experimental, Glyph: "⚡"),
+            "Misura", Status: FeatureStatus.Experimental, Glyph: "⚡", Available: false),
 
         // ── Le idee-firma (uniche, anti-placebo) ────────────────────────────────
         new(GhostTweak, "Ghost Tweak", "A/B alla cieca su te stesso: applica un tweak, misura, poi rivela. Uccide il placebo.",
@@ -59,7 +60,7 @@ public static class FeatureCatalog
         new(PlaceboMuseum, "Placebo Museum", "Galleria dei tweak-mito sfatati con l'evidenza. \"Non ci sono cascato.\"",
             "Anti-placebo", Status: FeatureStatus.Beta, Glyph: "🏛"),
         new(EvidenceCommunity, "Evidence community", "Dati anonimi aggregati: \"ha aiutato il 73% dei rig simili\". Onestà crowd-validata.",
-            "Anti-placebo", Status: FeatureStatus.Experimental, Glyph: "🌐"),
+            "Anti-placebo", Status: FeatureStatus.Experimental, Glyph: "🌐", Available: false),
 
         // ── Intelligenza per-gioco ──────────────────────────────────────────────
         new(OptimizeForGame, "Ottimizza per [gioco]", "Un click: tweak di sistema + impostazioni in-game/NVIDIA ottimali per QUEL titolo.",
@@ -91,7 +92,7 @@ public static class FeatureCatalog
         new(FreshInstall, "Fresh-install score", "Confronta col Windows pulito: \"hai aggiunto 47 processi dall'installazione\".",
             "Controllo", Status: FeatureStatus.Experimental, Glyph: "✨"),
         new(AiCopilot, "AI co-pilot", "Linguaggio naturale: \"rendi Valorant più fluido\" → Verdict spiega e propone.",
-            "Controllo", Status: FeatureStatus.Experimental, Glyph: "🤖"),
+            "Controllo", Status: FeatureStatus.Experimental, Glyph: "🤖", Available: false),
     ];
 
     public static FeatureModule? Get(string id) => All.FirstOrDefault(f => f.Id == id);

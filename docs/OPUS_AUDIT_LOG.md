@@ -658,6 +658,18 @@ Update rompe qualcosa). Nessun tool ti dice quando regredisci.
   (grafici, serve occhio), Reaction Lab (minigioco interattivo), AI co-pilot (serve LLM/API),
   Evidence community (serve server — non fare fake). Sono da fare con Léon al PC o come lavori dedicati.
 
+### 45. V3 — Onestà del Lab: flag "Available" sui moduli non ancora implementati (2026-06-18)
+Il Lab offriva toggle anche per i 4 moduli non ancora costruiti (Latency Lab, Reaction Lab, AI
+co-pilot, Evidence community) → attivarli non faceva nulla. Fix di onestà (on-brand):
+- `FeatureModule.Available` (default true); i 4 non-implementati marcati `Available: false`.
+- `AppSettings.IsFeatureEnabled` ora ritorna SEMPRE false per un modulo non-Available, anche se un
+  settings.json vecchio lo avesse on → un flag stale non può accendere un modulo inesistente.
+- `FeatureRow`: `IsAvailable`/`IsComingSoon`; il setter di Enabled rifiuta i non-disponibili.
+- GUI Lab: badge "IN ARRIVO" + CheckBox disabilitato per i coming-soon.
+- `FeatureCatalogTests` +2 (coming-soon mai default-on; implementati ≥12). **260/260 verdi**, build 0/0.
+- STATO LAB: **14 IMPLEMENTATI + 4 in arrivo** = catalogo onesto. I 4 restanti per design richiedono
+  GUI grafici (Latency/Reaction Lab) o infra esterna (LLM per AI co-pilot, server per Evidence).
+
 ## Stato a fine sessione Opus (AGGIORNATO 2026-06-16)
 - `dotnet test`: **145/145 verdi**. `dotnet build WPEP.sln -c Release`: 0 errori/0 warning.
   (Se un nodo MSBuild crasha in parallelo: `-m:1 --disable-build-servers`.)

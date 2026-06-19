@@ -31,11 +31,16 @@ public sealed class FeatureRow : ViewModelBase
     public bool IsHeavy => Module.Heavy;
     public string HeavyLabel => Module.Heavy ? "BACKGROUND" : "";
 
+    /// <summary>Not-yet-implemented modules are shown but can't be toggled on (honest UX).</summary>
+    public bool IsAvailable => Module.Available;
+    public bool IsComingSoon => !Module.Available;
+
     public bool Enabled
     {
         get => _settings.IsFeatureEnabled(Module.Id);
         set
         {
+            if (!Module.Available) return; // can't enable what isn't built yet
             if (value == Enabled) return;
             _settings.SetFeature(Module.Id, value);
             Raise();
