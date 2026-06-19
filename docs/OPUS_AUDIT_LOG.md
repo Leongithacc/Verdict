@@ -533,6 +533,24 @@ Per il gusto estetico di Léon: trasforma l'inventario hardware in un'identità 
 - STATO LAB: **6 moduli VIVI su 18** → Verdict Score, Risk Slider, Multi-monitor, Explain-my-Stutter,
   Trust mode, Rig DNA.
 
+### 36. V3 — Modulo Lab 7: GHOST TWEAK (2026-06-18) — A/B alla cieca, l'idea-firma anti-placebo
+La ⭐⭐ del progetto: applica un tweak SENZA dire quale, tu misuri, poi RIVELA se ha aiutato davvero.
+Doppio-cieco su te stesso. Apply CIECO REALE (journaled) + reveal + undo automatico.
+- `WPEP.Execution/GhostTweak.cs` (puro/testato): `Pick(candidateIds, seed)` selezione cieca
+  deterministica-nel-seed (l'app passa seed random → imprevedibile; modulo abs-safe per ogni seed
+  incl. int.MinValue). `Reveal(name, GhostOutcome, delta)` → testo onesto: Helped="non è placebo per
+  te, tienilo" / NoEffect="placebo per te anche se popolare" / Hurt="già annullato" / Inconclusive=
+  "misura troppo rumorosa". `GhostTweakTests` (7).
+- `GhostTweakViewModel` (App): candidati = KB CanApply && !NeedsAdmin (un round cieco non chiede mai
+  UAC); StartRound prova pick finché uno non-already-applied → Execute reale (journaled, salva il
+  journal file) → stato Applied. Reveal: Undo (ripristina SEMPRE) → mappa il verdetto da
+  `MeasureWizard.LastComparison` (Improvement→Helped, Regression→Hurt, NoMeasurableEffect→NoEffect,
+  gate/assente→Inconclusive) → mostra il reveal. Esposto `MeasureWizard.LastComparison` (nuovo).
+- GUI: sezione "Ghost Tweak" in cima alla pagina Measure (gated `Ghost.ShowGhostTweak`), spiegazione
+  + bottone Inizia/Rivela + card reveal colorata. Riusa il loop di misura del wizard per il verdetto.
+- **207/207 verdi**, build 0/0. STATO LAB: **7 moduli VIVI su 18** → Score, Risk Slider, Multi-monitor,
+  Explain-my-Stutter, Trust mode, Rig DNA, Ghost Tweak.
+
 ## Stato a fine sessione Opus (AGGIORNATO 2026-06-16)
 - `dotnet test`: **145/145 verdi**. `dotnet build WPEP.sln -c Release`: 0 errori/0 warning.
   (Se un nodo MSBuild crasha in parallelo: `-m:1 --disable-build-servers`.)

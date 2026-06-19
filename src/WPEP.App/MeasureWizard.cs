@@ -84,6 +84,10 @@ public sealed class MeasureWizardViewModel(MainViewModel main, AppSettings setti
     public ObservableCollection<ProcessChoice> Processes { get; } = [];
     public ObservableCollection<string> RunLog { get; } = [];
 
+    /// <summary>Ghost Tweak (Lab feature) lives as a section on the Measure page — it reuses this
+    /// wizard's last comparison for its blind reveal.</summary>
+    public GhostTweakViewModel Ghost { get; } = new(main);
+
     public IReadOnlyList<ScenarioPreset> Scenarios => ScenarioPreset.All;
     private ScenarioPreset _scenario = ScenarioPreset.All[0];
     public ScenarioPreset Scenario { get => _scenario; set => Set(ref _scenario, value); }
@@ -330,6 +334,10 @@ public sealed class MeasureWizardViewModel(MainViewModel main, AppSettings setti
         }
     }
 
+    /// <summary>The most recent completed comparison, exposed so the Ghost Tweak module can map it
+    /// to a blind-reveal verdict. Null until a verdict has been built this run.</summary>
+    public ComparisonEngine.ComparisonReport? LastComparison { get; private set; }
+
     private void BuildVerdict()
     {
         var env = EnvironmentValidator.Validate(_baseline, _post);
@@ -340,6 +348,7 @@ public sealed class MeasureWizardViewModel(MainViewModel main, AppSettings setti
         }
 
         var report = ComparisonEngine.Compare(_baseline, _post, settings.NoiseGateThresholdPercent);
+        LastComparison = report;
         var primary = report.Metrics[0];
 
         if (report.GateTriggered)

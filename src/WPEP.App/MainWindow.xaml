@@ -185,6 +185,43 @@
           <TextBlock Style="{StaticResource Muted}" Margin="0,4,0,16"
                      Text="Baseline → ONE change → post → verdict. The method is the product." />
 
+          <!-- Ghost Tweak (Lab feature): the blind A/B on yourself. -->
+          <Border Style="{StaticResource Card}" Margin="0,0,0,16" Padding="18,14"
+                  Visibility="{Binding Ghost.ShowGhostTweak, Converter={StaticResource BoolToVis}}">
+            <StackPanel>
+              <StackPanel Orientation="Horizontal">
+                <TextBlock Text="🎭" FontSize="18" VerticalAlignment="Center" />
+                <TextBlock Text="Ghost Tweak" Style="{StaticResource H2}" Margin="8,0,0,0" />
+                <Border Background="{DynamicResource Surface2}" CornerRadius="3" Padding="5,1"
+                        Margin="8,2,0,0" VerticalAlignment="Center">
+                  <TextBlock Text="A/B alla cieca" FontSize="10" Foreground="{DynamicResource TextMuted}" />
+                </Border>
+              </StackPanel>
+              <TextBlock Style="{StaticResource Muted}" Margin="0,4,0,0" TextWrapping="Wrap"
+                         Text="Verdict applica un tweak senza dirti quale. Tu misuri (baseline prima, post dopo). Poi Rivela: scopri cos'era e se ha aiutato DAVVERO. Doppio-cieco su te stesso — uccide il placebo. Il tweak viene sempre annullato alla fine." />
+              <TextBlock Style="{StaticResource Body}" Text="{Binding Ghost.Status}" Margin="0,10,0,0"
+                         TextWrapping="Wrap" />
+              <StackPanel Orientation="Horizontal" Margin="0,12,0,0">
+                <Button Style="{StaticResource PrimaryButton}" Content="Inizia round cieco"
+                        Command="{Binding Ghost.StartRoundCommand}"
+                        Visibility="{Binding Ghost.IsApplied, Converter={StaticResource BoolToVisInverted}}" />
+                <Button Style="{StaticResource PrimaryButton}" Content="Rivela"
+                        Command="{Binding Ghost.RevealCommand}"
+                        Visibility="{Binding Ghost.IsApplied, Converter={StaticResource BoolToVis}}" />
+              </StackPanel>
+              <Border CornerRadius="6" Padding="12,10" Margin="0,12,0,0"
+                      Background="{DynamicResource Surface2}"
+                      Visibility="{Binding Ghost.IsRevealed, Converter={StaticResource BoolToVis}}">
+                <StackPanel>
+                  <TextBlock Text="{Binding Ghost.RevealTitle}" FontWeight="SemiBold"
+                             Foreground="{Binding Ghost.RevealColor, Converter={StaticResource TokenBrush}}" />
+                  <TextBlock Text="{Binding Ghost.RevealPlain}" Style="{StaticResource Muted}"
+                             TextWrapping="Wrap" Margin="0,4,0,0" />
+                </StackPanel>
+              </Border>
+            </StackPanel>
+          </Border>
+
           <!-- Blockers (F1/F2) -->
           <Border Style="{StaticResource Card}" Margin="0,0,0,12"
                   Visibility="{Binding CanMeasure, Converter={StaticResource BoolToVisInverted}}">

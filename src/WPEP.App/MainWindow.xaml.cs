@@ -88,7 +88,11 @@ public partial class MainWindow : Window
         }
         return null;
     }
-    private void OnNavMeasure(object s, RoutedEventArgs e) => _vm.CurrentPage = _vm.Measure;
+    private void OnNavMeasure(object s, RoutedEventArgs e)
+    {
+        _vm.Measure.Ghost.RefreshFlag(); // reflect a Lab toggle
+        _vm.CurrentPage = _vm.Measure;
+    }
     private void OnNavDiagnostics(object s, RoutedEventArgs e) => _vm.CurrentPage = _vm.Diagnostics;
     private void OnNavKb(object s, RoutedEventArgs e) => _vm.CurrentPage = _vm.Kb;
     private void OnNavReport(object s, RoutedEventArgs e) => _vm.CurrentPage = _vm.Report;
