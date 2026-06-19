@@ -26,7 +26,34 @@ public sealed record HardwareInventory(
     IReadOnlyList<DiskInfo> Disks,
     IReadOnlyList<string> Gpus,
     IReadOnlyList<Finding> Findings,
-    bool? ExpoEnabled);
+    bool? ExpoEnabled)
+{
+    /// <summary>The GPU that actually matters for gaming: the discrete card, not the CPU's
+    /// integrated graphics. Many AMD CPUs (e.g. 9800X3D) expose an iGPU that WMI lists first as
+    /// "AMD Radeon(TM) Graphics" — picking that would mislabel the rig. Falls back to the first.</summary>
+    public string PrimaryGpu => GpuPicker.Best(Gpus);
+}
+
+/// <summary>Chooses the discrete gaming GPU from a possibly-mixed list (iGPU + dGPU).</summary>
+public static class GpuPicker
+{
+    public static string Best(IReadOnlyList<string> gpus)
+    {
+        if (gpus.Count == 0) return "";
+        // 1) A clearly discrete card: RTX/GTX, Radeon RX <model>, or Intel Arc.
+        var discrete = gpus.FirstOrDefault(g =>
+            Regex.IsMatch(g, @"\b(RTX|GTX)\b", RegexOptions.IgnoreCase) ||
+            Regex.IsMatch(g, @"\bRX\s?\d{3,4}\b", RegexOptions.IgnoreCase) ||
+            Regex.IsMatch(g, @"\bArc\b", RegexOptions.IgnoreCase));
+        if (discrete is not null) return discrete;
+        // 2) Anything that isn't an obvious integrated GPU ("…Graphics", "UHD", "Iris").
+        var notIntegrated = gpus.FirstOrDefault(g =>
+            !g.Contains("UHD", StringComparison.OrdinalIgnoreCase) &&
+            !g.Contains("Iris", StringComparison.OrdinalIgnoreCase) &&
+            !g.TrimEnd().EndsWith("Graphics", StringComparison.OrdinalIgnoreCase));
+        return notIntegrated ?? gpus[0];
+    }
+}
 
 public static class HardwareScanner
 {

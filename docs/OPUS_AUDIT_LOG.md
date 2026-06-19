@@ -607,6 +607,28 @@ L'onestà del progetto resa contenuto virale: i tweak che tutti consigliano ma n
   costruire fake), Watchdog + Regression Sentinel (servizi tray background). → da fare con Léon al PC
   o come lavori dedicati più grandi.
 
+### 42. V3 — CLI parity dei moduli Lab + 2 BUG VERI trovati sul PC di Léon (2026-06-18)
+Léon (su remote-control) ha chiesto "altro di utile". Ho esposto i moduli via CLI e LANCIATI sul suo
+PC reale → dati veri + due bug scoperti e fixati.
+- **CLI parity** (`src/WPEP.Cli/Program.cs`): nuovi comandi sola-lettura `score`, `dna`, `fresh`,
+  `network`, `timeline`, `museum`, `games`, `optimize <gioco>` — stessa logica pura della GUI. Help
+  aggiornato. Eseguiti live sul suo PC (es: Score 31/100 "Da sistemare" per EXPO off + 11 pending;
+  Rig DNA EPICO; Fresh 0/100 con 23 avvii terze parti; rete A/B; Epic blocca ICMP).
+- **BUG 1 — GPU picker (RigDna pescava la iGPU)**: il suo PC ha iGPU AMD (9800X3D) + dGPU NVIDIA
+  RTX 5080; `Gpus.FirstOrDefault()` prendeva la iGPU → DNA "Graphics", tier RARO sbagliato. Fix:
+  `GpuPicker.Best()` (preferisce discrete RTX/GTX/RX dddd/Arc, poi non-integrata) + `HardwareInventory.
+  PrimaryGpu`. RigDna + Time Machine ora usano PrimaryGpu. Ora: RTX 5080, tier EPICO. `GpuPickerTests` (5).
+- **BUG 2 — advisor mostrava tweak AMD-GPU a un gamer NVIDIA**: l'AdvisorEngine non aveva il case
+  `gpu:amd` (le voci AMD ce l'avevano già in KB ma cadeva nel default=applicabile) né `laptop`.
+  Aggiunti entrambi i case (gpu:amd → richiede GpuName AMD/Radeon; laptop → IsDesktop==false) +
+  taggato `laptop-dgpu-preference` con "laptop". Ora optimize/advise filtra correttamente: a Léon
+  spariscono Anti-Lag/HYPR-RX/RSR/laptop, resta "fTPM AMD BIOS" (corretto, ha CPU AMD). Migliora
+  TUTTO l'advisor, non solo il modulo. `AdvisorEngineTests` +3.
+- **OptimizeForGame** ora accetta `SystemSnapshot?` opzionale → filtra i tweak di sistema per
+  l'hardware reale (via AdvisorEngine, esclude NotApplicable). CLI+GUI passano lo snapshot.
+- **246/246 verdi**, solution build 0/0. (Snapshot GpuName era già corretto = NVIDIA, doctor lo conferma;
+  il bug GPU era solo in RigDna/timeline che usavano Gpus[0].)
+
 ## Stato a fine sessione Opus (AGGIORNATO 2026-06-16)
 - `dotnet test`: **145/145 verdi**. `dotnet build WPEP.sln -c Release`: 0 errori/0 warning.
   (Se un nodo MSBuild crasha in parallelo: `-m:1 --disable-build-servers`.)

@@ -117,7 +117,7 @@ public sealed class ScanViewModel : ViewModelBase
                 int startup = await Task.Run(() =>
                     FreshInstallScanner.EnumerateStartup().Count(i => !i.IsMicrosoft));
                 var state = new SystemState(System.DateTime.Now.ToString("o"),
-                    hw.ExpoEnabled, hw.RamTotalGb, hw.Gpus.FirstOrDefault() ?? "", hw.Bios, startup);
+                    hw.ExpoEnabled, hw.RamTotalGb, hw.PrimaryGpu, hw.Bios, startup);
                 var prev = SystemTimeline.LoadAll().LastOrDefault();
                 if (prev is null)
                 {

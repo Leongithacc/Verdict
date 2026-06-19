@@ -1,3 +1,4 @@
+using WPEP.Core.SystemInfo;
 using WPEP.KnowledgeBase;
 
 namespace WPEP.Advisor;
@@ -21,7 +22,8 @@ public static class OptimizeForGame
             .Distinct(StringComparer.OrdinalIgnoreCase)
             .OrderBy(g => g, StringComparer.OrdinalIgnoreCase)];
 
-    public static GameOptimization Build(string game, IEnumerable<TweakEntry> entries)
+    public static GameOptimization Build(string game, IEnumerable<TweakEntry> entries,
+        SystemSnapshot? snapshot = null)
     {
         var all = entries.ToList();
 
@@ -32,6 +34,17 @@ public static class OptimizeForGame
             .OrderBy(e => e.EvidenceLevel)
             .ThenBy(e => e.Name, StringComparer.OrdinalIgnoreCase)
             .ToList();
+
+        // When we know the rig, drop tweaks that don't apply to it (e.g. AMD-GPU tweaks on an
+        // NVIDIA gamer, or laptop-only tweaks on a desktop) — that's what makes it "tailored".
+        if (snapshot is not null)
+        {
+            var applicable = AdvisorEngine.Advise(snapshot, all)
+                .Where(r => r.Classification != Classification.NotApplicable)
+                .Select(r => r.Entry.Id)
+                .ToHashSet(StringComparer.OrdinalIgnoreCase);
+            system = system.Where(e => applicable.Contains(e.Id)).ToList();
+        }
 
         // In-game / driver settings specific to this title.
         var inGame = all

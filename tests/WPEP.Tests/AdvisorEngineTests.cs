@@ -38,6 +38,29 @@ public class AdvisorEngineTests
         recs.Single(r => r.Entry.Id == id);
 
     [Fact]
+    public void Advise_AmdGpuTweaks_NotApplicableOnNvidia()
+    {
+        // Real Léon case: AMD CPU + NVIDIA gaming GPU → AMD-GPU driver features don't apply.
+        var recs = AdvisorEngine.Advise(Snapshot() with { GpuName = "NVIDIA GeForce RTX 5080" }, Kb);
+        Assert.Equal(Classification.NotApplicable, For(recs, "amd-radeon-anti-lag").Classification);
+        Assert.Equal(Classification.NotApplicable, For(recs, "amd-hypr-rx").Classification);
+    }
+
+    [Fact]
+    public void Advise_AmdGpuTweaks_ApplicableOnRadeon()
+    {
+        var recs = AdvisorEngine.Advise(Snapshot() with { GpuName = "AMD Radeon RX 7900 XTX" }, Kb);
+        Assert.NotEqual(Classification.NotApplicable, For(recs, "amd-radeon-anti-lag").Classification);
+    }
+
+    [Fact]
+    public void Advise_LaptopTweak_NotApplicableOnDesktop()
+    {
+        var recs = AdvisorEngine.Advise(Snapshot(isDesktop: true), Kb);
+        Assert.Equal(Classification.NotApplicable, For(recs, "laptop-dgpu-preference").Classification);
+    }
+
+    [Fact]
     public void Advise_MonitorBelowMaxRefresh_RefreshTweakIsRecommended()
     {
         var recs = AdvisorEngine.Advise(Snapshot(currentHz: 60, maxHz: 240), Kb);

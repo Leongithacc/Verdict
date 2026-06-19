@@ -16,7 +16,7 @@ public static class RigDna
 
     public static RigDnaResult Compute(HardwareInventory inv)
     {
-        string gpu = inv.Gpus.FirstOrDefault() ?? "";
+        string gpu = inv.PrimaryGpu;
         // Canonical signature: the parts that define THIS build. Stable ordering, normalized.
         string canonical = string.Join("|",
             inv.Motherboard, inv.Cpu, inv.Cores?.ToString() ?? "?", gpu,

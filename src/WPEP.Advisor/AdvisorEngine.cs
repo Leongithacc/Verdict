@@ -106,6 +106,25 @@ public static class AdvisorEngine
                         return false;
                     }
                     break;
+                case "gpu:amd":
+                    // AMD-GPU driver features (Anti-Lag, HYPR-RX, RSR) only apply when the GAMING
+                    // GPU is AMD. A machine with an AMD iGPU but an NVIDIA dGPU games on NVIDIA, so
+                    // the snapshot's primary GpuName (NVIDIA) correctly rules these out.
+                    if (s.GpuName.Length > 0 &&
+                        !s.GpuName.Contains("AMD", StringComparison.OrdinalIgnoreCase) &&
+                        !s.GpuName.Contains("Radeon", StringComparison.OrdinalIgnoreCase))
+                    {
+                        note = $"Richiede GPU AMD/Radeon (rilevata: {s.GpuName}).";
+                        return false;
+                    }
+                    break;
+                case "laptop":
+                    if (s.IsDesktop == true)
+                    {
+                        note = "Tweak per portatili: questo è un desktop.";
+                        return false;
+                    }
+                    break;
             }
         }
         note = "";

@@ -194,6 +194,7 @@ public sealed class VerdictViewModel(MainViewModel main) : ViewModelBase
 
     // ── Optimize for [game] (Lab feature) ────────────────────────────────────
     private IReadOnlyList<TweakEntry> _kbCache = [];
+    private SystemSnapshot? _snapshotCache;
     private string? _selectedGame;
     public bool ShowOptimizeForGame => main.Settings.IsFeatureEnabled(FeatureCatalog.OptimizeForGame);
     public ObservableCollection<string> Games { get; } = [];
@@ -221,7 +222,7 @@ public sealed class VerdictViewModel(MainViewModel main) : ViewModelBase
         GameSystemTweaks.Clear();
         GameInGameSettings.Clear();
         if (_selectedGame is null || _kbCache.Count == 0) return;
-        var plan = OptimizeForGame.Build(_selectedGame, _kbCache);
+        var plan = OptimizeForGame.Build(_selectedGame, _kbCache, _snapshotCache);
         foreach (var t in plan.SystemTweaks) GameSystemTweaks.Add(t.Name);
         foreach (var s in plan.InGameSettings)
             GameInGameSettings.Add(new GameSettingRow(s.Name, s.ExpectedImpact));
@@ -263,6 +264,7 @@ public sealed class VerdictViewModel(MainViewModel main) : ViewModelBase
 
     private void Apply(SystemSnapshot snapshot, IReadOnlyList<Recommendation> allRecommendations)
     {
+        _snapshotCache = snapshot; // reused by the Optimize-for-game filter
         // Game-specific entries live in their own section and never count toward
         // the system verdict header (R7_COPY_AND_KB3 open question, resolved).
         var recommendations = allRecommendations.Where(r => r.Entry.Game is null).ToArray();

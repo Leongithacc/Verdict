@@ -53,6 +53,22 @@ switch (args[0])
         return RunDoctor();
     case "scan":
         return RunScan();
+    case "score":
+        return RunScore();
+    case "dna":
+        return RunDna();
+    case "fresh":
+        return RunFresh();
+    case "network":
+        return RunNetwork();
+    case "timeline":
+        return RunTimeline();
+    case "museum":
+        return RunMuseum();
+    case "games":
+        return RunGames();
+    case "optimize":
+        return RunOptimize(args.Skip(1).ToArray());
     case "tools" when args.Length >= 2 && args[1] == "install-presentmon":
         return await InstallPresentMon();
     default:
@@ -1067,6 +1083,147 @@ static int RunScan()
     return 0;
 }
 
+// ===================== Moduli "Lab" via CLI (V3) =====================
+// Espongono la stessa logica pura della GUI: sola lettura, niente scritture.
+
+static int RunScore()
+{
+    Console.WriteLine("Verdict Score — quanto è ottimizzato questo PC (onesto: i placebo non contano)\n");
+    var snapshot = WPEP.SystemAnalyzer.SnapshotBuilder.Build(DateTimeOffset.UtcNow);
+    var entries = WPEP.KnowledgeBase.KnowledgeBaseLoader.Load();
+    var recs = WPEP.Advisor.AdvisorEngine.Advise(snapshot, entries).Where(r => r.Entry.Game is null).ToArray();
+    int done = recs.Count(r => r.Classification == WPEP.Advisor.Classification.AlreadyActive);
+    int pending = recs.Count(r => r.Classification == WPEP.Advisor.Classification.Recommended);
+    bool? expo = SafeExpo();
+
+    var result = WPEP.Execution.VerdictScore.Compute(
+        new WPEP.Execution.ScoreInput(done, pending, 0, 0, expo));
+    Console.WriteLine($"   ┌─────────┐");
+    Console.WriteLine($"   │  {result.Score,3}    │   {result.Band}");
+    Console.WriteLine($"   └─────────┘\n");
+    foreach (var r in result.Breakdown)
+        Console.WriteLine($"   {(r.Delta == 0 ? "  " : r.Delta.ToString()),4}  {r.Text}");
+    Console.WriteLine($"\n   {result.HonestyNote}");
+    return 0;
+}
+
+static int RunDna()
+{
+    var hw = WPEP.SystemAnalyzer.HardwareScanner.Scan();
+    var dna = WPEP.SystemAnalyzer.RigDna.Compute(hw);
+    Console.WriteLine("Rig DNA — la firma unica di questo PC\n");
+    Console.WriteLine($"   {dna.Code}   [{dna.Tier}]");
+    Console.WriteLine($"   {string.Join("  ·  ", dna.Traits)}");
+    Console.WriteLine($"   (hue {dna.Hue}°)");
+    return 0;
+}
+
+static int RunFresh()
+{
+    var items = WPEP.SystemAnalyzer.FreshInstallScanner.EnumerateStartup();
+    var report = WPEP.SystemAnalyzer.FreshInstallScanner.Analyze(items);
+    Console.WriteLine("Fresh-install score — drift degli avvii rispetto a un Windows pulito\n");
+    Console.WriteLine($"   Score: {report.Score}/100  [{report.Band}]");
+    Console.WriteLine($"   {report.Headline}\n");
+    if (report.ThirdParty.Count > 0)
+    {
+        Console.WriteLine("   Terze parti all'avvio:");
+        foreach (var i in report.ThirdParty)
+            Console.WriteLine($"     - {i.Name}");
+    }
+    return 0;
+}
+
+static int RunNetwork()
+{
+    Console.WriteLine("Network Duel — qualità di rotta verso anchor pubblici (ICMP, best-effort)\n");
+    foreach (var (target, host) in WPEP.SystemAnalyzer.NetworkDuel.Anchors)
+    {
+        var rtts = WPEP.SystemAnalyzer.NetworkDuel.PingHost(host, 10);
+        var r = WPEP.SystemAnalyzer.NetworkDuel.Analyze(target, host, rtts);
+        Console.WriteLine($"   {r.Grade,-18} {target,-26} avg {r.AvgMs,4:F0}ms · jit {r.JitterMs,3:F0} · loss {r.LossPercent,3:F0}%");
+    }
+    Console.WriteLine("\n(Molti server di gioco bloccano l'ICMP: questi sono anchor di rotta, non il match server.)");
+    return 0;
+}
+
+static int RunTimeline()
+{
+    Console.WriteLine("Time Machine — cos'è cambiato dall'ultima istantanea\n");
+    var hw = WPEP.SystemAnalyzer.HardwareScanner.Scan();
+    int startup = WPEP.SystemAnalyzer.FreshInstallScanner.EnumerateStartup().Count(i => !i.IsMicrosoft);
+    var state = new WPEP.SystemAnalyzer.SystemState(DateTime.Now.ToString("o"),
+        hw.ExpoEnabled, hw.RamTotalGb, hw.PrimaryGpu, hw.Bios, startup);
+    var prev = WPEP.SystemAnalyzer.SystemTimeline.LoadAll().LastOrDefault();
+    if (prev is null)
+    {
+        WPEP.SystemAnalyzer.SystemTimeline.Save(state);
+        Console.WriteLine("   Prima istantanea salvata: questa è la baseline. Riesegui più tardi per il diff.");
+        return 0;
+    }
+    var diff = WPEP.SystemAnalyzer.SystemTimeline.Diff(prev, state);
+    if (diff.Count == 0)
+        Console.WriteLine("   Nessun cambiamento rilevante. Sistema stabile.");
+    else
+    {
+        foreach (var c in diff)
+            Console.WriteLine($"   {c.Field,-28} {c.Before}  →  {c.After}");
+        WPEP.SystemAnalyzer.SystemTimeline.Save(state);
+    }
+    return 0;
+}
+
+static int RunMuseum()
+{
+    var entries = WPEP.KnowledgeBase.KnowledgeBaseLoader.Load();
+    var museum = WPEP.KnowledgeBase.PlaceboMuseum.Build(entries);
+    Console.WriteLine($"Placebo Museum — {museum.Count} miti sfatati con l'evidenza\n");
+    foreach (var x in museum)
+    {
+        Console.WriteLine($"   ✗ {x.Name}  [{x.Category}]");
+        Console.WriteLine($"     Mito  : {x.Myth}");
+        Console.WriteLine($"     Verità: {x.Truth}\n");
+    }
+    return 0;
+}
+
+static int RunGames()
+{
+    var entries = WPEP.KnowledgeBase.KnowledgeBaseLoader.Load();
+    var games = WPEP.Advisor.OptimizeForGame.AvailableGames(entries);
+    Console.WriteLine("Giochi con un piano dedicato (usa 'wpep optimize <gioco>'):\n");
+    foreach (var g in games) Console.WriteLine($"   - {g}");
+    return 0;
+}
+
+static int RunOptimize(string[] args)
+{
+    if (args.Length == 0)
+    {
+        Console.Error.WriteLine("Uso: wpep optimize <gioco>   (vedi 'wpep games')");
+        return 2;
+    }
+    var entries = WPEP.KnowledgeBase.KnowledgeBaseLoader.Load();
+    var snapshot = WPEP.SystemAnalyzer.SnapshotBuilder.Build(DateTimeOffset.UtcNow);
+    var plan = WPEP.Advisor.OptimizeForGame.Build(args[0], entries, snapshot);
+    Console.WriteLine($"Ottimizza per {plan.Game}  (filtrato per il tuo hardware)\n");
+    Console.WriteLine("Tweak di sistema (evidenza solida):");
+    foreach (var t in plan.SystemTweaks) Console.WriteLine($"   - {t.Name}");
+    Console.WriteLine("\nImpostazioni in-game / driver:");
+    if (plan.InGameSettings.Count == 0)
+        Console.WriteLine("   (nessuna voce dedicata in KB per questo gioco)");
+    foreach (var s in plan.InGameSettings)
+        Console.WriteLine($"   - {s.Name}: {s.ExpectedImpact}");
+    return 0;
+}
+
+// EXPO senza propagare eccezioni WMI: la Score resta utile anche se il banco non si legge.
+static bool? SafeExpo()
+{
+    try { return WPEP.SystemAnalyzer.HardwareScanner.Scan().ExpoEnabled; }
+    catch { return null; }
+}
+
 // Riepilogo di prontezza: stato sistema + verdetto + diagnostica del motore.
 // Tutto sola-lettura/sicuro (self-test su chiave usa-e-getta; powercfg in lettura).
 static int RunDoctor()
@@ -1378,6 +1535,16 @@ static void PrintUsage()
               Riepilogo di prontezza: sistema, admin, giochi rilevati, verdetto
               (quanti applicabili/già ottimali/placebo), self-test del motore e lettura
               dello schema energetico. Tutto sola-lettura/sicuro.
+
+        — Moduli "Lab" (V3, sola lettura) —
+          wpep score        Verdict Score 0–100 onesto (i placebo non contano).
+          wpep dna          Rig DNA: firma unica + tier del tuo PC.
+          wpep fresh        Fresh-install score: avvii di terze parti vs Windows pulito.
+          wpep network      Network Duel: ping/jitter/loss verso anchor pubblici, con voto.
+          wpep timeline     Time Machine: cos'è cambiato dall'ultima istantanea.
+          wpep museum       Placebo Museum: i miti sfatati con l'evidenza.
+          wpep games        Giochi con un piano dedicato.
+          wpep optimize <gioco>   Piano su misura: tweak di sistema + impostazioni in-game.
 
         diag e bench richiedono terminale elevato (vincolo ETW di Windows).
         Misura (diag/bench/compare/analyze/advise) è SEMPRE sola lettura.

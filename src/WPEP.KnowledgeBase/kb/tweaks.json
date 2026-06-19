@@ -1652,7 +1652,9 @@
     "name": "Laptop: forza la GPU dedicata per il gioco (per-app GPU preference)",
     "category": "gpu",
     "description": "Su laptop con GPU ibrida (iGPU + dGPU), Windows può far girare un gioco sulla iGPU debole se il routing automatico sbaglia. La pagina Grafica di Windows 11 (documentata da Microsoft) permette di assegnare 'Prestazioni elevate' a un eseguibile, forzando la GPU dedicata. Sui desktop con una sola GPU è irrilevante; sui laptop può fare una differenza enorme.",
-    "hardware_prerequisites": [],
+    "hardware_prerequisites": [
+      "laptop"
+    ],
     "expected_impact": "Su laptop dove il gioco girava per errore sulla iGPU: guadagno enorme. Dove la dGPU è già usata (caso normale): nessun cambiamento. Le preferenze si valutano all'avvio dell'app, non in tempo reale.",
     "evidence_level": "plausible",
     "sources": [
