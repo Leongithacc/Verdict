@@ -773,6 +773,35 @@
                 </ItemsControl>
               </StackPanel>
 
+              <!-- Time Machine (Lab feature): what changed since last snapshot. -->
+              <StackPanel Visibility="{Binding ShowTimeMachine, Converter={StaticResource BoolToVis}}">
+                <Border Height="1" Background="{DynamicResource Line}" Margin="0,14" />
+                <StackPanel Orientation="Horizontal">
+                  <TextBlock Text="⏳" FontSize="14" VerticalAlignment="Center" />
+                  <TextBlock Text="TIME MACHINE" FontSize="11" FontWeight="SemiBold"
+                             Foreground="{DynamicResource Accent}" Margin="7,0,0,0" VerticalAlignment="Center" />
+                </StackPanel>
+                <TextBlock Text="{Binding TimelineHeadline}" Style="{StaticResource Muted}"
+                           TextWrapping="Wrap" Margin="0,6,0,0" />
+                <ItemsControl ItemsSource="{Binding TimelineChanges}" Margin="0,4,0,0">
+                  <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                      <Grid Margin="0,3,0,0">
+                        <Grid.ColumnDefinitions>
+                          <ColumnDefinition Width="160" />
+                          <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0" Text="{Binding Field}" Foreground="{DynamicResource Text}"
+                                   FontWeight="SemiBold" FontSize="12" TextWrapping="Wrap" />
+                        <TextBlock Grid.Column="1" Style="{StaticResource Mono}" FontSize="12" TextWrapping="Wrap">
+                          <Run Text="{Binding Before}" Foreground="{DynamicResource TextMuted}" /><Run Text="  →  " Foreground="{DynamicResource TextMuted}" /><Run Text="{Binding After}" Foreground="{DynamicResource Accent}" />
+                        </TextBlock>
+                      </Grid>
+                    </DataTemplate>
+                  </ItemsControl.ItemTemplate>
+                </ItemsControl>
+              </StackPanel>
+
               <TextBlock Text="Verdict — scan" FontSize="10" Opacity="0.4"
                          Foreground="{DynamicResource TextMuted}" Margin="0,14,0,0" HorizontalAlignment="Right" />
             </StackPanel>

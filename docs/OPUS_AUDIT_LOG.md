@@ -582,6 +582,19 @@ L'onestà del progetto resa contenuto virale: i tweak che tutti consigliano ma n
   + due colonne (tweak di sistema / impostazioni in-game-driver). VerdictViewModel cache KB +
   RefreshGames su nav. **224/224 verdi**, build 0/0. STATO LAB: **10 moduli VIVI su 18**.
 
+### 40. V3 — Modulo Lab 11: TIME MACHINE (2026-06-18) — timeline "cos'è cambiato"
+- `WPEP.SystemAnalyzer/SystemTimeline.cs`: `SystemState` (TakenAtIso, ExpoEnabled, RamGb, Gpu, Bios,
+  ThirdPartyStartup) + `Diff(older,newer)` PURO/testato (riporta solo i campi diversi; unknown→unknown
+  non è un cambiamento) + persistenza JSON in data/timeline/ (Save/LoadAll, filename ordinabile).
+  `SystemTimelineTests` (6).
+- App: in ScanAsync (gated `ShowTimeMachine`) costruisce lo stato dall'inventario + conteggio avvii,
+  carica la baseline precedente, diffa, e salva SOLO stati distinti (prima volta = baseline). GUI:
+  sezione "TIME MACHINE" nel build-sheet con headline + righe Campo: before → after.
+- **230/230 verdi**, build 0/0. STATO LAB: **11 moduli VIVI su 18**.
+- NOTA: i restanti 7 moduli richiedono o l'occhio di Léon sulla GUI (Latency Lab grafici, Reaction
+  Lab minigioco) o infra/servizi (AI co-pilot=LLM, Evidence community=server, Watchdog/Regression
+  Sentinel=background tray). Backend-autonomo resta solo Network Duel.
+
 ## Stato a fine sessione Opus (AGGIORNATO 2026-06-16)
 - `dotnet test`: **145/145 verdi**. `dotnet build WPEP.sln -c Release`: 0 errori/0 warning.
   (Se un nodo MSBuild crasha in parallelo: `-m:1 --disable-build-servers`.)

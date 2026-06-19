@@ -41,6 +41,13 @@ public sealed class ScanViewModel : ViewModelBase
     public bool HasFreshResult => FreshHeadline.Length > 0;
     public ObservableCollection<string> FreshThirdParty { get; } = [];
 
+    // ── Time Machine (Lab feature): what changed since last scan ──
+    private string _timelineHeadline = "";
+    public bool ShowTimeMachine => _settings.IsFeatureEnabled(WPEP.Execution.FeatureCatalog.TimeMachine);
+    public string TimelineHeadline { get => _timelineHeadline; set => Set(ref _timelineHeadline, value); }
+    public bool HasTimelineResult => TimelineHeadline.Length > 0;
+    public ObservableCollection<TimelineChange> TimelineChanges { get; } = [];
+
     public bool IsScanning { get => _isScanning; set => Set(ref _isScanning, value); }
     public string Motherboard { get => _motherboard; set => Set(ref _motherboard, value); }
     public string Bios { get => _bios; set => Set(ref _bios, value); }
@@ -101,6 +108,35 @@ public sealed class ScanViewModel : ViewModelBase
                 foreach (var tr in dna.Traits) RigTraits.Add(tr);
             }
 
+            // Time Machine (Lab feature): diff key system facts against the last saved snapshot.
+            Raise(nameof(ShowTimeMachine));
+            TimelineChanges.Clear();
+            TimelineHeadline = "";
+            if (ShowTimeMachine)
+            {
+                int startup = await Task.Run(() =>
+                    FreshInstallScanner.EnumerateStartup().Count(i => !i.IsMicrosoft));
+                var state = new SystemState(System.DateTime.Now.ToString("o"),
+                    hw.ExpoEnabled, hw.RamTotalGb, hw.Gpus.FirstOrDefault() ?? "", hw.Bios, startup);
+                var prev = SystemTimeline.LoadAll().LastOrDefault();
+                if (prev is null)
+                {
+                    TimelineHeadline = "Prima istantanea salvata: questa è la tua baseline. " +
+                                       "Torna dopo una scansione futura per vedere cos'è cambiato.";
+                    SystemTimeline.Save(state);
+                }
+                else
+                {
+                    var diff = SystemTimeline.Diff(prev, state);
+                    foreach (var c in diff) TimelineChanges.Add(c);
+                    TimelineHeadline = diff.Count == 0
+                        ? "Nessun cambiamento rilevante dall'ultima istantanea. Sistema stabile."
+                        : $"{diff.Count} cambiament{(diff.Count == 1 ? "o" : "i")} dall'ultima istantanea:";
+                    if (diff.Count > 0) SystemTimeline.Save(state); // only record distinct states
+                }
+                Raise(nameof(HasTimelineResult));
+            }
+
             // Fresh-install score (Lab feature): count third-party startup drift (WMI).
             Raise(nameof(ShowFreshInstall));
             FreshThirdParty.Clear();
@@ -146,14 +182,17 @@ public sealed class ScanViewModel : ViewModelBase
         Raise(nameof(ShowMultiMonitor));
         Raise(nameof(ShowRigDna));
         Raise(nameof(ShowFreshInstall));
+        Raise(nameof(ShowTimeMachine));
         if (!ShowMultiMonitor) { Displays.Clear(); MonitorFindings.Clear(); }
         if (!ShowRigDna) { RigTraits.Clear(); RigCode = ""; }
         if (!ShowFreshInstall) { FreshThirdParty.Clear(); FreshHeadline = ""; }
+        if (!ShowTimeMachine) { TimelineChanges.Clear(); TimelineHeadline = ""; }
 
         bool needMon = ShowMultiMonitor && Displays.Count == 0;
         bool needRig = ShowRigDna && RigCode.Length == 0;
         bool needFresh = ShowFreshInstall && FreshHeadline.Length == 0;
-        if ((needMon || needRig || needFresh) && !IsScanning)
+        bool needTimeline = ShowTimeMachine && TimelineHeadline.Length == 0;
+        if ((needMon || needRig || needFresh || needTimeline) && !IsScanning)
             await ScanAsync(); // full rescan repopulates every section from one inventory
     }
 
