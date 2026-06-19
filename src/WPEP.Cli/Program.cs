@@ -71,6 +71,8 @@ switch (args[0])
         return RunOptimize(args.Skip(1).ToArray());
     case "watch":
         return RunWatch();
+    case "sentinel":
+        return RunSentinel(args.Skip(1).ToArray());
     case "tools" when args.Length >= 2 && args[1] == "install-presentmon":
         return await InstallPresentMon();
     default:
@@ -1219,6 +1221,42 @@ static int RunOptimize(string[] args)
     return 0;
 }
 
+static int RunSentinel(string[] args)
+{
+    string? baselineDir = null, nowDir = null;
+    for (int i = 0; i < args.Length; i++)
+    {
+        switch (args[i])
+        {
+            case "--baseline" or "-b" when i + 1 < args.Length: baselineDir = args[++i]; break;
+            case "--now" or "-n" when i + 1 < args.Length: nowDir = args[++i]; break;
+            default: Console.Error.WriteLine($"Argomento sconosciuto: {args[i]}"); return 2;
+        }
+    }
+    Console.WriteLine("Regression Sentinel — le prestazioni sono peggiorate dalla baseline?\n");
+    if (baselineDir is null || nowDir is null)
+    {
+        Console.Error.WriteLine("Servono --baseline <dir> (benchmark di riferimento) e --now <dir> (ri-benchmark).");
+        return 2;
+    }
+    try
+    {
+        var baseline = BenchmarkRunStore.LoadDirectory(baselineDir);
+        var now = BenchmarkRunStore.LoadDirectory(nowDir);
+        var report = WPEP.Statistics.ComparisonEngine.Compare(baseline, now);
+        var verdict = WPEP.Statistics.RegressionSentinel.Evaluate(report);
+        string mark = verdict.Status switch
+        {
+            WPEP.Statistics.SentinelStatus.Regressed => "[!]",
+            WPEP.Statistics.SentinelStatus.Improved or WPEP.Statistics.SentinelStatus.Stable => "[ok]",
+            _ => "[i]",
+        };
+        Console.WriteLine($"  {mark} {verdict.Headline}");
+        return verdict.Status == WPEP.Statistics.SentinelStatus.Regressed ? 1 : 0;
+    }
+    catch (Exception ex) { Console.Error.WriteLine($"Sentinel fallito: {ex.Message}"); return 1; }
+}
+
 static int RunWatch()
 {
     Console.WriteLine("Watchdog — controlla derive: EXPO, tweak annullati, bloat all'avvio (sola lettura)\n");
@@ -1578,6 +1616,8 @@ static void PrintUsage()
           wpep network      Network Duel: ping/jitter/loss verso anchor pubblici, con voto.
           wpep timeline     Time Machine: cos'è cambiato dall'ultima istantanea.
           wpep watch        Watchdog: deriva EXPO, tweak annullati, bloat all'avvio.
+          wpep sentinel --baseline <dir> --now <dir>
+                            Regression Sentinel: rileva se le prestazioni sono peggiorate.
           wpep museum       Placebo Museum: i miti sfatati con l'evidenza.
           wpep games        Giochi con un piano dedicato.
           wpep optimize <gioco>   Piano su misura: tweak di sistema + impostazioni in-game.

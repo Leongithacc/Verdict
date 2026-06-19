@@ -644,6 +644,20 @@ Il modulo "funziona da solo": sorveglia le derive di un sistema messo a punto. C
 - `WatchdogCheckTests` (7). **253/253 verdi**, App+CLI build 0/0.
 - DA FARE (con Léon al PC): GUI Watchdog (sezione/tray) — è cross-cutting (scan+execution), meglio a video.
 
+### 44. V3 — Modulo Lab 14: REGRESSION SENTINEL (core + CLI) (2026-06-18)
+Il companion del Watchdog: ti avvisa quando le prestazioni PEGGIORANO nel tempo (es. un Windows
+Update rompe qualcosa). Nessun tool ti dice quando regredisci.
+- `WPEP.Statistics/RegressionSentinel.cs` (puro/testato): `Evaluate(ComparisonReport?)` →
+  `SentinelResult(Status{NoBaseline,Stable,Improved,Regressed,Inconclusive}, Headline, DeltaPercent,
+  Color)`. Riusa il verdetto statistico di ComparisonEngine (frametime lower-is-better → delta+
+  = regressione). Onesto: gate troppo rumoroso → Inconclusive, niente baseline → guida.
+- CLI `wpep sentinel --baseline <dir> --now <dir>`: carica due set di run (BenchmarkRunStore),
+  ComparisonEngine.Compare → Evaluate → esito (exit 1 se regressione). Help aggiornato.
+- `RegressionSentinelTests` (5). **258/258 verdi**, build 0/0.
+- BILANCIO LAB: **14 moduli su 18**. I 4 rimasti NON sono fattibili bene in autonomia: Latency Lab
+  (grafici, serve occhio), Reaction Lab (minigioco interattivo), AI co-pilot (serve LLM/API),
+  Evidence community (serve server — non fare fake). Sono da fare con Léon al PC o come lavori dedicati.
+
 ## Stato a fine sessione Opus (AGGIORNATO 2026-06-16)
 - `dotnet test`: **145/145 verdi**. `dotnet build WPEP.sln -c Release`: 0 errori/0 warning.
   (Se un nodo MSBuild crasha in parallelo: `-m:1 --disable-build-servers`.)
