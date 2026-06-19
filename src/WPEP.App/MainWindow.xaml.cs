@@ -108,7 +108,8 @@ public partial class MainWindow : Window
     private void OnNavChanges(object s, RoutedEventArgs e)
     {
         _vm.Changes.Refresh();
-        _vm.Changes.RefreshTrustManifest(); // Trust mode (Lab feature)
+        _vm.Changes.RefreshTrustManifest();   // Trust mode (Lab feature)
+        _vm.Changes.Watchdog?.RefreshFlag();   // Watchdog (Lab feature)
         _vm.CurrentPage = _vm.Changes;
     }
     private void OnNavLab(object s, RoutedEventArgs e) => _vm.CurrentPage = _vm.Lab;

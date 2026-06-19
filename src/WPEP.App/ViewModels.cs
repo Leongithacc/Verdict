@@ -54,6 +54,7 @@ public sealed class MainViewModel : ViewModelBase
         Kb = new KbViewModel(Settings);
         Report = new ReportViewModel(this);
         Changes = new ChangesViewModel(Execution, Settings);
+        Changes.Watchdog = new WatchdogViewModel(this);
         SettingsPage = new SettingsViewModel(Settings);
         Lab = new LabViewModel(Settings);
         // EXPO state lands with the hardware scan → refresh the Verdict Score when it does.

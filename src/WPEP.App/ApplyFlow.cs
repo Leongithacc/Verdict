@@ -318,6 +318,10 @@ public sealed class ChangesViewModel : ViewModelBase
     public string Status { get => _status; set => Set(ref _status, value); }
     public bool IsEmpty => Sessions.Count == 0;
 
+    /// <summary>Watchdog (Lab feature) lives as a section on this page. Set by MainViewModel since it
+    /// needs the whole app (scan + execution), not just this page's pieces.</summary>
+    public WatchdogViewModel? Watchdog { get; set; }
+
     // ── Trust mode (Lab feature): the full "what Verdict could touch" manifest ──
     public bool ShowTrustMode => _settings.IsFeatureEnabled(WPEP.Execution.FeatureCatalog.TrustMode);
     public ObservableCollection<TrustEntry> TrustEntries { get; } = [];

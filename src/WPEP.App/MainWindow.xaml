@@ -898,6 +898,44 @@
           </StackPanel>
         </Border>
 
+        <!-- Watchdog (Lab feature): on-demand drift check (EXPO, reverted tweaks, startup bloat). -->
+        <Border Style="{StaticResource Card}" Margin="0,28,0,0" Padding="16,14"
+                DataContext="{Binding Watchdog}"
+                Visibility="{Binding ShowWatchdog, Converter={StaticResource BoolToVis}}">
+          <StackPanel>
+            <DockPanel>
+              <Button DockPanel.Dock="Right" Style="{StaticResource GhostButton}" Content="Controlla ora"
+                      Command="{Binding CheckCommand}" VerticalAlignment="Center" />
+              <StackPanel Orientation="Horizontal">
+                <Ellipse Width="9" Height="9" VerticalAlignment="Center"
+                         Fill="{Binding WorstColor, Converter={StaticResource TokenBrush}}" />
+                <TextBlock Text="🛡" FontSize="15" Margin="8,0,0,0" VerticalAlignment="Center" />
+                <TextBlock Text="Watchdog" Style="{StaticResource H2}" Margin="6,0,0,0" />
+              </StackPanel>
+            </DockPanel>
+            <TextBlock Text="{Binding Status}" Style="{StaticResource Muted}" Margin="0,6,0,0"
+                       TextWrapping="Wrap" />
+            <ItemsControl ItemsSource="{Binding Alerts}" Margin="0,8,0,0">
+              <ItemsControl.ItemTemplate>
+                <DataTemplate>
+                  <Border Background="{DynamicResource Surface2}" CornerRadius="6" Padding="12,9" Margin="0,4,0,0">
+                    <StackPanel>
+                      <StackPanel Orientation="Horizontal">
+                        <Ellipse Width="7" Height="7" VerticalAlignment="Center"
+                                 Fill="{Binding ColorKey, Converter={StaticResource TokenBrush}}" />
+                        <TextBlock Text="{Binding Title}" FontWeight="SemiBold" Margin="7,0,0,0"
+                                   Foreground="{DynamicResource Text}" />
+                      </StackPanel>
+                      <TextBlock Text="{Binding Detail}" Style="{StaticResource Muted}"
+                                 TextWrapping="Wrap" Margin="0,3,0,0" />
+                    </StackPanel>
+                  </Border>
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+          </StackPanel>
+        </Border>
+
         <!-- Trust mode (Lab feature): the full security-review manifest of what Verdict could touch. -->
         <StackPanel Margin="0,28,0,0"
                     Visibility="{Binding ShowTrustMode, Converter={StaticResource BoolToVis}}">
