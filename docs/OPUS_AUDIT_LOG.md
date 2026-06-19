@@ -687,6 +687,19 @@ Costruiti gli scheletri funzionali (no fronzoli, wiring corretto).
 - STATO: 14 moduli Lab + GUI Watchdog + GUI Profili §2. Resta: i 4 moduli "in arrivo" (Latency/
   Reaction Lab, AI co-pilot, Evidence) e la rifinitura estetica finale (Claude Design).
 
+### 47. V3 — Modulo Lab 15: LATENCY LAB (2026-06-18) — grafico before/after (era "in arrivo")
+Promosso da "in arrivo" a implementato. Visualizza l'ultimo confronto del wizard Measure.
+- `MeasureWizardViewModel`: `LatencyRow(Metric,BaselineMs,PostMs,DeltaPercent,DeltaLabel,DeltaColor,
+  BaselineBar,PostBar)` con larghezze barra PRE-CALCOLATE nel VM (scala a max fisso 260px → niente
+  libreria grafica né converter). `BuildLatencyRows(report)` chiamato in BuildVerdict; frametime
+  lower-is-better → delta negativo = verde (Improvement), positivo = rosso (Regression). Gated
+  `ShowLatencyLab` + `HasLatencyData`.
+- GUI: sezione "Latency Lab" sulla pagina Measure (MultiDataTrigger), una riga per metrica con barra
+  baseline (grigia) + barra post (colorata per esito) + valori + delta%. Si popola dopo un A/B Measure.
+- Catalogo: LatencyLab ora `Available` (Beta). Resta "in arrivo": Reaction Lab (minigioco), AI
+  co-pilot (LLM), Evidence community (server).
+- Build 0/0. (Grafico = wiring deterministico; estetica premium a fine progetto con Claude Design.)
+
 ## Stato a fine sessione Opus (AGGIORNATO 2026-06-16)
 - `dotnet test`: **145/145 verdi**. `dotnet build WPEP.sln -c Release`: 0 errori/0 warning.
   (Se un nodo MSBuild crasha in parallelo: `-m:1 --disable-build-servers`.)

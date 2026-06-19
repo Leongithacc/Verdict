@@ -4,12 +4,18 @@ using System.Text.Json;
 using WPEP.Benchmark;
 using WPEP.Core.Benchmark;
 using WPEP.Core.Platform;
+using WPEP.Execution;
 using WPEP.Statistics;
 using WPEP.SystemAnalyzer;
 
 namespace WPEP.App;
 
 public enum WizardStep { Pick, Baseline, ApplyChange, Post, Verdict }
+
+/// <summary>One before/after metric for the Latency Lab chart: values + precomputed bar widths.</summary>
+public sealed record LatencyRow(
+    string Metric, double BaselineMs, double PostMs, double DeltaPercent,
+    string DeltaLabel, string DeltaColor, double BaselineBar, double PostBar);
 
 /// <summary>A measurement protocol: exact instructions that make runs
 /// repeatable. The map codes are community benchmark islands, picked because
@@ -87,6 +93,12 @@ public sealed class MeasureWizardViewModel(MainViewModel main, AppSettings setti
     /// <summary>Ghost Tweak (Lab feature) lives as a section on the Measure page — it reuses this
     /// wizard's last comparison for its blind reveal.</summary>
     public GhostTweakViewModel Ghost { get; } = new(main);
+
+    // ── Latency Lab (Lab feature): before/after chart of the last comparison ──
+    public bool ShowLatencyLab => settings.IsFeatureEnabled(FeatureCatalog.LatencyLab);
+    public bool HasLatencyData => LatencyRows.Count > 0;
+    public ObservableCollection<LatencyRow> LatencyRows { get; } = [];
+    public void RefreshLatencyFlag() => Raise(nameof(ShowLatencyLab));
 
     public IReadOnlyList<ScenarioPreset> Scenarios => ScenarioPreset.All;
     private ScenarioPreset _scenario = ScenarioPreset.All[0];
@@ -349,6 +361,7 @@ public sealed class MeasureWizardViewModel(MainViewModel main, AppSettings setti
 
         var report = ComparisonEngine.Compare(_baseline, _post, settings.NoiseGateThresholdPercent);
         LastComparison = report;
+        BuildLatencyRows(report);
         var primary = report.Metrics[0];
 
         if (report.GateTriggered)
@@ -378,6 +391,37 @@ public sealed class MeasureWizardViewModel(MainViewModel main, AppSettings setti
         if (!report.Conclusive)
             lines.Add($"\n⚠ Fewer than {ComparisonEngine.MinRunsForConclusion} runs per side: indicative, not conclusive.");
         VerdictText = string.Join("\n", lines);
+    }
+
+    /// <summary>Turns the comparison into before/after rows with bar widths scaled to a fixed max,
+    /// so the Latency Lab can draw a simple chart with no charting library. Frametime is
+    /// lower-is-better, so a negative delta (post &lt; baseline) is an improvement (green).</summary>
+    private void BuildLatencyRows(ComparisonEngine.ComparisonReport report)
+    {
+        LatencyRows.Clear();
+        const double maxBarPx = 260;
+        double scaleMax = report.Metrics.Count == 0 ? 1
+            : Math.Max(1, report.Metrics.Max(m => Math.Max(m.BaselineMedian, m.PostMedian)));
+        foreach (var m in report.Metrics)
+        {
+            string color = m.Verdict switch
+            {
+                Verdict.Improvement => "Ok",
+                Verdict.Regression => "Danger",
+                _ => "TextMuted",
+            };
+            string label = m.DeltaPercent switch
+            {
+                < 0 => $"{m.DeltaPercent:F1}%",
+                > 0 => $"+{m.DeltaPercent:F1}%",
+                _ => "0%",
+            };
+            LatencyRows.Add(new LatencyRow(m.Metric, m.BaselineMedian, m.PostMedian, m.DeltaPercent,
+                label, color,
+                BaselineBar: m.BaselineMedian / scaleMax * maxBarPx,
+                PostBar: m.PostMedian / scaleMax * maxBarPx));
+        }
+        Raise(nameof(HasLatencyData));
     }
 
     private void RaiseSteps()

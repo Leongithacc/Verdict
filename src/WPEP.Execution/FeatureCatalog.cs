@@ -49,8 +49,8 @@ public static class FeatureCatalog
         // ── Identità & misura (la "faccia premium") ─────────────────────────────
         new(Score, "Verdict Score", "Un numero 0–100 dello stato del PC, in homepage.",
             "Identità", DefaultEnabled: true, Status: FeatureStatus.Beta, Glyph: "◆"),
-        new(LatencyLab, "Latency Lab", "Test before/after guidato con grafici premium. Dimostra che il tweak funziona.",
-            "Misura", Status: FeatureStatus.Experimental, Glyph: "📈", Available: false),
+        new(LatencyLab, "Latency Lab", "Grafico before/after dell'ultimo confronto: dimostra a colpo d'occhio che il tweak funziona.",
+            "Misura", Status: FeatureStatus.Beta, Glyph: "📈"),
         new(ReactionLab, "Reaction Lab", "Minigioco reflex+aim: misura la TUA latenza umana+sistema prima/dopo.",
             "Misura", Status: FeatureStatus.Experimental, Glyph: "⚡", Available: false),
 
