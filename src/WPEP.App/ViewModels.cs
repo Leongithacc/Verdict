@@ -30,6 +30,7 @@ public sealed class MainViewModel : ViewModelBase
     public ChangesViewModel Changes { get; }
     public SettingsViewModel SettingsPage { get; }
     public LabViewModel Lab { get; }
+    public ProfilesViewModel Profiles { get; }
     public ApplyDialogViewModel ApplyDialog { get; }
     public ApplyAllViewModel ApplyAll { get; }
 
@@ -61,6 +62,7 @@ public sealed class MainViewModel : ViewModelBase
         Scan.ScanCompleted += () => Verdict.RecomputeScore();
         ApplyDialog = new ApplyDialogViewModel(this, Execution);
         ApplyAll = new ApplyAllViewModel(this, Execution);
+        Profiles = new ProfilesViewModel(this);
         _currentPage = Verdict;
 
         StartFirstScanCommand = new(() =>

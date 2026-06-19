@@ -670,6 +670,23 @@ co-pilot, Evidence community) → attivarli non faceva nulla. Fix di onestà (on
 - STATO LAB: **14 IMPLEMENTATI + 4 in arrivo** = catalogo onesto. I 4 restanti per design richiedono
   GUI grafici (Latency/Reaction Lab) o infra esterna (LLM per AI co-pilot, server per Evidence).
 
+### 46. V3 — GUI Watchdog + GUI Profili §2 (scheletri funzionali) (2026-06-18)
+Léon: "prima finiamo tutto, poi irrobustiamo; l'estetica a fine progetto con Claude Design".
+Costruiti gli scheletri funzionali (no fronzoli, wiring corretto).
+- **GUI Watchdog** (`WatchdogViewModel`): sezione sulla pagina Changes (gated dal flag). "Controlla
+  ora" → scan EXPO/startup + baseline Time Machine + `Execution.DetectDrift()` → `WatchdogCheck.
+  Evaluate` → alert colorati. Esposto via `ChangesViewModel.Watchdog`. Read-only.
+- **GUI Profili §2** (`ProfilesViewModel` + pagina nav "Profili"): la batch-selection a checkbox che
+  mancava. Colonna sx = profili salvati (Applica/Carica/Elimina; built-in non eliminabili); colonna
+  dx = lista CanApply a spunte + "Applica selezionati (N)" (apre il dry-run batch esistente
+  ApplyAll.Open → ognuno journaled+annullabile singolarmente) + campo nome + "Salva come profilo"
+  (ProfileStore.Save). Carica un profilo = spunta le sue voci per revisione prima di applicare.
+- **260/260 verdi**, App build 0/0. (Logica già coperta: ProfileStore, WatchdogCheck. GUI = wiring.)
+- NOTA: durante un build ho dovuto chiudere un WPEP.exe aperto (lock file) — la GUI era aperta sul
+  remote di Léon.
+- STATO: 14 moduli Lab + GUI Watchdog + GUI Profili §2. Resta: i 4 moduli "in arrivo" (Latency/
+  Reaction Lab, AI co-pilot, Evidence) e la rifinitura estetica finale (Claude Design).
+
 ## Stato a fine sessione Opus (AGGIORNATO 2026-06-16)
 - `dotnet test`: **145/145 verdi**. `dotnet build WPEP.sln -c Release`: 0 errori/0 warning.
   (Se un nodo MSBuild crasha in parallelo: `-m:1 --disable-build-servers`.)

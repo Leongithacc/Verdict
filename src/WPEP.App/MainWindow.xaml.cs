@@ -112,6 +112,11 @@ public partial class MainWindow : Window
         _vm.Changes.Watchdog?.RefreshFlag();   // Watchdog (Lab feature)
         _vm.CurrentPage = _vm.Changes;
     }
+    private void OnNavProfiles(object s, RoutedEventArgs e)
+    {
+        _vm.Profiles.RefreshProfiles();
+        _vm.CurrentPage = _vm.Profiles;
+    }
     private void OnNavLab(object s, RoutedEventArgs e) => _vm.CurrentPage = _vm.Lab;
     private void OnNavSettings(object s, RoutedEventArgs e) => _vm.CurrentPage = _vm.SettingsPage;
 }
