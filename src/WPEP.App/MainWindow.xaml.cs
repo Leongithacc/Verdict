@@ -94,7 +94,11 @@ public partial class MainWindow : Window
         _vm.CurrentPage = _vm.Measure;
     }
     private void OnNavDiagnostics(object s, RoutedEventArgs e) => _vm.CurrentPage = _vm.Diagnostics;
-    private void OnNavKb(object s, RoutedEventArgs e) => _vm.CurrentPage = _vm.Kb;
+    private void OnNavKb(object s, RoutedEventArgs e)
+    {
+        _vm.Kb.RefreshMuseumFlag(); // Placebo Museum (Lab feature)
+        _vm.CurrentPage = _vm.Kb;
+    }
     private void OnNavReport(object s, RoutedEventArgs e) => _vm.CurrentPage = _vm.Report;
     private void OnNavChanges(object s, RoutedEventArgs e)
     {

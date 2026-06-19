@@ -551,6 +551,16 @@ Doppio-cieco su te stesso. Apply CIECO REALE (journaled) + reveal + undo automat
 - **207/207 verdi**, build 0/0. STATO LAB: **7 moduli VIVI su 18** → Score, Risk Slider, Multi-monitor,
   Explain-my-Stutter, Trust mode, Rig DNA, Ghost Tweak.
 
+### 37. V3 — Modulo Lab 8: PLACEBO MUSEUM (2026-06-18) — galleria miti sfatati, condivisibile
+L'onestà del progetto resa contenuto virale: i tweak che tutti consigliano ma non fanno niente.
+- `WPEP.KnowledgeBase/PlaceboMuseum.cs` (puro/testato): `Build(entries)` filtra EvidenceLevel.Placebo
+  → `PlaceboExhibit(Id,Name,Category,Myth=ExpectedImpact,Truth=Description,Sources)`, ordinato per
+  categoria/nome. `Count` per il riepilogo. `PlaceboMuseumTests` (5).
+- GUI: pannello "Placebo Museum" nella colonna detail della pagina KB, mostrato quando il modulo è
+  ON e nessuna voce è selezionata (MultiDataTrigger ShowPlaceboMuseum + Selected==null). Ogni mito:
+  badge PLACEBO + "Il mito:" / "La verità:" (rosso). KbViewModel ora prende AppSettings.
+- **212/212 verdi**, build 0/0. STATO LAB: **8 moduli VIVI su 18**.
+
 ## Stato a fine sessione Opus (AGGIORNATO 2026-06-16)
 - `dotnet test`: **145/145 verdi**. `dotnet build WPEP.sln -c Release`: 0 errori/0 warning.
   (Se un nodo MSBuild crasha in parallelo: `-m:1 --disable-build-servers`.)

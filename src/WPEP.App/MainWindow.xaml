@@ -479,6 +479,59 @@
               </StackPanel>
             </ScrollViewer>
           </Border>
+
+          <!-- Placebo Museum (Lab feature): shown in the detail pane when nothing is selected. -->
+          <Border Grid.Column="1" Margin="16,0,0,0">
+            <Border.Style>
+              <Style TargetType="Border" BasedOn="{StaticResource Card}">
+                <Setter Property="Visibility" Value="Collapsed" />
+                <Style.Triggers>
+                  <MultiDataTrigger>
+                    <MultiDataTrigger.Conditions>
+                      <Condition Binding="{Binding ShowPlaceboMuseum}" Value="True" />
+                      <Condition Binding="{Binding Selected}" Value="{x:Null}" />
+                    </MultiDataTrigger.Conditions>
+                    <Setter Property="Visibility" Value="Visible" />
+                  </MultiDataTrigger>
+                </Style.Triggers>
+              </Style>
+            </Border.Style>
+            <ScrollViewer VerticalScrollBarVisibility="Auto">
+              <StackPanel>
+                <StackPanel Orientation="Horizontal">
+                  <TextBlock Text="🏛" FontSize="18" VerticalAlignment="Center" />
+                  <TextBlock Text="Placebo Museum" Style="{StaticResource H2}" Margin="8,0,0,0" />
+                </StackPanel>
+                <TextBlock Text="{Binding MuseumSummary}" Style="{StaticResource Muted}" Margin="0,2,0,2" />
+                <TextBlock Style="{StaticResource Muted}" FontSize="11" Margin="0,0,0,8" TextWrapping="Wrap"
+                           Text="I tweak che TUTTI consigliano ma che non fanno niente di misurabile. Non ci sei cascato." />
+                <ItemsControl ItemsSource="{Binding Museum}">
+                  <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                      <Border Background="{DynamicResource Surface2}" CornerRadius="6" Padding="12,10" Margin="0,0,0,6">
+                        <StackPanel>
+                          <DockPanel>
+                            <Border DockPanel.Dock="Right" Background="{DynamicResource Neutral}" CornerRadius="3"
+                                    Padding="6,1" VerticalAlignment="Center">
+                              <TextBlock Text="PLACEBO" FontSize="9" FontWeight="Bold" Foreground="#0F0F14" />
+                            </Border>
+                            <TextBlock Text="{Binding Name}" FontWeight="SemiBold"
+                                       Foreground="{DynamicResource Text}" VerticalAlignment="Center" />
+                          </DockPanel>
+                          <TextBlock Margin="0,5,0,0" TextWrapping="Wrap">
+                            <Run Text="Il mito: " Foreground="{DynamicResource TextMuted}" FontSize="11" /><Run Text="{Binding Myth}" Foreground="{DynamicResource TextMuted}" FontSize="11" />
+                          </TextBlock>
+                          <TextBlock Margin="0,3,0,0" TextWrapping="Wrap">
+                            <Run Text="La verità: " Foreground="{DynamicResource Danger}" FontSize="11" FontWeight="SemiBold" /><Run Text="{Binding Truth}" Foreground="{DynamicResource Text}" FontSize="11" />
+                          </TextBlock>
+                        </StackPanel>
+                      </Border>
+                    </DataTemplate>
+                  </ItemsControl.ItemTemplate>
+                </ItemsControl>
+              </StackPanel>
+            </ScrollViewer>
+          </Border>
         </Grid>
         <TextBlock Grid.Row="2" Style="{StaticResource Muted}" Text="{Binding Footer}" Margin="0,12,0,0" />
       </Grid>

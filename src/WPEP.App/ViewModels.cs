@@ -51,7 +51,7 @@ public sealed class MainViewModel : ViewModelBase
         Measure.InitCommands();
         Measure.RefreshProcesses();
         Diagnostics = new DiagnosticsViewModel(this);
-        Kb = new KbViewModel();
+        Kb = new KbViewModel(Settings);
         Report = new ReportViewModel(this);
         Changes = new ChangesViewModel(Execution, Settings);
         SettingsPage = new SettingsViewModel(Settings);
@@ -478,11 +478,17 @@ public sealed class KbViewModel : ViewModelBase
     private KbItemViewModel? _selected;
     private string _loadError = "";
 
-    public KbViewModel()
+    private readonly AppSettings _settings;
+
+    public KbViewModel(AppSettings settings)
     {
+        _settings = settings;
         try
         {
-            _all = KnowledgeBaseLoader.Load().Select(e => new KbItemViewModel(e)).ToArray();
+            var entries = KnowledgeBaseLoader.Load();
+            _all = entries.Select(e => new KbItemViewModel(e)).ToArray();
+            foreach (var x in PlaceboMuseum.Build(entries)) // Placebo Museum (Lab feature)
+                Museum.Add(x);
         }
         catch (Exception ex)
         {
@@ -491,6 +497,12 @@ public sealed class KbViewModel : ViewModelBase
         }
         Refresh();
     }
+
+    // ── Placebo Museum (Lab feature): gallery of debunked myth-tweaks ──
+    public bool ShowPlaceboMuseum => _settings.IsFeatureEnabled(WPEP.Execution.FeatureCatalog.PlaceboMuseum);
+    public ObservableCollection<PlaceboExhibit> Museum { get; } = [];
+    public string MuseumSummary => $"{Museum.Count} miti sfatati con l'evidenza";
+    public void RefreshMuseumFlag() => Raise(nameof(ShowPlaceboMuseum));
 
     public IReadOnlyList<string> Filters { get; } =
         ["All", "Strong evidence", "Plausible", "Controversial", "Placebo", "Risky"];
