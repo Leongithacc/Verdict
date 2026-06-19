@@ -2249,5 +2249,102 @@
       "undo": "manual-steps",
       "gui_only_reason": "In-game setting"
     }
+  },
+  {
+    "id": "foreground-lock-timeout-off",
+    "name": "Foreground lock timeout a 0 (il gioco prende il fuoco subito)",
+    "category": "input",
+    "description": "ForegroundLockTimeout impedisce a un'app di rubare il primo piano per un certo tempo (default 200000 ms). Azzerandolo, quando lanci o ri-attivi un gioco questo prende il fuoco immediatamente, senza restare dietro o lampeggiare nella taskbar. Documentato da Microsoft via SystemParametersInfo (SPI_SETFOREGROUNDLOCKTIMEOUT).",
+    "hardware_prerequisites": [],
+    "expected_impact": "Zero sugli FPS. Il gioco/app va in primo piano all'istante invece di restare in background. QoL/usabilita, utile con alt-tab.",
+    "evidence_level": "plausible",
+    "sources": [
+      "https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-systemparametersinfoa"
+    ],
+    "risk": "none",
+    "risk_notes": "",
+    "rollback": "Rimetti ForegroundLockTimeout al default 200000 (0x30d40). Verdict lo annulla automaticamente.",
+    "manual_steps": "Nessuna UI Windows diretta: e un valore di registro. Lascia che Verdict scriva ForegroundLockTimeout=0 in HKCU (no admin). Effetto al prossimo accesso.",
+    "conflicts_with": [],
+    "measurable": false,
+    "apply": {
+      "method": "registry",
+      "operations": [
+        {
+          "path": "HKCU\\Control Panel\\Desktop\\ForegroundLockTimeout",
+          "value_after": "0",
+          "verify": "0",
+          "kind": "dword"
+        }
+      ],
+      "requires_reboot": true,
+      "undo": "auto-journal",
+      "gui_only_reason": null
+    }
+  },
+  {
+    "id": "menu-show-delay-instant",
+    "name": "Menu istantanei (MenuShowDelay = 0)",
+    "category": "input",
+    "description": "MenuShowDelay e il ritardo (ms, default 400) prima che Windows mostri un menu/sottomenu al passaggio del mouse. A 0 i menu e l'interfaccia rispondono all'istante. Documentato da Microsoft (SystemParametersInfo SPI_SETMENUSHOWDELAY).",
+    "hardware_prerequisites": [],
+    "expected_impact": "Zero sugli FPS. UI e menu percepiti come istantanei. QoL/reattivita del desktop.",
+    "evidence_level": "plausible",
+    "sources": [
+      "https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-systemparametersinfoa",
+      "https://learn.microsoft.com/en-us/dotnet/api/system.windows.forms.systeminformation.menushowdelay"
+    ],
+    "risk": "none",
+    "risk_notes": "",
+    "rollback": "Rimetti MenuShowDelay al default 400. Verdict lo annulla automaticamente.",
+    "manual_steps": "E un valore di registro (REG_SZ). Lascia che Verdict scriva MenuShowDelay=0 in HKCU (no admin). Effetto al prossimo accesso.",
+    "conflicts_with": [],
+    "measurable": false,
+    "apply": {
+      "method": "registry",
+      "operations": [
+        {
+          "path": "HKCU\\Control Panel\\Desktop\\MenuShowDelay",
+          "value_after": "0",
+          "verify": "0",
+          "kind": "string"
+        }
+      ],
+      "requires_reboot": true,
+      "undo": "auto-journal",
+      "gui_only_reason": null
+    }
+  },
+  {
+    "id": "disable-window-animations",
+    "name": "Disattiva le animazioni di minimizza/massimizza",
+    "category": "background",
+    "description": "MinAnimate controlla le animazioni di minimizzazione/ingrandimento delle finestre. Disattivandole il desktop e le transizioni alt-tab sono immediati e si risparmia un filo di lavoro al compositore. Documentato da Microsoft (SystemParametersInfo SPI_SETANIMATION).",
+    "hardware_prerequisites": [],
+    "expected_impact": "Effetto trascurabile sugli FPS in gioco; desktop e alt-tab piu immediati. QoL/reattivita.",
+    "evidence_level": "plausible",
+    "sources": [
+      "https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-systemparametersinfoa"
+    ],
+    "risk": "none",
+    "risk_notes": "",
+    "rollback": "Rimetti MinAnimate=1 (default). Verdict lo annulla automaticamente.",
+    "manual_steps": "Impostazioni -> Accessibilita -> Effetti visivi -> Effetti di animazione (off), oppure lascia che Verdict scriva MinAnimate=0 in HKCU (no admin). Effetto al prossimo accesso.",
+    "conflicts_with": [],
+    "measurable": false,
+    "apply": {
+      "method": "registry",
+      "operations": [
+        {
+          "path": "HKCU\\Control Panel\\Desktop\\WindowMetrics\\MinAnimate",
+          "value_after": "0",
+          "verify": "0",
+          "kind": "string"
+        }
+      ],
+      "requires_reboot": true,
+      "undo": "auto-journal",
+      "gui_only_reason": null
+    }
   }
 ]

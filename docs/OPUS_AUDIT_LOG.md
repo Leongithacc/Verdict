@@ -728,6 +728,17 @@ Finiti i moduli (16/18), inizio l'irrobustimento. Giro mirato sui punti a rischi
   read-only → fallire è sempre sicuro. Smoke OK (`wpep dna` ancora funzionante).
 - **272/272 verdi** (+3 DetectDrift), App+CLI build 0/0.
 
+### 50. BASI — Léon: "manca l'app in sé, tutti i tweak applicabili con un click" (2026-06-18)
+Censimento onesto: solo 12/86 erano one-click. I 56 gui-only NON sono quasi mai automatizzabili
+via registro: ~15 in-game (anti-cheat), ~15 pannello NVIDIA/AMD (serve NVAPI), BIOS (EXPO/fTPM/ReBAR),
+hardware/consigli, 7 placebo. → la via per crescere le basi: (A) NUOVI tweak registro sicuri,
+(B) NVIDIA Control Panel via NVAPI, (C) UX core di apply. Léon ha scelto TUTTI E TRE (cps).
+**FASE A (questa entry)** — +3 tweak registro HKCU (no admin, reversibili, fonte primaria MS
+SystemParametersInfoA): `foreground-lock-timeout-off` (il gioco prende il fuoco subito — gaming),
+`menu-show-delay-instant`, `disable-window-animations`. KB 86→89, one-click 12→15. KB valida (12/12
+test KB). Le scritture restano da field-validare da Léon come da prassi.
+PROSSIMO: FASE C (UX core apply) poi FASE B (NVAPI DRS, read-only prima per testare sulla sua RTX 5080).
+
 ## Stato a fine sessione Opus (AGGIORNATO 2026-06-16)
 - `dotnet test`: **145/145 verdi**. `dotnet build WPEP.sln -c Release`: 0 errori/0 warning.
   (Se un nodo MSBuild crasha in parallelo: `-m:1 --disable-build-servers`.)
