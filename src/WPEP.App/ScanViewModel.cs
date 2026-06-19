@@ -20,6 +20,16 @@ public sealed class ScanViewModel : ViewModelBase
     /// <summary>Multi-monitor optimizer (Lab feature): the Displays section only shows when on.</summary>
     public bool ShowMultiMonitor => _settings.IsFeatureEnabled(WPEP.Execution.FeatureCatalog.MultiMonitor);
 
+    // ── Rig DNA (Lab feature): generated trading-card identity of this build ──
+    private string _rigCode = "", _rigTier = "", _rigTierColor = "Accent";
+    private System.Windows.Media.Brush _rigTint = System.Windows.Media.Brushes.Transparent;
+    public bool ShowRigDna => _settings.IsFeatureEnabled(WPEP.Execution.FeatureCatalog.RigDna);
+    public string RigCode { get => _rigCode; set => Set(ref _rigCode, value); }
+    public string RigTier { get => _rigTier; set => Set(ref _rigTier, value); }
+    public string RigTierColor { get => _rigTierColor; set => Set(ref _rigTierColor, value); }
+    public System.Windows.Media.Brush RigTint { get => _rigTint; set => Set(ref _rigTint, value); }
+    public ObservableCollection<string> RigTraits { get; } = [];
+
     public bool IsScanning { get => _isScanning; set => Set(ref _isScanning, value); }
     public string Motherboard { get => _motherboard; set => Set(ref _motherboard, value); }
     public string Bios { get => _bios; set => Set(ref _bios, value); }
@@ -67,6 +77,19 @@ public sealed class ScanViewModel : ViewModelBase
             foreach (var f in hw.Findings)
                 Findings.Add(ToRow(f));
 
+            // Rig DNA (Lab feature): generate the build's collectible identity from the inventory.
+            Raise(nameof(ShowRigDna));
+            RigTraits.Clear();
+            if (ShowRigDna)
+            {
+                var dna = RigDna.Compute(hw);
+                RigCode = dna.Code;
+                RigTier = dna.Tier;
+                RigTierColor = dna.TierColor;
+                RigTint = TintFromHue(dna.Hue);
+                foreach (var tr in dna.Traits) RigTraits.Add(tr);
+            }
+
             // Multi-monitor optimizer (Lab feature): only scan displays when the module is on.
             Displays.Clear();
             MonitorFindings.Clear();
@@ -88,26 +111,37 @@ public sealed class ScanViewModel : ViewModelBase
         ScanCompleted?.Invoke();
     }
 
-    /// <summary>Cheap refresh of just the Displays section (no WMI) so toggling the Multi-monitor
-    /// module in the Lab takes effect when the user returns to the Scan page.</summary>
-    public async Task RefreshMultiMonitorAsync()
+    /// <summary>Makes the Lab-gated sections (Rig DNA, Multi-monitor) reflect their current toggle
+    /// when the user returns to the Scan page: re-raises visibility, and re-scans only if a now-on
+    /// section is missing its data. Turning a section off just clears it (no rescan).</summary>
+    public async Task EnsureLabSectionsAsync()
     {
         Raise(nameof(ShowMultiMonitor));
-        if (!ShowMultiMonitor)
+        Raise(nameof(ShowRigDna));
+        if (!ShowMultiMonitor) { Displays.Clear(); MonitorFindings.Clear(); }
+        if (!ShowRigDna) { RigTraits.Clear(); RigCode = ""; }
+
+        bool needMon = ShowMultiMonitor && Displays.Count == 0;
+        bool needRig = ShowRigDna && RigCode.Length == 0;
+        if ((needMon || needRig) && !IsScanning)
+            await ScanAsync(); // full rescan repopulates every section from one inventory
+    }
+
+    /// <summary>A vivid-but-dark tint from the Rig DNA hue (HSL, fixed S/L), frozen for the card.</summary>
+    private static System.Windows.Media.Brush TintFromHue(int hue)
+    {
+        double h = hue / 60.0, s = 0.55, l = 0.5;
+        double c = (1 - Math.Abs(2 * l - 1)) * s, x = c * (1 - Math.Abs(h % 2 - 1)), m = l - c / 2;
+        (double r, double g, double b) = h switch
         {
-            Displays.Clear();
-            MonitorFindings.Clear();
-            return;
-        }
-        if (Displays.Count > 0) return; // already populated by the last full scan
-        var displays = await Task.Run(DisplayScanner.Enumerate);
-        Displays.Clear();
-        foreach (var d in displays)
-            Displays.Add($"{d.Name}   ·   {d.Width}×{d.Height} @ {d.RefreshHz} Hz" +
-                         (d.IsPrimary ? "   ·   PRIMARIO" : ""));
-        MonitorFindings.Clear();
-        foreach (var f in DisplayScanner.Analyze(displays))
-            MonitorFindings.Add(ToRow(f));
+            < 1 => (c, x, 0.0), < 2 => (x, c, 0.0), < 3 => (0.0, c, x),
+            < 4 => (0.0, x, c), < 5 => (x, 0.0, c), _ => (c, 0.0, x),
+        };
+        byte B(double v) => (byte)Math.Clamp((v + m) * 255, 0, 255);
+        var brush = new System.Windows.Media.SolidColorBrush(
+            System.Windows.Media.Color.FromRgb(B(r), B(g), B(b)));
+        brush.Freeze();
+        return brush;
     }
 
     private static FindingRow ToRow(Finding f) => new(f.Text,

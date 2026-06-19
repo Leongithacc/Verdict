@@ -46,7 +46,7 @@ public partial class MainWindow : Window
     }
     private void OnNavScan(object s, RoutedEventArgs e)
     {
-        _ = _vm.Scan.RefreshMultiMonitorAsync(); // reflect a Multi-monitor toggle from the Lab
+        _ = _vm.Scan.EnsureLabSectionsAsync(); // reflect Rig DNA / Multi-monitor toggles from the Lab
         _vm.CurrentPage = _vm.Scan;
     }
 

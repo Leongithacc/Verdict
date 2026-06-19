@@ -517,6 +517,22 @@ Per i paranoici: mostra ESATTAMENTE cosa Verdict scriverebbe, prima di fidarsi. 
 - STATO LAB: 5 moduli VIVI su 18 → Verdict Score, Risk Slider, Multi-monitor, Explain-my-Stutter,
   Trust mode. Pattern consolidato (logica pura in lib + test + Show<Feature> flag + GUI gated + refresh su nav).
 
+### 35. V3 — Modulo Lab 6: RIG DNA (2026-06-18) — firma/trading-card generativa
+Per il gusto estetico di Léon: trasforma l'inventario hardware in un'identità unica da collezione.
+- `WPEP.SystemAnalyzer/RigDna.cs` (puro/deterministico, hash FNV-1a, NIENTE random → testabile e
+  stabile tra run): `Compute(inv)` → `RigDnaResult(Code "RIG-XXXX-XXXX", Tier, TierColor, Traits[],
+  Hue 0-359)`. Code = base32 Crockford (no I/L/O/U) dell'hash della firma canonica (mobo|cpu|cores|
+  gpu|ram|disk). Tier = euristica di potenza (core, GPU top, RAM≥32, EXPO on, NVMe) → COMUNE/RARO/
+  EPICO/LEGGENDARIO/MITICO. Traits = "8-Core/16T", GPU short, "32GB RAM", "EXPO ✓/✗". Sul rig di
+  Léon → MITICO.
+- GUI: card "RIG DNA" nel build-sheet (pagina Scan, gated `ShowRigDna`), tinta da un colore HSL
+  derivato dalla Hue generata (TintFromHue, frozen), code grande + badge tier + chip traits (WrapPanel).
+- Refresh Lab sections su nav Scan unificato (`EnsureLabSectionsAsync`: ri-scansiona solo se una
+  sezione ora-attiva non ha dati; spegnerla la pulisce senza rescan). `RigDnaTests` (6: determinismo,
+  shape code, tier beast/weak, EXPO trait). **200/200 verdi**, build 0/0.
+- STATO LAB: **6 moduli VIVI su 18** → Verdict Score, Risk Slider, Multi-monitor, Explain-my-Stutter,
+  Trust mode, Rig DNA.
+
 ## Stato a fine sessione Opus (AGGIORNATO 2026-06-16)
 - `dotnet test`: **145/145 verdi**. `dotnet build WPEP.sln -c Release`: 0 errori/0 warning.
   (Se un nodo MSBuild crasha in parallelo: `-m:1 --disable-build-servers`.)

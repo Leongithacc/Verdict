@@ -494,6 +494,48 @@
                 </ItemsControl.ItemTemplate>
               </ItemsControl>
 
+              <!-- Rig DNA (Lab feature): the build's collectible identity, tinted by its hue. -->
+              <Border Margin="0,14,0,0" CornerRadius="10" Padding="0"
+                      Background="{DynamicResource Surface}" BorderThickness="1"
+                      BorderBrush="{Binding RigTint}"
+                      Visibility="{Binding ShowRigDna, Converter={StaticResource BoolToVis}}">
+                <Grid>
+                  <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="6" />
+                    <ColumnDefinition Width="*" />
+                  </Grid.ColumnDefinitions>
+                  <Border Grid.Column="0" Background="{Binding RigTint}"
+                          CornerRadius="10,0,0,10" />
+                  <StackPanel Grid.Column="1" Margin="14,11">
+                    <DockPanel>
+                      <Border DockPanel.Dock="Right" CornerRadius="4" Padding="7,2"
+                              Background="{DynamicResource Surface2}" VerticalAlignment="Center">
+                        <TextBlock Text="{Binding RigTier}" FontSize="11" FontWeight="Bold"
+                                   Foreground="{Binding RigTierColor, Converter={StaticResource TokenBrush}}" />
+                      </Border>
+                      <TextBlock Text="RIG DNA" FontSize="10" FontWeight="Bold" Opacity="0.6"
+                                 Foreground="{DynamicResource TextMuted}" VerticalAlignment="Center" />
+                    </DockPanel>
+                    <TextBlock Text="{Binding RigCode}" Style="{StaticResource Mono}" FontSize="22"
+                               Foreground="{Binding RigTint}" Margin="0,2,0,0" />
+                    <ItemsControl ItemsSource="{Binding RigTraits}" Margin="0,6,0,0">
+                      <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate><WrapPanel /></ItemsPanelTemplate>
+                      </ItemsControl.ItemsPanel>
+                      <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                          <Border Background="{DynamicResource Surface2}" CornerRadius="3"
+                                  Padding="6,2" Margin="0,0,6,0">
+                            <TextBlock Text="{Binding}" FontSize="11"
+                                       Foreground="{DynamicResource Text}" />
+                          </Border>
+                        </DataTemplate>
+                      </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                  </StackPanel>
+                </Grid>
+              </Border>
+
               <Border Height="1" Background="{DynamicResource Line}" Margin="0,14" />
 
               <Grid>
