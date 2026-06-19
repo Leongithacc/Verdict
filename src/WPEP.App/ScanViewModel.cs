@@ -167,6 +167,12 @@ public sealed class ScanViewModel : ViewModelBase
                     MonitorFindings.Add(ToRow(f));
             }
         }
+        catch (System.Exception ex)
+        {
+            // A WMI/P-Invoke hiccup in any section must not crash the app (this runs fire-and-forget)
+            // or abort the whole build-sheet — surface it as a finding and keep what loaded.
+            Findings.Add(new FindingRow($"Scansione parziale: {ex.Message}", "Warn", "⚠"));
+        }
         finally
         {
             IsScanning = false;

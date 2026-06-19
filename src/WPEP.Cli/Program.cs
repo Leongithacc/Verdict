@@ -13,6 +13,8 @@ if (args.Length == 0 || args[0] is "-h" or "--help" or "help")
     return 0;
 }
 
+try
+{
 switch (args[0])
 {
     case "diag":
@@ -79,6 +81,14 @@ switch (args[0])
         Console.Error.WriteLine($"Comando sconosciuto: {args[0]}");
         PrintUsage();
         return 2;
+}
+}
+catch (System.Exception ex)
+{
+    // Global safety net: any command that throws (WMI hiccup, missing file, ...) reports cleanly
+    // instead of dumping a stack trace. Everything here is read-only, so failing is always safe.
+    System.Console.Error.WriteLine($"Errore durante '{args[0]}': {ex.Message}");
+    return 1;
 }
 
 static int RunDiag(string[] args)

@@ -259,7 +259,11 @@ public sealed class ExecutionEngine(
             foreach (var entry in session.Entries)
             {
                 if (entry.Undone) continue;
-                var (exists, value) = ReadCurrent(entry);
+                // One unreadable entry (e.g. a bcdedit value needing admin) must not sink the whole
+                // check — skip it rather than throw. Drift detection is best-effort by nature.
+                bool exists; string? value;
+                try { (exists, value) = ReadCurrent(entry); }
+                catch { continue; }
                 bool stillApplied = exists && value == entry.ValueAfter;
                 if (!stillApplied)
                     drifted.Add(new DriftItem(entry.TweakId, entry.Path,

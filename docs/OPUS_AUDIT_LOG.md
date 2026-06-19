@@ -713,6 +713,21 @@ Promosso da "in arrivo" a implementato. Visualizza l'ultimo confronto del wizard
 - App build 0/0. **16 moduli implementati su 18.** Restano "in arrivo" SOLO i 2 che richiedono infra
   esterna: **AI co-pilot** (LLM/API key di Léon) + **Evidence community** (server backend). Per design.
 
+### 49. V3 — Robustness pass #1 (2026-06-18) — "prima finire, poi irrobustire" (Léon)
+Finiti i moduli (16/18), inizio l'irrobustimento. Giro mirato sui punti a rischio eccezione:
+- `ExecutionEngine.DetectDrift()`: `ReadCurrent` per powercfg/bcdedit ESEGUE processi esterni e può
+  lanciare (alcuni richiedono admin). Una sola voce illeggibile faceva crashare l'intero check del
+  Watchdog. Fix: try/catch per-voce → salta l'illeggibile invece di affondare tutto (best-effort).
+  +3 test (`DetectDrift_NoDriftRightAfterApply`, `_FlagsExternallyRevertedValue`, `_IgnoresUndoneEntries`).
+- `ScanViewModel.ScanAsync`: aveva try/finally ma NESSUN catch, ed è chiamato fire-and-forget → un
+  fallimento WMI/P-Invoke di una sezione Lab (DisplayScanner, FreshInstall...) abortiva tutto lo scan
+  con eccezione non osservata (rischio crash). Fix: catch che aggiunge un finding "Scansione parziale"
+  e tiene ciò che è stato caricato.
+- CLI: rete di sicurezza GLOBALE — lo `switch(args[0])` ora è in try/catch: qualsiasi comando che
+  lancia (WMI, file mancante...) stampa un errore pulito + exit 1 invece di uno stack trace. Tutto
+  read-only → fallire è sempre sicuro. Smoke OK (`wpep dna` ancora funzionante).
+- **272/272 verdi** (+3 DetectDrift), App+CLI build 0/0.
+
 ## Stato a fine sessione Opus (AGGIORNATO 2026-06-16)
 - `dotnet test`: **145/145 verdi**. `dotnet build WPEP.sln -c Release`: 0 errori/0 warning.
   (Se un nodo MSBuild crasha in parallelo: `-m:1 --disable-build-servers`.)

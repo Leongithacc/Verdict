@@ -106,6 +106,40 @@ public class ExecutionEngineTests : IDisposable
     }
 
     [Fact]
+    public void DetectDrift_NoDriftRightAfterApply()
+    {
+        var registry = new FakeRegistry();
+        var engine = new ExecutionEngine(registry, _journalDir);
+        engine.Execute(engine.BuildPlan(Entry()));
+        Assert.Empty(engine.DetectDrift());
+    }
+
+    [Fact]
+    public void DetectDrift_FlagsExternallyRevertedValue()
+    {
+        var registry = new FakeRegistry();
+        var engine = new ExecutionEngine(registry, _journalDir);
+        engine.Execute(engine.BuildPlan(Entry()));
+
+        registry.Data[@"HKCU\Test\Key\ValueA"] = ("dword", "999"); // something changed it back
+        var drift = engine.DetectDrift();
+
+        Assert.Single(drift);
+        Assert.Equal(@"HKCU\Test\Key\ValueA", drift[0].Path);
+        Assert.Equal("999", drift[0].Actual);
+    }
+
+    [Fact]
+    public void DetectDrift_IgnoresUndoneEntries()
+    {
+        var registry = new FakeRegistry();
+        var engine = new ExecutionEngine(registry, _journalDir);
+        var file = engine.Execute(engine.BuildPlan(Entry()));
+        engine.Undo(file); // clean undo → every entry marked Undone
+        Assert.Empty(engine.DetectDrift());
+    }
+
+    [Fact]
     public void PowerCfg_Apply_SwitchesSchemeAndJournals()
     {
         var power = new FakePowerCfg();
