@@ -51,8 +51,8 @@ public static class FeatureCatalog
             "Identità", DefaultEnabled: true, Status: FeatureStatus.Beta, Glyph: "◆"),
         new(LatencyLab, "Latency Lab", "Grafico before/after dell'ultimo confronto: dimostra a colpo d'occhio che il tweak funziona.",
             "Misura", Status: FeatureStatus.Beta, Glyph: "📈"),
-        new(ReactionLab, "Reaction Lab", "Minigioco reflex+aim: misura la TUA latenza umana+sistema prima/dopo.",
-            "Misura", Status: FeatureStatus.Experimental, Glyph: "⚡", Available: false),
+        new(ReactionLab, "Reaction Lab", "Minigioco reflex: misura la TUA latenza umana+sistema (clicca al verde).",
+            "Misura", Status: FeatureStatus.Beta, Glyph: "⚡"),
 
         // ── Le idee-firma (uniche, anti-placebo) ────────────────────────────────
         new(GhostTweak, "Ghost Tweak", "A/B alla cieca su te stesso: applica un tweak, misura, poi rivela. Uccide il placebo.",

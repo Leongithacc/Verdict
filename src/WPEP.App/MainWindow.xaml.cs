@@ -93,6 +93,7 @@ public partial class MainWindow : Window
     {
         _vm.Measure.Ghost.RefreshFlag();        // reflect a Lab toggle
         _vm.Measure.RefreshLatencyFlag();       // Latency Lab (Lab feature)
+        _vm.Measure.Reaction.RefreshFlag();     // Reaction Lab (Lab feature)
         _vm.CurrentPage = _vm.Measure;
     }
     private void OnNavDiagnostics(object s, RoutedEventArgs e)

@@ -94,6 +94,9 @@ public sealed class MeasureWizardViewModel(MainViewModel main, AppSettings setti
     /// wizard's last comparison for its blind reveal.</summary>
     public GhostTweakViewModel Ghost { get; } = new(main);
 
+    /// <summary>Reaction Lab (Lab feature): the reflex minigame, surfaced on the Measure page.</summary>
+    public ReactionLabViewModel Reaction { get; } = new(settings);
+
     // ── Latency Lab (Lab feature): before/after chart of the last comparison ──
     public bool ShowLatencyLab => settings.IsFeatureEnabled(FeatureCatalog.LatencyLab);
     public bool HasLatencyData => LatencyRows.Count > 0;

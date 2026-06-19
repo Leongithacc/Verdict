@@ -700,6 +700,19 @@ Promosso da "in arrivo" a implementato. Visualizza l'ultimo confronto del wizard
   co-pilot (LLM), Evidence community (server).
 - Build 0/0. (Grafico = wiring deterministico; estetica premium a fine progetto con Claude Design.)
 
+### 48. V3 — Modulo Lab 16: REACTION LAB (2026-06-18) — minigioco reflex (era "in arrivo")
+- `WPEP.Statistics/ReactionStats.cs` (puro/testato): `Analyze(samplesMs)` → best/media/MEDIANA +
+  grade (Élite<180 / Ottimo<220 / Buono<260 / Nella media<320 / Lento). Usa la mediana → un fumble
+  o un click fortunato non definisce il voto. Framing onesto: misura umano+sistema insieme, non un
+  numero di sistema puro. `ReactionStatsTests` (5 + theory).
+- `ReactionLabViewModel` (App): macchina a stati Idle→Wait(rosso)→Go(verde)→record, DispatcherTimer
+  con delay random 1.2–2.8s (non anticipabile), Stopwatch per la reazione, falsa-partenza = click
+  durante il rosso (non conta, ripete il round), 5 round → ReactionStats. Esposto su MeasureWizard.
+- GUI: sezione "Reaction Lab" sulla pagina Measure: bersaglio grande cliccabile (colore per stato)
+  + Avvia + chip dei tempi + riga risultato. Catalogo: ReactionLab `Available` (Beta).
+- App build 0/0. **16 moduli implementati su 18.** Restano "in arrivo" SOLO i 2 che richiedono infra
+  esterna: **AI co-pilot** (LLM/API key di Léon) + **Evidence community** (server backend). Per design.
+
 ## Stato a fine sessione Opus (AGGIORNATO 2026-06-16)
 - `dotnet test`: **145/145 verdi**. `dotnet build WPEP.sln -c Release`: 0 errori/0 warning.
   (Se un nodo MSBuild crasha in parallelo: `-m:1 --disable-build-servers`.)
