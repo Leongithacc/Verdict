@@ -61,6 +61,12 @@ public static class AdvisorEngine
         return new Recommendation(e, classification, stateNote);
     }
 
+    /// <summary>Public prerequisite gate: do this tweak's hardware_prerequisites match
+    /// the current system? Reused by the CLI so 'applicable'/'apply' non offrono p.es.
+    /// tweak NVIDIA su una GPU AMD. Fail-OPEN quando l'hardware non è rilevabile.</summary>
+    public static bool MeetsHardwarePrerequisites(SystemSnapshot s, TweakEntry e, out string note)
+        => IsApplicable(s, e, out note);
+
     private static bool IsApplicable(SystemSnapshot s, TweakEntry e, out string note)
     {
         foreach (var prerequisite in e.HardwarePrerequisites)

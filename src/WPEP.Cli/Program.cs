@@ -762,10 +762,18 @@ static int RunApplicable(string[] args)
     catch (Exception ex) { Console.Error.WriteLine($"Caricamento KB fallito: {ex.Message}"); return 1; }
 
     // I tweak per-gioco dipendono dal gioco in esecuzione: fuori da questa panoramica di sistema.
-    var applicable = entries.Where(e => CanApplyEntry(e) && e.Game is null)
+    var oneClick = entries.Where(e => CanApplyEntry(e) && e.Game is null).ToList();
+
+    // Gate hardware: non elenchiamo tweak NVIDIA su GPU AMD, desktop su portatile, ecc.
+    // Fail-open quando l'hardware non è rilevabile (l'utente vede comunque la voce).
+    var snapshot = WPEP.SystemAnalyzer.SnapshotBuilder.Build(DateTimeOffset.UtcNow);
+    int hwExcluded = oneClick.Count(e =>
+        !WPEP.Advisor.AdvisorEngine.MeetsHardwarePrerequisites(snapshot, e, out _));
+    var applicable = oneClick
+        .Where(e => WPEP.Advisor.AdvisorEngine.MeetsHardwarePrerequisites(snapshot, e, out _))
         .OrderBy(e => e.Category, StringComparer.OrdinalIgnoreCase)
         .ThenBy(e => e.Name, StringComparer.OrdinalIgnoreCase).ToList();
-    if (applicable.Count == 0) { Console.WriteLine("Nessun tweak applicabile automaticamente in questa build."); return 0; }
+    if (applicable.Count == 0) { Console.WriteLine("Nessun tweak applicabile automaticamente su questo hardware."); return 0; }
 
     bool elevated = Elevation.IsElevated();
     var engine = NewEngine();
@@ -815,6 +823,8 @@ static int RunApplicable(string[] args)
     if (adminNeeded > 0) Console.Write($",  {adminNeeded} richiedono admin");
     if (unreadable > 0) Console.Write($",  {unreadable} non leggibili");
     Console.WriteLine(".");
+    if (hwExcluded > 0)
+        Console.WriteLine($"({hwExcluded} altri one-click esclusi perché non adatti al tuo hardware.)");
     if (!elevated && adminNeeded > 0)
         Console.WriteLine("Rilancia da un terminale amministratore per includere i tweak che scrivono in HKLM/boot.");
     Console.WriteLine("\nApplica:  wpep apply <id> [--yes]   ·   tutti i consigliati:  wpep apply-all [--yes]");
@@ -837,6 +847,14 @@ static int RunApply(string[] args)
     {
         Console.Error.WriteLine($"'{entry.Id}' non è applicabile automaticamente " +
             $"({entry.Apply?.GuiOnlyReason ?? "placebo o solo manuale"}). 'wpep kb show {entry.Id}' per i passi manuali.");
+        return 2;
+    }
+    // Gate hardware: niente NVAPI su GPU AMD, niente tweak desktop su un portatile, ecc.
+    // Messaggio pulito invece di un'eccezione grezza da BuildPlan. Fail-open se non rilevabile.
+    var sysSnapshot = WPEP.SystemAnalyzer.SnapshotBuilder.Build(DateTimeOffset.UtcNow);
+    if (!WPEP.Advisor.AdvisorEngine.MeetsHardwarePrerequisites(sysSnapshot, entry, out var hwNote))
+    {
+        Console.Error.WriteLine($"'{entry.Id}' non è adatto a questo hardware: {hwNote}");
         return 2;
     }
     // BuildPlan only READS the current value (no admin needed), so we can report
