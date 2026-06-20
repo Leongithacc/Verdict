@@ -31,7 +31,13 @@ public static class ProfileStore
                 "hags-hardware-gpu-scheduling",
                 "disable-enhance-pointer-precision",
                 "disable-sticky-keys-gaming",
+                "nvidia-low-latency-on",
+                "nvidia-prefer-max-performance",
+                "win11-windowed-optimizations",
+                "windows-game-mode",
             ],
+            // V-Sync Off NON è qui di proposito: con G-SYNC è l'opposto giusto (V-Sync ON + framecap),
+            // quindi resta una scelta manuale per chi sa di NON usare il refresh variabile.
             "Latenza al massimo per gli sparatutto competitivi.", BuiltIn: true),
         new("Streaming",
             [
@@ -44,6 +50,8 @@ public static class ProfileStore
             [
                 "disable-sticky-keys-gaming",
                 "disable-enhance-pointer-precision",
+                "menu-show-delay-instant",
+                "foreground-lock-timeout-off",
             ],
             "Ritocchi leggeri di tutti i giorni (QoL, nessun rischio).", BuiltIn: true),
         new("Single-player",
@@ -51,6 +59,9 @@ public static class ProfileStore
                 "power-plan-high-performance",
                 "hags-hardware-gpu-scheduling",
                 "disable-enhance-pointer-precision",
+                "win11-variable-refresh-rate",
+                "win11-windowed-optimizations",
+                "windows-game-mode",
             ],
             "Giochi single-player: fluidità e qualità, niente estremismi di latenza.", BuiltIn: true),
         new("Pulizia max",

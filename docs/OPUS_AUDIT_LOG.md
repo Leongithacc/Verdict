@@ -840,6 +840,21 @@ QuerySettingIndex, già corretto. Aggiunto **`pcie-aspm-off`** (powercfg-value, 
 (controversial, "tipicamente neutro, preempt del mito"). Esercita il path powercfg-value (fix #55) con
 una 2ª voce. One-click: 21 → **22**. Dry-run: già 0 sul suo piano BXTool.
 
+### 60. PROFILI curati con i nuovi tweak + fix conflitto KB errato (2026-06-20)
+I profili predefiniti erano scritti PRIMA dei 5 nuovi tweak one-click. Curati:
+- **Competitive** (+nvidia-low-latency-on, nvidia-prefer-max-performance, win11-windowed-optimizations,
+  windows-game-mode). V-Sync Off deliberatamente FUORI (con G-SYNC è l'opposto giusto → scelta manuale).
+- **Single-player** (+win11-variable-refresh-rate, win11-windowed-optimizations, windows-game-mode).
+- **Daily** (+menu-show-delay-instant, foreground-lock-timeout-off — QoL puro).
+Nuovo test invariante: ogni id dei profili predefiniti DEVE esistere nella KB ed essere applicabile
+(CanApply) — niente refusi/voci gui-only silenziose.
+**Bug KB trovato e corretto**: `network-throttling-index` dichiarava `conflicts_with
+systemresponsiveness-gpupriority-registry`, ma scrivono VALORI DIVERSI (NetworkThrottlingIndex vs
+SystemResponsiveness, stessa chiave Multimedia\SystemProfile) → NON sono mutuamente esclusivi, anzi è
+la combo classica. Il conflitto errato faceva scartare silenziosamente NetworkThrottlingIndex in ogni
+profilo che aveva entrambi (Competitive, Pulizia max). Rimosso. Ora "0 in conflitto", NetworkThrottling
+finisce correttamente nel gruppo "richiede admin" (HKLM).
+
 ## Stato a fine sessione Opus (AGGIORNATO 2026-06-16)
 - `dotnet test`: **145/145 verdi**. `dotnet build WPEP.sln -c Release`: 0 errori/0 warning.
   (Se un nodo MSBuild crasha in parallelo: `-m:1 --disable-build-servers`.)

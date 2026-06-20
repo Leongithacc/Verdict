@@ -1,4 +1,5 @@
 using WPEP.Execution;
+using WPEP.KnowledgeBase;
 using Xunit;
 
 namespace WPEP.Tests;
@@ -13,6 +14,23 @@ public class ProfileStoreTests
         Assert.Contains(d, p => p.Name == "Streaming");
         Assert.Contains(d, p => p.Name == "Daily");
         Assert.All(d, p => Assert.NotEmpty(p.TweakIds));
+    }
+
+    [Fact]
+    public void Defaults_EveryTweakId_ExistsInKb_AndIsApplicable()
+    {
+        // Invariante: un profilo predefinito non deve mai referenziare un id inesistente
+        // (refuso) o non applicabile (gui-only/placebo) — sarebbe un buco silenzioso.
+        var byId = KnowledgeBaseLoader.Load()
+            .ToDictionary(e => e.Id, StringComparer.OrdinalIgnoreCase);
+        foreach (var profile in ProfileStore.Defaults)
+            foreach (var id in profile.TweakIds)
+            {
+                Assert.True(byId.TryGetValue(id, out var entry),
+                    $"Profilo '{profile.Name}': id '{id}' non esiste nella KB.");
+                Assert.True(ApplyPolicy.CanApply(entry!),
+                    $"Profilo '{profile.Name}': '{id}' non è applicabile (gui-only/placebo).");
+            }
     }
 
     [Fact]

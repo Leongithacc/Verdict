@@ -847,9 +847,7 @@
     "risk_notes": "Disattivarlo rimuove una protezione anti-glitch audio durante traffico di rete pesante.",
     "rollback": "Ripristinare NetworkThrottlingIndex=10 (default) o eliminare il valore in HKLM\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Multimedia\\SystemProfile.",
     "manual_steps": "Sconsigliato senza misura. Per test: SystemProfile → NetworkThrottlingIndex → 0xFFFFFFFF → riavvio → misura → rollback se entro il noise floor.",
-    "conflicts_with": [
-      "systemresponsiveness-gpupriority-registry"
-    ],
+    "conflicts_with": [],
     "measurable": true,
     "apply": {
       "method": "registry",
