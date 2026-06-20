@@ -2,6 +2,7 @@
   <ItemGroup>
     <ProjectReference Include="..\WPEP.Core\WPEP.Core.csproj" />
     <ProjectReference Include="..\WPEP.KnowledgeBase\WPEP.KnowledgeBase.csproj" />
+    <ProjectReference Include="..\WPEP.SystemAnalyzer\WPEP.SystemAnalyzer.csproj" />
   </ItemGroup>
   <ItemGroup>
     <InternalsVisibleTo Include="WPEP.Tests" />

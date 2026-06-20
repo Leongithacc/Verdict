@@ -56,6 +56,16 @@ file sealed class FakeBcdEdit : IBcdEdit
     public void Delete(string element) => Elements.Remove(element);
 }
 
+/// <summary>In-memory NVIDIA DRS: never touches the real driver profile.</summary>
+file sealed class FakeNvidiaDrs : INvidiaDrs
+{
+    public readonly Dictionary<uint, uint> Settings = new();
+    public (bool Found, uint Value) ReadDword(uint settingId) =>
+        Settings.TryGetValue(settingId, out var v) ? (true, v) : (false, 0);
+    public void WriteDword(uint settingId, uint value) => Settings[settingId] = value;
+    public void DeleteSetting(uint settingId) => Settings.Remove(settingId);
+}
+
 public class ExecutionEngineTests : IDisposable
 {
     private readonly string _journalDir =
@@ -103,6 +113,46 @@ public class ExecutionEngineTests : IDisposable
 
         Assert.Equal("1", plan.Operations[0].Before);
         Assert.False(plan.Operations[1].ExistedBefore); // ValueB not set
+    }
+
+    [Fact]
+    public void NvidiaDrs_Apply_WritesVerifies_AndUndoDeletesWhenNotSetBefore()
+    {
+        var nv = new FakeNvidiaDrs();
+        var engine = new ExecutionEngine(new FakeRegistry(), _journalDir, nvidiaDrs: nv);
+        var entry = Entry(apply: new ApplySpec
+        {
+            Method = "nvidia-drs",
+            Operations = [new ApplyOperation { Path = "0x1057EB71", ValueAfter = "1", Kind = "dword" }],
+        });
+
+        var plan = engine.BuildPlan(entry);
+        Assert.False(plan.Operations[0].ExistedBefore); // default → not set
+
+        var file = engine.Execute(plan);
+        Assert.Equal(1u, nv.Settings[0x1057EB71]); // written
+
+        engine.Undo(file);
+        Assert.False(nv.Settings.ContainsKey(0x1057EB71)); // back to driver default (deleted)
+    }
+
+    [Fact]
+    public void NvidiaDrs_UndoRestoresPreviousValue_WhenSetBefore()
+    {
+        var nv = new FakeNvidiaDrs();
+        nv.Settings[0x1057EB71] = 5; // user had it explicitly set to OPTIMAL_POWER
+        var engine = new ExecutionEngine(new FakeRegistry(), _journalDir, nvidiaDrs: nv);
+        var entry = Entry(apply: new ApplySpec
+        {
+            Method = "nvidia-drs",
+            Operations = [new ApplyOperation { Path = "0x1057EB71", ValueAfter = "1", Kind = "dword" }],
+        });
+
+        var file = engine.Execute(engine.BuildPlan(entry));
+        Assert.Equal(1u, nv.Settings[0x1057EB71]);
+
+        engine.Undo(file);
+        Assert.Equal(5u, nv.Settings[0x1057EB71]); // restored, not deleted
     }
 
     [Fact]

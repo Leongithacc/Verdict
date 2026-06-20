@@ -28,6 +28,9 @@ public static class NvApi
     private const uint Id_DRS_LoadSettings = 0x375DBD6B;
     private const uint Id_DRS_GetBaseProfile = 0xDA8466A0;
     private const uint Id_DRS_GetSetting = 0x73BF8338;
+    private const uint Id_DRS_SetSetting = 0x577DD202;
+    private const uint Id_DRS_SaveSettings = 0xFCBC7E14;
+    private const uint Id_DRS_DeleteProfileSetting = 0xE4A26362;
 
     // Well-known DRS setting ids (DWORD-typed).
     public const uint Setting_PreferredPState = 0x1057EB71; // "Power management mode"
@@ -48,6 +51,12 @@ public static class NvApi
     private delegate int DRS_GetBaseProfile_t(IntPtr session, out IntPtr profile);
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     private delegate int DRS_GetSetting_t(IntPtr session, IntPtr profile, uint settingId, ref NVDRS_SETTING setting);
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    private delegate int DRS_SetSetting_t(IntPtr session, IntPtr profile, ref NVDRS_SETTING setting);
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    private delegate int DRS_SaveSettings_t(IntPtr session);
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    private delegate int DRS_DeleteProfileSetting_t(IntPtr session, IntPtr profile, uint settingId);
 
     // NVDRS_SETTING (v1). The two value "unions" are sized to their largest member
     // (NVDRS_BINARY_SETTING = 4 + 4 + NVAPI_BINARY_DATA_MAX). version is sizeof | (1<<16),
@@ -108,16 +117,13 @@ public static class NvApi
         }
     }
 
-    /// <summary>READ-ONLY: reads the current DWORD value of a global-profile DRS setting (a NVIDIA
-    /// Control Panel option). Opens a DRS session, loads settings, reads the base (global) profile,
-    /// gets the setting, then tears the session down. Writes nothing. Returns the NVAPI status text
-    /// + the value when ok — used to validate the DRS struct marshalling against the real panel
-    /// before we ever attempt a write.</summary>
-    /// <summary>NVAPI status returned by the last DRS_GetSetting was anything OTHER than
-    /// "incompatible struct version" (-130) — i.e. the call executed and our struct layout was
-    /// accepted. NOT_FOUND (-9) still counts as marshalling-ok (the setting just isn't set).</summary>
+    /// <summary>-130 = the struct version/layout was rejected; any other status means GetSetting ran
+    /// and our marshalling was accepted (NOT_FOUND/-9 included).</summary>
     private const int NVAPI_INCOMPATIBLE_STRUCT_VERSION = -130;
 
+    /// <summary>READ-ONLY: reads the current DWORD value of a global-profile DRS setting (a NVIDIA
+    /// Control Panel option). Opens a DRS session, loads settings, reads the base (global) profile,
+    /// gets the setting, then tears the session down. Writes nothing.</summary>
     public static NvDrsRead ReadDwordSetting(uint settingId)
     {
         IntPtr session = IntPtr.Zero;
@@ -160,6 +166,93 @@ public static class NvApi
         }
         catch (DllNotFoundException) { return new(false, false, 0, "nvapi64.dll non trovata."); }
         catch (Exception ex) { return new(false, false, 0, $"Errore DRS: {ex.Message}"); }
+        finally
+        {
+            if (session != IntPtr.Zero) destroy?.Invoke(session);
+            Resolve<Unload_t>(Id_Unload)?.Invoke();
+        }
+    }
+
+    private const uint NVDRS_DWORD_TYPE = 0;
+
+    /// <summary>Writes a DWORD value into a global-profile DRS setting (a NVIDIA Control Panel option)
+    /// and saves it. Anti-cheat safe (user-mode NVAPI). Returns NVAPI status text.</summary>
+    public static (bool Ok, string Message) WriteDwordSetting(uint settingId, uint value)
+    {
+        IntPtr session = IntPtr.Zero;
+        DRS_DestroySession_t? destroy = null;
+        try
+        {
+            var init = Resolve<Initialize_t>(Id_Initialize);
+            if (init is null || init() != 0) return (false, "NvAPI_Initialize fallito.");
+
+            var create = Resolve<DRS_CreateSession_t>(Id_DRS_CreateSession);
+            var load = Resolve<DRS_LoadSettings_t>(Id_DRS_LoadSettings);
+            var getBase = Resolve<DRS_GetBaseProfile_t>(Id_DRS_GetBaseProfile);
+            var setSetting = Resolve<DRS_SetSetting_t>(Id_DRS_SetSetting);
+            var save = Resolve<DRS_SaveSettings_t>(Id_DRS_SaveSettings);
+            destroy = Resolve<DRS_DestroySession_t>(Id_DRS_DestroySession);
+            if (create is null || load is null || getBase is null || setSetting is null || save is null)
+                return (false, "Funzioni DRS di scrittura non risolte.");
+
+            int s = create(out session); if (s != 0) return (false, $"CreateSession {s}.");
+            s = load(session); if (s != 0) return (false, $"LoadSettings {s}.");
+            s = getBase(session, out var profile); if (s != 0) return (false, $"GetBaseProfile {s}.");
+
+            var setting = new NVDRS_SETTING
+            {
+                version = (uint)(Marshal.SizeOf<NVDRS_SETTING>() | (1 << 16)),
+                settingName = "",
+                settingId = settingId,
+                settingType = NVDRS_DWORD_TYPE,
+                predefinedValue = new byte[UnionSize],
+                currentValue = new byte[UnionSize],
+            };
+            BitConverter.GetBytes(value).CopyTo(setting.currentValue, 0);
+
+            s = setSetting(session, profile, ref setting); if (s != 0) return (false, $"SetSetting {s}.");
+            s = save(session); if (s != 0) return (false, $"SaveSettings {s}.");
+            return (true, $"Scritto 0x{settingId:X} = {value} e salvato.");
+        }
+        catch (DllNotFoundException) { return (false, "nvapi64.dll non trovata."); }
+        catch (Exception ex) { return (false, $"Errore DRS write: {ex.Message}"); }
+        finally
+        {
+            if (session != IntPtr.Zero) destroy?.Invoke(session);
+            Resolve<Unload_t>(Id_Unload)?.Invoke();
+        }
+    }
+
+    /// <summary>Removes a setting from the global profile (back to driver default) and saves.
+    /// Used to undo a write when the setting wasn't explicitly set before.</summary>
+    public static (bool Ok, string Message) DeleteSetting(uint settingId)
+    {
+        IntPtr session = IntPtr.Zero;
+        DRS_DestroySession_t? destroy = null;
+        try
+        {
+            var init = Resolve<Initialize_t>(Id_Initialize);
+            if (init is null || init() != 0) return (false, "NvAPI_Initialize fallito.");
+
+            var create = Resolve<DRS_CreateSession_t>(Id_DRS_CreateSession);
+            var load = Resolve<DRS_LoadSettings_t>(Id_DRS_LoadSettings);
+            var getBase = Resolve<DRS_GetBaseProfile_t>(Id_DRS_GetBaseProfile);
+            var del = Resolve<DRS_DeleteProfileSetting_t>(Id_DRS_DeleteProfileSetting);
+            var save = Resolve<DRS_SaveSettings_t>(Id_DRS_SaveSettings);
+            destroy = Resolve<DRS_DestroySession_t>(Id_DRS_DestroySession);
+            if (create is null || load is null || getBase is null || del is null || save is null)
+                return (false, "Funzioni DRS di delete non risolte.");
+
+            int s = create(out session); if (s != 0) return (false, $"CreateSession {s}.");
+            s = load(session); if (s != 0) return (false, $"LoadSettings {s}.");
+            s = getBase(session, out var profile); if (s != 0) return (false, $"GetBaseProfile {s}.");
+            s = del(session, profile, settingId);
+            if (s != 0 && s != -9) return (false, $"DeleteProfileSetting {s}."); // -9 = già assente = ok
+            s = save(session); if (s != 0) return (false, $"SaveSettings {s}.");
+            return (true, $"Setting 0x{settingId:X} riportato al default.");
+        }
+        catch (DllNotFoundException) { return (false, "nvapi64.dll non trovata."); }
+        catch (Exception ex) { return (false, $"Errore DRS delete: {ex.Message}"); }
         finally
         {
             if (session != IntPtr.Zero) destroy?.Invoke(session);

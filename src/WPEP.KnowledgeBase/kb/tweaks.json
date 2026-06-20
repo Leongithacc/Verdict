@@ -558,7 +558,7 @@
   },
   {
     "id": "nvidia-prefer-max-performance",
-    "name": "Power mode GPU: Prefer Maximum Performance (per-gioco)",
+    "name": "Power Management Mode: Prefer Maximum Performance (globale)",
     "category": "gpu",
     "description": "Impedisce alla GPU di scendere di clock nei momenti di basso carico, evitando la latenza di risalita del boost. Sensato per-gioco nei titoli competitivi con carico altalenante; inutile globale (tiene i clock alti anche sul desktop, consumo e calore per niente).",
     "hardware_prerequisites": [
@@ -567,7 +567,8 @@
     "expected_impact": "Marginale: evita micro-ritardi di boost in scenari a basso carico. Tipicamente entro la varianza nei giochi che tengono la GPU carica.",
     "evidence_level": "plausible",
     "sources": [
-      "https://www.nvidia.com/en-us/geforce/guides/gfecnt/202010/system-latency-optimization-guide/"
+      "https://www.nvidia.com/en-us/geforce/guides/gfecnt/202010/system-latency-optimization-guide/",
+      "https://github.com/NVIDIA/nvapi/blob/main/NvApiDriverSettings.h"
     ],
     "risk": "low",
     "risk_notes": "Consumo e temperatura più alti se applicato globalmente. Applicare per-gioco.",
@@ -576,11 +577,18 @@
     "conflicts_with": [],
     "measurable": true,
     "apply": {
-      "method": "gui-only",
-      "operations": [],
+      "method": "nvidia-drs",
+      "operations": [
+        {
+          "path": "0x1057EB71",
+          "value_after": "1",
+          "verify": "1",
+          "kind": "dword"
+        }
+      ],
       "requires_reboot": false,
-      "undo": "manual-steps",
-      "gui_only_reason": "Driver control panel setting"
+      "undo": "auto-journal",
+      "gui_only_reason": null
     }
   },
   {

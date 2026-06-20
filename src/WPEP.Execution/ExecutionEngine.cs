@@ -58,10 +58,11 @@ public sealed record DriftItem(string TweakId, string Path, string Expected, str
 /// </summary>
 public sealed class ExecutionEngine(
     IRegistryAccess registry, string journalDirectory,
-    IPowerCfg? powerCfg = null, IBcdEdit? bcdEdit = null)
+    IPowerCfg? powerCfg = null, IBcdEdit? bcdEdit = null, INvidiaDrs? nvidiaDrs = null)
 {
     private readonly IPowerCfg _powerCfg = powerCfg ?? new RealPowerCfg();
     private readonly IBcdEdit _bcdEdit = bcdEdit ?? new RealBcdEdit();
+    private readonly INvidiaDrs _nvidiaDrs = nvidiaDrs ?? new RealNvidiaDrs();
 
     public static string DefaultJournalDirectory =>
         System.IO.Path.Combine(AppContext.BaseDirectory, "data", "journal");
@@ -110,6 +111,16 @@ public sealed class ExecutionEngine(
                     $"{entry.Id}: value_after (valore bcdedit) mancante")).Trim().ToLowerInvariant();
                 return new PlannedOperation(op.Path, "bcdedit", current.Exists,
                     current.Value, target);
+            }).ToList(),
+
+            "nvidia-drs" => apply.Operations.Select(op =>
+            {
+                // op.Path = NVIDIA DRS setting id (hex, e.g. "0x1057EB71"); value_after = DWORD value.
+                var (found, value) = _nvidiaDrs.ReadDword(ParseSettingId(op.Path));
+                string target = op.ValueAfter ?? throw new InvalidOperationException(
+                    $"{entry.Id}: value_after (valore DRS) mancante");
+                return new PlannedOperation(op.Path, "nvidia-drs", found,
+                    found ? value.ToString() : null, target);
             }).ToList(),
 
             _ => throw new NotSupportedException(
@@ -289,6 +300,9 @@ public sealed class ExecutionEngine(
             case "bcdedit":
                 var b = _bcdEdit.Query(entry.Path);
                 return (b.Exists, b.Value);
+            case "nvidia-drs":
+                var (found, value) = _nvidiaDrs.ReadDword(ParseSettingId(entry.Path));
+                return (found, found ? value.ToString() : null);
             default:
                 return (false, null);
         }
@@ -329,6 +343,16 @@ public sealed class ExecutionEngine(
                 if (_bcdEdit.Query(entry.Path).Exists)
                     throw new InvalidOperationException($"Undo VERIFY fallita su {entry.Path}: elemento ancora presente.");
                 break;
+            case "nvidia-drs" when entry.ExistedBefore:
+                var idR = ParseSettingId(entry.Path);
+                _nvidiaDrs.WriteDword(idR, uint.Parse(entry.ValueBefore!));
+                var (fR, vR) = _nvidiaDrs.ReadDword(idR);
+                if (!fR || vR.ToString() != entry.ValueBefore)
+                    throw new InvalidOperationException($"Undo VERIFY fallita su {entry.Path} (nvidia-drs).");
+                break;
+            case "nvidia-drs":
+                _nvidiaDrs.DeleteSetting(ParseSettingId(entry.Path)); // back to driver default
+                break;
         }
     }
 
@@ -355,9 +379,23 @@ public sealed class ExecutionEngine(
             case "bcdedit":
                 _bcdEdit.Set(path, after);
                 return _bcdEdit.Query(path).Value ?? "<niente>";
+            case "nvidia-drs":
+                uint id = ParseSettingId(path);
+                _nvidiaDrs.WriteDword(id, uint.Parse(after));
+                var (found, value) = _nvidiaDrs.ReadDword(id);
+                return found ? value.ToString() : "<niente>";
             default:
                 throw new NotSupportedException($"Metodo '{method}' non eseguibile.");
         }
+    }
+
+    /// <summary>NVIDIA DRS setting id from a hex (e.g. "0x1057EB71") or decimal string.</summary>
+    private static uint ParseSettingId(string path)
+    {
+        path = path.Trim();
+        return path.StartsWith("0x", StringComparison.OrdinalIgnoreCase)
+            ? Convert.ToUInt32(path[2..], 16)
+            : uint.Parse(path);
     }
 
     /// <summary>Power-setting path is "subgroupGuid/settingGuid".</summary>
