@@ -35,6 +35,40 @@
     }
   },
   {
+    "id": "pcie-aspm-off",
+    "name": "PCI Express: ASPM (risparmio energia link) Off",
+    "category": "power",
+    "description": "Disattiva l'Active State Power Management del bus PCIe: il link verso GPU/NVMe non scende negli stati a basso consumo (L0s/L1) quando il traffico cala. Su DESKTOP il risparmio è irrilevante; in rari casi risolve micro-stutter o latenza da risveglio del link. Su hardware moderno è di norma neutro — l'inclusione serve a dare la verità misurata, non a promettere FPS.",
+    "hardware_prerequisites": [
+      "desktop"
+    ],
+    "expected_impact": "Tipicamente neutro sugli FPS. Può eliminare micro-stutter/latenza nei (rari) casi in cui il link PCIe entra/esce dagli stati di risparmio sotto carico altalenante. Costo energetico trascurabile su desktop.",
+    "evidence_level": "controversial",
+    "sources": [
+      "https://learn.microsoft.com/en-us/windows-hardware/customize/power-settings/configure-pci-express-settings"
+    ],
+    "risk": "low",
+    "risk_notes": "Nessun rischio di stabilità su desktop. Su portatili aumenta il consumo: non consigliato a batteria (per questo è marcato desktop-only).",
+    "rollback": "Stessa impostazione → Risparmio energia moderato (default).",
+    "manual_steps": "Opzioni risparmio energia → Modifica impostazioni piano → Impostazioni avanzate → PCI Express → Risparmio energia stato collegamento → Inattivo.",
+    "conflicts_with": [],
+    "measurable": false,
+    "apply": {
+      "method": "powercfg-value",
+      "operations": [
+        {
+          "path": "501a4d13-42af-4429-9fd1-a8218c268e20/ee12f906-d277-404b-b6da-e5fa1a576df5",
+          "value_after": "0",
+          "verify": "0",
+          "kind": "dword"
+        }
+      ],
+      "requires_reboot": false,
+      "undo": "auto-journal",
+      "gui_only_reason": null
+    }
+  },
+  {
     "id": "disable-enhance-pointer-precision",
     "name": "Disattiva 'Migliora precisione puntatore'",
     "category": "input",

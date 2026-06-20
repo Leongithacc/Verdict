@@ -811,6 +811,35 @@ informative. Promossi i 3 candidati ad alta confidenza:
   hanno deep-link"; manual_steps resta come documentazione). One-click: 18 → 21.
 - Test: +2 dxuser (preservazione sorelle + undo), +2 powercfg locale. Build 0/0.
 
+### 56. BLOCCO 2 — UX core apply: comando `applicable` + riepiloghi onesti (2026-06-20, commit 98b3e41)
+Léon: "manca la app in sé, tutti i tweak applicabili con un click". Risposta diretta: **`wpep
+applicable`** = panoramica a colpo d'occhio di TUTTO il one-click con stato LIVE (✓ già a posto / ○
+applicabile / richiede admin), raggruppato per categoria, sola lettura (BuildPlan legge, non scrive).
+Letture che richiedono admin (bcdedit) etichettate "richiede amministratore", non "non leggibile".
++ riga "Riepilogo" onesta nel dry-run di apply-all/apply-profile (N da applicare · N già a posto ·
+N in conflitto · N admin · N falliti). Sul PC di Léon: 21 → 10 già, 9 ora, 2 admin.
+
+### 57. ROBUSTEZZA — gate hardware su apply/applicable (2026-06-20, commit d2925f8)
+`AdvisorEngine.MeetsHardwarePrerequisites` (pubblico, riusa IsApplicable testato, fail-OPEN). `apply`
+dà un messaggio pulito "non adatto a questo hardware" invece dell'eccezione NVAPI grezza su GPU non-NVIDIA;
+`applicable` filtra i non-compatibili con conteggio nel footer. Su RTX 5080: 21/21 compatibili.
+
+### 58. FIELD-TEST WRITE+VERIFY+UNDO REALE SUPERATO (2026-06-20)
+`apply win11-variable-refresh-rate --yes` sul PC di Léon: VRROptimizeEnable 0→1 scritto+verificato,
+**sorelle (SwapEffectUpgradeEnable=1, AutoHDREnable=0) INTATTE** (anti-clobbering provato sul registro
+reale via reg query prima/dopo), poi `undo last` → stato identico all'iniziale. **NESSUNO STALLO sul
+restore-point** (fix #53 confermato dal vivo). Il write path completo (dxuser+journal+undo+restore-point)
+non è più "solo coi fake": provato su hardware reale. È l'ultimo tassello che mancava al motore.
+
+### 59. ROBUSTEZZA — audit parse locale + 2° tweak powercfg-value (2026-06-20)
+Audit di TUTTI i parse di output comandi per fragilità rispetto alla lingua di Windows (dopo il bug
+locale di #55). Esito: **pulito** — gli altri parser usano GUID (powercfg getactivescheme, ReadPowerPlan),
+nomi di config-key non localizzati (bcdedit), o tool sempre-inglesi (nvidia-smi). L'unico bug era
+QuerySettingIndex, già corretto. Aggiunto **`pcie-aspm-off`** (powercfg-value, GUID SUB_PCIEXPRESS
+501a4d13…/ASPM ee12f906…, value 0=Off) — GUID verificati live sul PC di Léon, framing onesto
+(controversial, "tipicamente neutro, preempt del mito"). Esercita il path powercfg-value (fix #55) con
+una 2ª voce. One-click: 21 → **22**. Dry-run: già 0 sul suo piano BXTool.
+
 ## Stato a fine sessione Opus (AGGIORNATO 2026-06-16)
 - `dotnet test`: **145/145 verdi**. `dotnet build WPEP.sln -c Release`: 0 errori/0 warning.
   (Se un nodo MSBuild crasha in parallelo: `-m:1 --disable-build-servers`.)
