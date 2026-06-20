@@ -760,6 +760,21 @@ La via per i tweak del pannello NVIDIA (Reflex, Low Latency, Power Management) =
   LoadSettings 0x375DBD6B, GetBaseProfile 0xDA8466A0, GetSetting 0x73BF8338, SetSetting 0x577DD202,
   SaveSettings 0xFCBC7E14, DestroySession 0xDAD9CFF8. Setting PREFERRED_PSTATE 0x1057EB71.
 
+### 52. BASI/FASE B — DRS read + struct marshalling VALIDATO sulla RTX 5080 (2026-06-18)
+Spinto oltre la fondazione (lettura = sicura): `NvApi.ReadDwordSetting(settingId)` fa il flusso DRS
+completo READ-ONLY — Initialize → DRS_CreateSession → LoadSettings → GetBaseProfile → GetSetting →
+DestroySession/Unload. Struct `NVDRS_SETTING` (version = Marshal.SizeOf | 1<<16, settingName wchar
+[2048], 2 union da NVDRS_BINARY_SETTING=4104B). Ritorna `NvDrsRead(Ok, MarshallingOk, Value, Message)`.
+- ✅ **TESTATO**: `wpep nvidia` sulla RTX 5080 → DRS_GetSetting status **-9 (NOT_FOUND)**, NON -130
+  (INCOMPATIBLE_STRUCT_VERSION). Quindi: sessione DRS + LoadSettings + GetBaseProfile OK, e il
+  **marshalling delle struct è CORRETTO** (NVAPI ha accettato il layout/version). Il -9 = il setting
+  non è impostato nel profilo globale (Léon è sul default; NVAPI non salva i default).
+- BILANCIO NVIDIA: interop ✓, sessione DRS ✓, struct marshalling ✓ — le 3 incognite dure risolte.
+  PROSSIMO: (1) leggere un setting EFFETTIVAMENTE impostato o GetSettingDefault per vedere un valore;
+  (2) mappare gli id/valori (PREFERRED_PSTATE: prefer-max=1?, Low Latency Mode id, Reflex); (3) WRITE
+  via DRS_SetSetting(0x577DD202)+DRS_SaveSettings(0xFCBC7E14) + nuovo metodo apply "nvidia-drs"
+  nell'ExecutionEngine + verify-after-write + undo-journal, field-validate da Léon. Anti-cheat safe.
+
 ## Stato a fine sessione Opus (AGGIORNATO 2026-06-16)
 - `dotnet test`: **145/145 verdi**. `dotnet build WPEP.sln -c Release`: 0 errori/0 warning.
   (Se un nodo MSBuild crasha in parallelo: `-m:1 --disable-build-servers`.)

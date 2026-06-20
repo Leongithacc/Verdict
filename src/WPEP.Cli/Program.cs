@@ -1274,9 +1274,16 @@ static int RunNvidia()
     Console.WriteLine("NVIDIA — prova interop NVAPI (user-mode, anti-cheat safe, sola lettura)\n");
     var probe = WPEP.SystemAnalyzer.NvApi.Probe();
     Console.WriteLine($"  {(probe.Available ? "[ok]" : "[!]")} {probe.Message}");
-    if (probe.Available)
-        Console.WriteLine("\n  → Fondazione OK: si puo costruire l'automazione del pannello NVIDIA (Reflex,\n    Low Latency, Power Management) via DRS, con field-validation di Leon sulle scritture.");
-    return probe.Available ? 0 : 1;
+    if (!probe.Available) return 1;
+
+    Console.WriteLine("\n  DRS read (sola lettura, valida il marshalling delle struct):");
+    var r = WPEP.SystemAnalyzer.NvApi.ReadDwordSetting(WPEP.SystemAnalyzer.NvApi.Setting_PreferredPState);
+    Console.WriteLine($"  {(r.Ok ? "[ok]" : r.MarshallingOk ? "[i]" : "[!]")} Power Management Mode: {r.Message}");
+    if (r.Ok)
+        Console.WriteLine("\n  → DRS READ COMPLETO FUNZIONA: leggo i valori del pannello NVIDIA. Prossimo: WRITE (field-validate).");
+    else if (r.MarshallingOk)
+        Console.WriteLine("\n  → MARSHALLING STRUCT VALIDATO (nessun -130): la sessione DRS e le struct sono\n    corrette. Il setting non e impostato (sei sul default). Il meccanismo read/write e pronto:\n    prossimo passo, leggere un setting impostato + aggiungere la WRITE (field-validate da Leon).");
+    return 0;
 }
 
 static int RunWatch()

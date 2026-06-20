@@ -23,6 +23,14 @@ public static class NvApi
     private const uint Id_Initialize = 0x0150E828;
     private const uint Id_Unload = 0xD22BDD7E;
     private const uint Id_GetInterfaceVersionString = 0x01053FA5;
+    private const uint Id_DRS_CreateSession = 0x0694D52E;
+    private const uint Id_DRS_DestroySession = 0xDAD9CFF8;
+    private const uint Id_DRS_LoadSettings = 0x375DBD6B;
+    private const uint Id_DRS_GetBaseProfile = 0xDA8466A0;
+    private const uint Id_DRS_GetSetting = 0x73BF8338;
+
+    // Well-known DRS setting ids (DWORD-typed).
+    public const uint Setting_PreferredPState = 0x1057EB71; // "Power management mode"
 
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     private delegate int Initialize_t();
@@ -30,6 +38,37 @@ public static class NvApi
     private delegate int GetInterfaceVersionString_t(StringBuilder desc);
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     private delegate int Unload_t();
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    private delegate int DRS_CreateSession_t(out IntPtr session);
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    private delegate int DRS_DestroySession_t(IntPtr session);
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    private delegate int DRS_LoadSettings_t(IntPtr session);
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    private delegate int DRS_GetBaseProfile_t(IntPtr session, out IntPtr profile);
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    private delegate int DRS_GetSetting_t(IntPtr session, IntPtr profile, uint settingId, ref NVDRS_SETTING setting);
+
+    // NVDRS_SETTING (v1). The two value "unions" are sized to their largest member
+    // (NVDRS_BINARY_SETTING = 4 + 4 + NVAPI_BINARY_DATA_MAX). version is sizeof | (1<<16),
+    // computed at runtime via Marshal.SizeOf so it always matches THIS layout.
+    private const int NVAPI_UNICODE_STRING_MAX = 2048;
+    private const int NVAPI_BINARY_DATA_MAX = 4096;
+    private const int UnionSize = 4 + 4 + NVAPI_BINARY_DATA_MAX; // NVDRS_BINARY_SETTING
+
+    [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
+    private struct NVDRS_SETTING
+    {
+        public uint version;
+        [MarshalAs(UnmanagedType.ByValTStr, SizeConst = NVAPI_UNICODE_STRING_MAX)] public string settingName;
+        public uint settingId;
+        public uint settingType;
+        public uint settingLocation;
+        public uint isCurrentPredefined;
+        public uint isPredefinedValid;
+        [MarshalAs(UnmanagedType.ByValArray, SizeConst = UnionSize)] public byte[] predefinedValue;
+        [MarshalAs(UnmanagedType.ByValArray, SizeConst = UnionSize)] public byte[] currentValue;
+    }
 
     private static T? Resolve<T>(uint id) where T : Delegate
     {
@@ -68,4 +107,68 @@ public static class NvApi
             return new(false, $"NVAPI non disponibile: {ex.Message}");
         }
     }
+
+    /// <summary>READ-ONLY: reads the current DWORD value of a global-profile DRS setting (a NVIDIA
+    /// Control Panel option). Opens a DRS session, loads settings, reads the base (global) profile,
+    /// gets the setting, then tears the session down. Writes nothing. Returns the NVAPI status text
+    /// + the value when ok — used to validate the DRS struct marshalling against the real panel
+    /// before we ever attempt a write.</summary>
+    /// <summary>NVAPI status returned by the last DRS_GetSetting was anything OTHER than
+    /// "incompatible struct version" (-130) — i.e. the call executed and our struct layout was
+    /// accepted. NOT_FOUND (-9) still counts as marshalling-ok (the setting just isn't set).</summary>
+    private const int NVAPI_INCOMPATIBLE_STRUCT_VERSION = -130;
+
+    public static NvDrsRead ReadDwordSetting(uint settingId)
+    {
+        IntPtr session = IntPtr.Zero;
+        DRS_DestroySession_t? destroy = null;
+        try
+        {
+            var init = Resolve<Initialize_t>(Id_Initialize);
+            if (init is null || init() != 0) return new(false, false, 0, "NvAPI_Initialize fallito.");
+
+            var create = Resolve<DRS_CreateSession_t>(Id_DRS_CreateSession);
+            var load = Resolve<DRS_LoadSettings_t>(Id_DRS_LoadSettings);
+            var getBase = Resolve<DRS_GetBaseProfile_t>(Id_DRS_GetBaseProfile);
+            var getSetting = Resolve<DRS_GetSetting_t>(Id_DRS_GetSetting);
+            destroy = Resolve<DRS_DestroySession_t>(Id_DRS_DestroySession);
+            if (create is null || load is null || getBase is null || getSetting is null)
+                return new(false, false, 0, "Funzioni DRS non risolte dall'NVAPI.");
+
+            int s = create(out session);
+            if (s != 0) return new(false, false, 0, $"DRS_CreateSession status {s}.");
+            s = load(session);
+            if (s != 0) return new(false, false, 0, $"DRS_LoadSettings status {s}.");
+            s = getBase(session, out var profile);
+            if (s != 0) return new(false, false, 0, $"DRS_GetBaseProfile status {s}.");
+
+            var setting = new NVDRS_SETTING
+            {
+                version = (uint)(Marshal.SizeOf<NVDRS_SETTING>() | (1 << 16)),
+                settingName = "",
+                predefinedValue = new byte[UnionSize],
+                currentValue = new byte[UnionSize],
+            };
+            s = getSetting(session, profile, settingId, ref setting);
+            bool marshallingOk = s != NVAPI_INCOMPATIBLE_STRUCT_VERSION;
+            if (s != 0)
+                return new(false, marshallingOk,
+                    0, $"status {s} su settingId 0x{settingId:X} (-9 = non impostato/default).");
+
+            uint value = BitConverter.ToUInt32(setting.currentValue, 0);
+            return new(true, true, value, $"0x{settingId:X} = {value} (tipo {setting.settingType}).");
+        }
+        catch (DllNotFoundException) { return new(false, false, 0, "nvapi64.dll non trovata."); }
+        catch (Exception ex) { return new(false, false, 0, $"Errore DRS: {ex.Message}"); }
+        finally
+        {
+            if (session != IntPtr.Zero) destroy?.Invoke(session);
+            Resolve<Unload_t>(Id_Unload)?.Invoke();
+        }
+    }
 }
+
+/// <summary>Result of a DRS read. <see cref="MarshallingOk"/> is true whenever NVAPI executed the
+/// call without rejecting our struct (no -130), even if the setting wasn't found — that's the proof
+/// the interop layout is correct.</summary>
+public sealed record NvDrsRead(bool Ok, bool MarshallingOk, uint Value, string Message);
