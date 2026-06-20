@@ -35,6 +35,8 @@ switch (args[0])
         return RunReport(args.Skip(1).ToArray());
     case "advise":
         return RunAdvise(args.Skip(1).ToArray());
+    case "applicable":
+        return RunApplicable(args.Skip(1).ToArray());
     case "apply":
         return RunApply(args.Skip(1).ToArray());
     case "apply-all":
@@ -750,6 +752,75 @@ static WPEP.Execution.ExecutionEngine NewEngine() =>
 static bool EntryNeedsAdmin(WPEP.KnowledgeBase.TweakEntry e) => WPEP.Execution.ApplyPolicy.NeedsAdmin(e);
 static bool CanApplyEntry(WPEP.KnowledgeBase.TweakEntry e) => WPEP.Execution.ApplyPolicy.CanApply(e);
 
+// Vista a colpo d'occhio: TUTTO ciò che Verdict può applicare con un click, con lo
+// stato LIVE di ognuno (sola lettura — non scrive niente). Risponde alla domanda di
+// Léon: "quali sono i tweak applicabili con un click?".
+static int RunApplicable(string[] args)
+{
+    IReadOnlyList<WPEP.KnowledgeBase.TweakEntry> entries;
+    try { entries = WPEP.KnowledgeBase.KnowledgeBaseLoader.Load(); }
+    catch (Exception ex) { Console.Error.WriteLine($"Caricamento KB fallito: {ex.Message}"); return 1; }
+
+    // I tweak per-gioco dipendono dal gioco in esecuzione: fuori da questa panoramica di sistema.
+    var applicable = entries.Where(e => CanApplyEntry(e) && e.Game is null)
+        .OrderBy(e => e.Category, StringComparer.OrdinalIgnoreCase)
+        .ThenBy(e => e.Name, StringComparer.OrdinalIgnoreCase).ToList();
+    if (applicable.Count == 0) { Console.WriteLine("Nessun tweak applicabile automaticamente in questa build."); return 0; }
+
+    bool elevated = Elevation.IsElevated();
+    var engine = NewEngine();
+    int done = 0, readyNow = 0, adminNeeded = 0, unreadable = 0;
+    var lines = new List<(string Category, string Text)>();
+
+    foreach (var e in applicable)
+    {
+        string icon;
+        var extra = "";
+        bool needsAdmin = EntryNeedsAdmin(e);
+        try
+        {
+            var plan = engine.BuildPlan(e); // legge solo i valori correnti
+            if (plan.IsAlreadyApplied) { icon = "✓"; done++; }
+            else if (needsAdmin && !elevated) { icon = "○"; extra = "  · richiede amministratore"; adminNeeded++; }
+            else { icon = "○"; readyNow++; }
+        }
+        catch
+        {
+            // Alcune letture (es. bcdedit) richiedono admin: se è quel caso, è più onesto
+            // dirlo che spacciarlo per "non leggibile".
+            if (needsAdmin && !elevated) { icon = "○"; extra = "  · richiede amministratore"; adminNeeded++; }
+            else { icon = "?"; extra = "  · stato non leggibile"; unreadable++; }
+        }
+
+        var riskTag = e.Risk switch
+        {
+            WPEP.KnowledgeBase.RiskLevel.Medium => "  ⚠ rischio medio",
+            WPEP.KnowledgeBase.RiskLevel.High => "  ⚠ RISCHIO ALTO",
+            _ => "",
+        };
+        var impact = e.ExpectedImpact.Length > 96 ? e.ExpectedImpact[..93] + "…" : e.ExpectedImpact;
+        lines.Add((e.Category, $"  {icon} {e.Name}  [{e.Id}]{riskTag}{extra}\n      {impact}"));
+    }
+
+    Console.WriteLine($"\nTweak applicabili con un click ({applicable.Count}) — sola lettura, niente è stato scritto:\n");
+    foreach (var group in lines.GroupBy(l => l.Category))
+    {
+        Console.WriteLine($"━━ {group.Key.ToUpperInvariant()}");
+        foreach (var l in group) Console.WriteLine(l.Text);
+        Console.WriteLine();
+    }
+
+    Console.WriteLine("Legenda:  ✓ già a posto   ○ applicabile   ? stato non leggibile");
+    Console.Write($"Totale {applicable.Count}:  {done} già applicati,  {readyNow} applicabili ora");
+    if (adminNeeded > 0) Console.Write($",  {adminNeeded} richiedono admin");
+    if (unreadable > 0) Console.Write($",  {unreadable} non leggibili");
+    Console.WriteLine(".");
+    if (!elevated && adminNeeded > 0)
+        Console.WriteLine("Rilancia da un terminale amministratore per includere i tweak che scrivono in HKLM/boot.");
+    Console.WriteLine("\nApplica:  wpep apply <id> [--yes]   ·   tutti i consigliati:  wpep apply-all [--yes]");
+    return 0;
+}
+
 static int RunApply(string[] args)
 {
     bool yes = args.Contains("--yes") || args.Contains("-y");
@@ -841,7 +912,7 @@ static int RunApplyAll(string[] args)
     bool elevated = Elevation.IsElevated();
     var engine = NewEngine();
     var ready = new List<WPEP.Execution.ExecutionPlan>();
-    int adminSkipped = 0;
+    int adminSkipped = 0, alreadyOk = 0, failed = 0;
 
     // Never apply two mutually-exclusive tweaks in one batch.
     var (kept, conflicts) = WPEP.Advisor.ConflictResolver.Resolve(recs);
@@ -859,14 +930,17 @@ static int RunApplyAll(string[] args)
         try
         {
             var p = engine.BuildPlan(e);
-            if (p.IsAlreadyApplied) { Console.WriteLine($"• {e.Name}\n    [già al valore desiderato — niente da fare]"); continue; }
+            if (p.IsAlreadyApplied) { alreadyOk++; Console.WriteLine($"• {e.Name}\n    [già al valore desiderato — niente da fare]"); continue; }
             ready.Add(p);
             Console.WriteLine($"• {e.Name}\n{p.Describe()}");
         }
-        catch (Exception ex) { Console.WriteLine($"• {e.Name}\n    [non applicabile: {ex.Message}]"); }
+        catch (Exception ex) { failed++; Console.WriteLine($"• {e.Name}\n    [non applicabile: {ex.Message}]"); }
     }
+    Console.WriteLine($"\nRiepilogo: {ready.Count} da applicare · {alreadyOk} già a posto · " +
+        $"{conflicts.Count} in conflitto · {adminSkipped} richiedono admin" +
+        (failed > 0 ? $" · {failed} non applicabili" : "") + ".");
     if (adminSkipped > 0)
-        Console.WriteLine($"\n{adminSkipped} richiedono un terminale amministratore (rilancia da admin per includerli).");
+        Console.WriteLine($"{adminSkipped} richiedono un terminale amministratore (rilancia da admin per includerli).");
     if (ready.Count == 0) { Console.WriteLine("\nNiente da applicare adesso."); return 0; }
 
     if (!yes)
@@ -922,7 +996,7 @@ static int RunApplyProfile(string[] args)
     var engine = NewEngine();
     var (kept, conflicts) = WPEP.Advisor.ConflictResolver.Resolve(entries);
     var ready = new List<WPEP.Execution.ExecutionPlan>();
-    int adminSkipped = 0;
+    int adminSkipped = 0, alreadyOk = 0, failed = 0;
 
     Console.WriteLine($"Profilo '{profile.Name}' — dry run:\n");
     foreach (var d in conflicts)
@@ -938,14 +1012,17 @@ static int RunApplyProfile(string[] args)
         try
         {
             var p = engine.BuildPlan(e);
-            if (p.IsAlreadyApplied) { Console.WriteLine($"• {e.Name}\n    [già al valore desiderato]"); continue; }
+            if (p.IsAlreadyApplied) { alreadyOk++; Console.WriteLine($"• {e.Name}\n    [già al valore desiderato]"); continue; }
             ready.Add(p);
             Console.WriteLine($"• {e.Name}\n{p.Describe()}");
         }
-        catch (Exception ex) { Console.WriteLine($"• {e.Name}\n    [non applicabile: {ex.Message}]"); }
+        catch (Exception ex) { failed++; Console.WriteLine($"• {e.Name}\n    [non applicabile: {ex.Message}]"); }
     }
+    Console.WriteLine($"\nRiepilogo: {ready.Count} da applicare · {alreadyOk} già a posto · " +
+        $"{conflicts.Count} in conflitto · {adminSkipped} richiedono admin" +
+        (failed > 0 ? $" · {failed} non applicabili" : "") + ".");
     if (adminSkipped > 0)
-        Console.WriteLine($"\n{adminSkipped} richiedono un terminale amministratore (rilancia da admin per includerli).");
+        Console.WriteLine($"{adminSkipped} richiedono un terminale amministratore (rilancia da admin per includerli).");
     if (ready.Count == 0) { Console.WriteLine("\nNiente da applicare adesso."); return 0; }
     if (!yes)
     {
@@ -1598,6 +1675,11 @@ static void PrintUsage()
 
           wpep tools install-presentmon
               Scarica PresentMon (Intel, MIT) nella cartella tools di WPEP.
+
+          wpep applicable
+              Panoramica a colpo d'occhio di TUTTO ciò che è applicabile con un
+              click, con lo stato live di ognuno (✓ già a posto / ○ applicabile /
+              richiede admin), raggruppato per categoria. Sola lettura.
 
           wpep apply <id> [--yes]
               Applica un tweak della KB. SENZA --yes mostra solo il dry-run
