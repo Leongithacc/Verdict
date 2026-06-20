@@ -855,6 +855,19 @@ la combo classica. Il conflitto errato faceva scartare silenziosamente NetworkTh
 profilo che aveva entrambi (Competitive, Pulizia max). Rimosso. Ora "0 in conflitto", NetworkThrottling
 finisce correttamente nel gruppo "richiede admin" (HKLM).
 
+### 61. BLOCCO 3 NVIDIA RTX50 — RICERCA FATTA, CHIUSO con verdetto (2026-06-20)
+Ricerca read-only (mentre Léon era via) per sbloccare/chiudere l'unico blocco aperto. Verdetto:
+- **Low Latency Mode "On"** = "Maximum pre-rendered frames" 0x007BA09E=1 → GIÀ implementato.
+- **Low Latency "Ultra", Reflex, Frame Generation, Smooth Motion, DLSS override** → NVIDIA dichiara
+  ESPLICITAMENTE (forum dev, thread 241104) che NON sono supportati via NVAPI SDK; nessun riferimento
+  Profile Inspector (DeadManWalkingTO né xHybred Revamped CustomSettingNames.xml) li espone come DRS.
+  Sono gestiti dall'app NVIDIA / integrazione in-game → NON automatizzabili in sicurezza.
+- Esiste un FPS Limiter via DRS ma richiede un valore scelto (monitor-dipendente) → non one-click.
+- **CONCLUSIONE**: superficie DRS one-click esaurita coi 3 tweak NVIDIA già presenti. Blocco 3 chiuso,
+  nessuna implementazione (giusto rifiutare di scrivere costanti inesistenti/non documentate).
+Preparato `docs/NEXT_SESSION.md`: brief ordinato per importanza per il ritorno di Léon (field-test
+write path reali #1, review visiva GUI #2, polish estetico #3 solo-alla-fine, altri tweak #4 opzionale).
+
 ## Stato a fine sessione Opus (AGGIORNATO 2026-06-16)
 - `dotnet test`: **145/145 verdi**. `dotnet build WPEP.sln -c Release`: 0 errori/0 warning.
   (Se un nodo MSBuild crasha in parallelo: `-m:1 --disable-build-servers`.)
