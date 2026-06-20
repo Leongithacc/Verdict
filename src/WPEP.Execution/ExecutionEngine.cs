@@ -411,17 +411,27 @@ public sealed class ExecutionEngine(
         System.IO.File.WriteAllText(file, JsonSerializer.Serialize(session,
             new JsonSerializerOptions { WriteIndented = true }));
 
+    /// <summary>Hard cap on how long we let System Restore run before giving up.
+    /// Checkpoint-Computer can stall for minutes (VSS busy, provider hung, disabled)
+    /// — apply must NEVER block on it, so we cut it off and proceed best-effort.</summary>
+    private const int RestorePointTimeoutMs = 12000;
+
     /// <summary>Belt-and-braces: a System Restore checkpoint before writing.
-    /// Best effort — requires admin and System Restore enabled.</summary>
+    /// Best effort — requires admin and System Restore enabled. Guaranteed to return
+    /// within ~<see cref="RestorePointTimeoutMs"/>ms even if PowerShell/VSS hangs:
+    /// on timeout the process tree is killed and we report failure (no checkpoint).</summary>
     private static bool TryCreateRestorePoint(string description)
     {
+        // Sanitise the description for single-quoted PowerShell (escape ' as '').
+        var safe = description.Replace("'", "''");
+        Process? p = null;
         try
         {
             // -WarningAction SilentlyContinue: Windows rate-limits restore points to one
             // per 24h and emits a WARNING when skipped; suppress it (best-effort anyway).
             // Redirect BOTH streams so nothing leaks to the caller's console.
             var psi = new ProcessStartInfo("powershell",
-                $"-NoProfile -Command \"Checkpoint-Computer -Description '{description}' " +
+                $"-NoProfile -NonInteractive -Command \"Checkpoint-Computer -Description '{safe}' " +
                 "-RestorePointType MODIFY_SETTINGS -ErrorAction Stop -WarningAction SilentlyContinue\"")
             {
                 UseShellExecute = false,
@@ -429,15 +439,32 @@ public sealed class ExecutionEngine(
                 RedirectStandardError = true,
                 RedirectStandardOutput = true,
             };
-            using var p = Process.Start(psi)!;
-            p.StandardOutput.ReadToEnd();
-            p.StandardError.ReadToEnd();
-            p.WaitForExit(30000);
+            p = Process.Start(psi);
+            if (p is null)
+                return false;
+
+            // Drain both pipes asynchronously: a synchronous ReadToEnd() would block
+            // here forever if the child hangs, before WaitForExit's timeout could fire.
+            p.BeginOutputReadLine();
+            p.BeginErrorReadLine();
+
+            if (!p.WaitForExit(RestorePointTimeoutMs))
+            {
+                // Timed out — kill the whole tree (PowerShell may have spawned children)
+                // and report no checkpoint. The caller continues with journal-based undo.
+                try { p.Kill(entireProcessTree: true); } catch { /* already gone */ }
+                return false;
+            }
+
             return p.ExitCode == 0;
         }
         catch
         {
             return false;
+        }
+        finally
+        {
+            p?.Dispose();
         }
     }
 }
