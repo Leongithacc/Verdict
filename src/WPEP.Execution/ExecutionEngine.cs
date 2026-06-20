@@ -127,6 +127,17 @@ public sealed class ExecutionEngine(
                     found ? value.ToString() : null, target);
             }).ToList(),
 
+            "dxuser" => apply.Operations.Select(op =>
+            {
+                // op.Path = nome del sotto-setting (es. "VRROptimizeEnable"); value_after = "0"/"1".
+                // Read-modify-write sul REG_SZ globale: leggiamo SOLO la coppia di questo setting.
+                var raw = registry.Read(DxUserSettings.GlobalValuePath).Value;
+                var (found, value) = DxUserSettings.Get(raw, op.Path);
+                string target = op.ValueAfter ?? throw new InvalidOperationException(
+                    $"{entry.Id}: value_after (valore dxuser) mancante");
+                return new PlannedOperation(op.Path, "dxuser", found, value, target);
+            }).ToList(),
+
             _ => throw new NotSupportedException(
                 $"Metodo '{apply.Method}' non ancora supportato dall'engine (registry, powercfg, bcdedit in questa build)."),
         };
@@ -212,7 +223,7 @@ public sealed class ExecutionEngine(
                 continue;
 
             var (exists, value) = ReadCurrent(entry);
-            bool isCreate = entry.Method is "registry" or "bcdedit" && !entry.ExistedBefore;
+            bool isCreate = entry.Method is "registry" or "bcdedit" or "dxuser" && !entry.ExistedBefore;
             bool alreadyReverted = isCreate ? !exists : (exists && value == entry.ValueBefore);
             bool matchesOurWrite = exists && value == entry.ValueAfter;
 
@@ -307,6 +318,9 @@ public sealed class ExecutionEngine(
             case "nvidia-drs":
                 var (found, value) = _nvidiaDrs.ReadDword(ParseSettingId(entry.Path));
                 return (found, found ? value.ToString() : null);
+            case "dxuser":
+                var dxRaw = registry.Read(DxUserSettings.GlobalValuePath).Value;
+                return DxUserSettings.Get(dxRaw, entry.Path);
             default:
                 return (false, null);
         }
@@ -357,6 +371,22 @@ public sealed class ExecutionEngine(
             case "nvidia-drs":
                 _nvidiaDrs.DeleteSetting(ParseSettingId(entry.Path)); // back to driver default
                 break;
+            case "dxuser" when entry.ExistedBefore:
+                // Ripristina SOLO questa coppia al valore precedente, preservando le altre.
+                var rawB = registry.Read(DxUserSettings.GlobalValuePath).Value;
+                registry.Write(DxUserSettings.GlobalValuePath, "string",
+                    DxUserSettings.Set(rawB, entry.Path, entry.ValueBefore!));
+                var (fB, vB) = DxUserSettings.Get(
+                    registry.Read(DxUserSettings.GlobalValuePath).Value, entry.Path);
+                if (!fB || vB != entry.ValueBefore)
+                    throw new InvalidOperationException($"Undo VERIFY fallita su {entry.Path} (dxuser).");
+                break;
+            case "dxuser":
+                // La coppia non c'era prima di Verdict: la rimuoviamo, lasciando intatte le altre.
+                var rawD = registry.Read(DxUserSettings.GlobalValuePath).Value;
+                registry.Write(DxUserSettings.GlobalValuePath, "string",
+                    DxUserSettings.Remove(rawD, entry.Path));
+                break;
         }
     }
 
@@ -388,6 +418,14 @@ public sealed class ExecutionEngine(
                 _nvidiaDrs.WriteDword(id, uint.Parse(after));
                 var (found, value) = _nvidiaDrs.ReadDword(id);
                 return found ? value.ToString() : "<niente>";
+            case "dxuser":
+                // Read-modify-write: fonde SOLO questa coppia, preserva le sorelle, rilegge per verify.
+                var rawA = registry.Read(DxUserSettings.GlobalValuePath).Value;
+                registry.Write(DxUserSettings.GlobalValuePath, "string",
+                    DxUserSettings.Set(rawA, path, after));
+                var (fA, vA) = DxUserSettings.Get(
+                    registry.Read(DxUserSettings.GlobalValuePath).Value, path);
+                return fA ? vA! : "<niente>";
             default:
                 throw new NotSupportedException($"Metodo '{method}' non eseguibile.");
         }

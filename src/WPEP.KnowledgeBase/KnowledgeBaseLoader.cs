@@ -63,7 +63,7 @@ public static class KnowledgeBaseValidator
             // V2 prep: apply specs must be coherent even before the engine exists.
             if (e.Apply is { } apply)
             {
-                string[] methods = ["registry", "powercfg", "powercfg-value", "bcdedit", "nvidia-drs", "service", "gui-only"];
+                string[] methods = ["registry", "powercfg", "powercfg-value", "bcdedit", "nvidia-drs", "dxuser", "service", "gui-only"];
                 if (!methods.Contains(apply.Method))
                     problems.Add($"{e.Id}: apply.method '{apply.Method}' non valido.");
                 if (apply.Method == "gui-only" && string.IsNullOrWhiteSpace(apply.GuiOnlyReason))

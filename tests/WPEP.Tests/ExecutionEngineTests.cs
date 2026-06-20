@@ -156,6 +156,72 @@ public class ExecutionEngineTests : IDisposable
     }
 
     [Fact]
+    public void DxUser_Apply_MergesOnePair_PreservingSiblings_AndUndoRestores()
+    {
+        var registry = new FakeRegistry();
+        // Stato reale tipico: windowed-opts ON, VRR OFF, AutoHDR OFF — UN solo REG_SZ.
+        registry.Data[DxUserSettings.GlobalValuePath] =
+            ("string", "SwapEffectUpgradeEnable=1;VRROptimizeEnable=0;AutoHDREnable=0;");
+        var engine = new ExecutionEngine(registry, _journalDir);
+        var entry = Entry(apply: new ApplySpec
+        {
+            Method = "dxuser",
+            Operations = [new ApplyOperation { Path = "VRROptimizeEnable", ValueAfter = "1", Kind = "dxuser" }],
+        });
+
+        var plan = engine.BuildPlan(entry);
+        Assert.Equal("0", plan.Operations[0].Before); // VRR era 0
+        Assert.True(plan.Operations[0].ExistedBefore);
+
+        var file = engine.Execute(plan);
+        var after = registry.Data[DxUserSettings.GlobalValuePath].Value;
+        Assert.Equal("1", DxUserSettings.Get(after, "VRROptimizeEnable").Value);   // cambiato
+        Assert.Equal("1", DxUserSettings.Get(after, "SwapEffectUpgradeEnable").Value); // sorella INTATTA
+        Assert.Equal("0", DxUserSettings.Get(after, "AutoHDREnable").Value);        // sorella INTATTA
+
+        engine.Undo(file);
+        var restored = registry.Data[DxUserSettings.GlobalValuePath].Value;
+        Assert.Equal("0", DxUserSettings.Get(restored, "VRROptimizeEnable").Value); // ripristinato
+        Assert.Equal("1", DxUserSettings.Get(restored, "SwapEffectUpgradeEnable").Value); // ancora intatta
+    }
+
+    [Fact]
+    public void DxUser_Apply_AppendsPair_WhenAbsent_AndUndoRemovesIt_KeepingSiblings()
+    {
+        var registry = new FakeRegistry();
+        registry.Data[DxUserSettings.GlobalValuePath] = ("string", "SwapEffectUpgradeEnable=1;");
+        var engine = new ExecutionEngine(registry, _journalDir);
+        var entry = Entry(apply: new ApplySpec
+        {
+            Method = "dxuser",
+            Operations = [new ApplyOperation { Path = "VRROptimizeEnable", ValueAfter = "1", Kind = "dxuser" }],
+        });
+
+        var plan = engine.BuildPlan(entry);
+        Assert.False(plan.Operations[0].ExistedBefore); // la coppia non c'era
+
+        var file = engine.Execute(plan);
+        Assert.Equal("1", DxUserSettings.Get(registry.Data[DxUserSettings.GlobalValuePath].Value, "VRROptimizeEnable").Value);
+
+        engine.Undo(file);
+        var restored = registry.Data[DxUserSettings.GlobalValuePath].Value;
+        Assert.False(DxUserSettings.Get(restored, "VRROptimizeEnable").Found);      // rimossa
+        Assert.Equal("1", DxUserSettings.Get(restored, "SwapEffectUpgradeEnable").Value); // sorella preservata
+    }
+
+    [Theory]
+    // Windows ITALIANO: l'etichetta è tradotta — il parser NON deve dipendere dal testo.
+    [InlineData("    Indice impostazione alimentazione CA corrente: 0x00000000\n    Indice impostazione alimentazione CC corrente: 0x00000001", 0)]
+    // Windows INGLESE.
+    [InlineData("    Current AC Power Setting Index: 0x00000001\n    Current DC Power Setting Index: 0x00000000", 1)]
+    public void PowerCfg_ParseAcIndex_IsLocaleIndependent(string dump, int expected)
+    {
+        // Gli indici "possibili" (000/001 senza 0x) NON devono confondere il parser.
+        string full = "      Indice impostazione possibile: 000\n      Indice impostazione possibile: 001\n" + dump;
+        Assert.Equal(expected, RealPowerCfg.ParseAcIndex(full));
+    }
+
+    [Fact]
     public void DetectDrift_NoDriftRightAfterApply()
     {
         var registry = new FakeRegistry();

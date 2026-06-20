@@ -1044,12 +1044,18 @@
     "conflicts_with": [],
     "measurable": false,
     "apply": {
-      "method": "gui-only",
-      "operations": [],
+      "method": "powercfg-value",
+      "operations": [
+        {
+          "path": "2a737441-1930-4402-8d77-b2bebba308a3/48e6b7a6-50f5-4782-a5d4-53bb8f07e226",
+          "value_after": "0",
+          "verify": "0",
+          "kind": "dword"
+        }
+      ],
       "requires_reboot": false,
-      "undo": "manual-steps",
-      "gui_only_reason": "Hidden advanced power setting - not reliably scriptable",
-      "settings_uri": "control.exe powercfg.cpl"
+      "undo": "auto-journal",
+      "gui_only_reason": null
     }
   },
   {
@@ -1072,12 +1078,18 @@
     ],
     "measurable": true,
     "apply": {
-      "method": "gui-only",
-      "operations": [],
+      "method": "dxuser",
+      "operations": [
+        {
+          "path": "SwapEffectUpgradeEnable",
+          "value_after": "1",
+          "verify": "1",
+          "kind": "dxuser"
+        }
+      ],
       "requires_reboot": false,
-      "undo": "manual-steps",
-      "gui_only_reason": "Windows graphics settings page",
-      "settings_uri": "ms-settings:display-advancedgraphics"
+      "undo": "auto-journal",
+      "gui_only_reason": null
     }
   },
   {
@@ -1773,12 +1785,18 @@
     "conflicts_with": [],
     "measurable": true,
     "apply": {
-      "method": "gui-only",
-      "operations": [],
+      "method": "dxuser",
+      "operations": [
+        {
+          "path": "VRROptimizeEnable",
+          "value_after": "1",
+          "verify": "1",
+          "kind": "dxuser"
+        }
+      ],
       "requires_reboot": false,
-      "undo": "manual-steps",
-      "gui_only_reason": "Windows Settings / Graphics page",
-      "settings_uri": "ms-settings:display-advancedgraphics"
+      "undo": "auto-journal",
+      "gui_only_reason": null
     }
   },
   {

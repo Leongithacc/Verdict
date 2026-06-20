@@ -775,6 +775,42 @@ DestroySession/Unload. Struct `NVDRS_SETTING` (version = Marshal.SizeOf | 1<<16,
   via DRS_SetSetting(0x577DD202)+DRS_SaveSettings(0xFCBC7E14) + nuovo metodo apply "nvidia-drs"
   nell'ExecutionEngine + verify-after-write + undo-journal, field-validate da Léon. Anti-cheat safe.
 
+### 53. ROBUSTEZZA — Timeout su TryCreateRestorePoint (2026-06-20, commit 92bfffa)
+Il restore-point (Checkpoint-Computer via PowerShell) poteva impallarsi per minuti (VSS occupato/
+provider hung) e `ReadToEnd()` bloccava PRIMA di `WaitForExit`, così il timeout non scattava mai →
+OGNI apply rischiava lo stallo (è ciò che aveva impallato il field-test NVIDIA). Fix: drain async dei
+pipe (BeginOutput/ErrorReadLine), cap 12s (`RestorePointTimeoutMs`), kill dell'albero processi su
+timeout, ExitCode solo dopo uscita confermata, escape `'` nella description. Apply non blocca più >12s.
+
+### 54. BASI/FASE B — +2 tweak NVIDIA one-click, costanti header-verified (2026-06-20, commit 06ebcbc)
+`nvidia-low-latency-on` (PRERENDERLIMIT 0x007BA09E=1) e `nvidia-vsync-off` (VSYNCMODE 0x00A879CF=
+VSYNCMODE_FORCEOFF 0x08416747). Costanti prese VERBATIM dall'header ufficiale NVIDIA/nvapi (2 fetch
+indipendenti, NON a memoria — così ho corretto un mio ricordo errato di OGL_THREAD_CONTROL_ID/
+PREFER_MIN). Engine: la KB può scrivere il valore DRS in hex o decimale; `ParseDword` in BuildPlan
+normalizza a decimale (verify/drift confrontano decimale==decimale). Dry-run su RTX 5080: entrambi
+`<not set>` → target (0x08416747 → 138504007 dec). Descrizione vsync-off AVVISA: non usare con G-SYNC.
+
+### 55. BASI/BLOCCO 1 — gui-only → one-click: nuovo metodo `dxuser` + fix locale powercfg (2026-06-20)
+Léon (cps): "Promuovi gui-only → one-click". Censimento onesto del KB (91 voci): solo 18 erano
+one-click, 55 gui-only (la maggioranza GIUSTAMENTE non automatizzabile: in-game/BIOS/cavi), 18 solo
+informative. Promossi i 3 candidati ad alta confidenza:
+- **Nuovo metodo `dxuser`** (read-modify-write del REG_SZ globale `DirectXUserGlobalSettings` sotto
+  HKCU\…\DirectX\UserGpuPreferences): le tre toggle Win11 (windowed-opts, VRR, AutoHDR) vivono in UN
+  solo valore come coppie `chiave=valore;`. Una scrittura SZ ingenua le cancellerebbe a vicenda →
+  helper puro `DxUserSettings` (Parse/Build/Get/Set/Remove) che fonde UNA chiave preservando le altre,
+  con undo granulare (ripristina/rimuove solo quella coppia). `win11-windowed-optimizations`
+  (SwapEffectUpgradeEnable=1) e `win11-variable-refresh-rate` (VRROptimizeEnable=1) ora one-click.
+  Letto il registro LIVE di Léon per confermare il formato: `SwapEffectUpgradeEnable=1;VRROptimizeEnable=0;
+  AutoHDREnable=0;`. Dry-run reali: windowed-opts già=1, VRR 0→1. ✓
+- **`usb-selective-suspend-off` → powercfg-value** (GUID USB 2a737441…/48e6b7a6…). Ha smascherato un
+  **bug latente importante**: `RealPowerCfg.QuerySettingIndex` cercava l'etichetta INGLESE "Current AC
+  Power Setting Index" → su Windows ITALIANO (Léon) non matchava mai → powercfg-value ROTTO su ogni
+  Windows localizzato. Fix locale-indipendente: estratto `ParseAcIndex(output)` testabile che prende il
+  PRIMO valore `0x…` (gli indici possibili sono 000/001 senza 0x; il 1° 0x = AC). Test theory IT+EN.
+- Tolto `settings_uri` dalle 3 voci promosse (rispettata l'invariante esistente "le applicabili non
+  hanno deep-link"; manual_steps resta come documentazione). One-click: 18 → 21.
+- Test: +2 dxuser (preservazione sorelle + undo), +2 powercfg locale. Build 0/0.
+
 ## Stato a fine sessione Opus (AGGIORNATO 2026-06-16)
 - `dotnet test`: **145/145 verdi**. `dotnet build WPEP.sln -c Release`: 0 errori/0 warning.
   (Se un nodo MSBuild crasha in parallelo: `-m:1 --disable-build-servers`.)

@@ -35,12 +35,20 @@ public sealed class RealPowerCfg : IPowerCfg
     public int QuerySettingIndex(string subgroup, string setting)
     {
         string output = Run($"/query SCHEME_CURRENT {subgroup} {setting}");
-        var match = System.Text.RegularExpressions.Regex.Match(
-            output, @"Current AC Power Setting Index:\s*0x([0-9a-fA-F]+)");
-        return match.Success
-            ? Convert.ToInt32(match.Groups[1].Value, 16)
-            : throw new InvalidOperationException(
+        return ParseAcIndex(output)
+            ?? throw new InvalidOperationException(
                 $"Impossibile leggere il valore di {subgroup}/{setting}.");
+    }
+
+    /// <summary>Extract the AC current index from a `powercfg /query` dump,
+    /// LOCALE-INDIPENDENTE: l'etichetta "Current AC Power Setting Index" è tradotta su
+    /// Windows localizzato, quindi non la cerchiamo per testo. Gli unici valori "0x..."
+    /// nell'output sono l'indice CA corrente e poi quello CC (gli indici "possibili" sono
+    /// stampati come 000/001 senza prefisso 0x): il PRIMO match 0x è l'AC. Null se assente.</summary>
+    internal static int? ParseAcIndex(string output)
+    {
+        var match = System.Text.RegularExpressions.Regex.Match(output, @"0x([0-9a-fA-F]+)");
+        return match.Success ? Convert.ToInt32(match.Groups[1].Value, 16) : null;
     }
 
     public void SetSettingIndex(string subgroup, string setting, int index)

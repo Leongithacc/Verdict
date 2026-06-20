@@ -26,7 +26,7 @@ public static class ApplyPolicy
     /// <summary>A KB entry Verdict can write programmatically: a supported method and
     /// never a placebo (applying a placebo is refused by design).</summary>
     public static bool CanApply(TweakEntry e) =>
-        e.Apply is { Method: "registry" or "powercfg" or "powercfg-value" or "bcdedit" or "nvidia-drs" } &&
+        e.Apply is { Method: "registry" or "powercfg" or "powercfg-value" or "bcdedit" or "nvidia-drs" or "dxuser" } &&
         e.EvidenceLevel != EvidenceLevel.Placebo;
 
     /// <summary>bcdedit always writes the boot store; HKLM registry writes need admin too.</summary>
