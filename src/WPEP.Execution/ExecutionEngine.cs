@@ -117,8 +117,12 @@ public sealed class ExecutionEngine(
             {
                 // op.Path = NVIDIA DRS setting id (hex, e.g. "0x1057EB71"); value_after = DWORD value.
                 var (found, value) = _nvidiaDrs.ReadDword(ParseSettingId(op.Path));
-                string target = op.ValueAfter ?? throw new InvalidOperationException(
+                string rawTarget = op.ValueAfter ?? throw new InvalidOperationException(
                     $"{entry.Id}: value_after (valore DRS) mancante");
+                // La KB può scrivere il valore in hex ("0x08416747", verificabile a vista
+                // contro l'header nvapi) o in decimale: lo normalizziamo a decimale qui così
+                // la verify (rilettura == target) e il drift-check confrontano sempre decimale.
+                string target = ParseDword(rawTarget).ToString();
                 return new PlannedOperation(op.Path, "nvidia-drs", found,
                     found ? value.ToString() : null, target);
             }).ToList(),
@@ -397,6 +401,10 @@ public sealed class ExecutionEngine(
             ? Convert.ToUInt32(path[2..], 16)
             : uint.Parse(path);
     }
+
+    /// <summary>Parse a DRS DWORD value written in hex ("0x...") or decimal.
+    /// Same grammar as a setting id — separate name for call-site clarity.</summary>
+    private static uint ParseDword(string value) => ParseSettingId(value);
 
     /// <summary>Power-setting path is "subgroupGuid/settingGuid".</summary>
     private static (string subgroup, string setting) SplitPowerPath(string path)

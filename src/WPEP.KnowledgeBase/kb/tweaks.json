@@ -592,6 +592,76 @@
     }
   },
   {
+    "id": "nvidia-low-latency-on",
+    "name": "Low Latency Mode: On (max frame pre-renderizzati = 1)",
+    "category": "gpu",
+    "description": "Limita a 1 i frame che la CPU può accodare in anticipo per la GPU (la vecchia 'Maximum pre-rendered frames', oggi UI 'Low Latency Mode: On'). Meno frame in coda = meno ritardo tra mouse e schermo. Aiuta soprattutto quando sei GPU-bound; quando sei già CPU-bound l'effetto è minimo. Per i competitivi è una delle poche impostazioni pannello che tocca davvero la latenza.",
+    "hardware_prerequisites": [
+      "gpu:nvidia"
+    ],
+    "expected_impact": "Riduzione latenza di rendering di ~1 frame quando GPU-bound (qualche ms a seconda dell'FPS). Trascurabile se sei già CPU-bound o con FPS molto alti.",
+    "evidence_level": "plausible",
+    "sources": [
+      "https://www.nvidia.com/en-us/geforce/guides/gfecnt/202010/system-latency-optimization-guide/",
+      "https://github.com/NVIDIA/nvapi/blob/main/NvApiDriverSettings.h"
+    ],
+    "risk": "low",
+    "risk_notes": "Può ridurre marginalmente l'FPS medio in scenari fortemente GPU-bound (meno buffering). Per Reflex nei giochi che lo supportano, l'in-game Reflow batte questa impostazione.",
+    "rollback": "Pannello NVIDIA → Modalità a bassa latenza → Off (oppure undo automatico di Verdict).",
+    "manual_steps": "Pannello di controllo NVIDIA → Gestisci impostazioni 3D → Modalità a bassa latenza → On.",
+    "conflicts_with": [],
+    "measurable": true,
+    "apply": {
+      "method": "nvidia-drs",
+      "operations": [
+        {
+          "path": "0x007BA09E",
+          "value_after": "1",
+          "verify": "1",
+          "kind": "dword"
+        }
+      ],
+      "requires_reboot": false,
+      "undo": "auto-journal",
+      "gui_only_reason": null
+    }
+  },
+  {
+    "id": "nvidia-vsync-off",
+    "name": "Vertical Sync: Off forzato (globale)",
+    "category": "gpu",
+    "description": "Forza la V-Sync OFF a livello driver, ignorando l'impostazione dei singoli giochi. Toglie il ritardo di coda introdotto dalla sincronizzazione verticale: latenza più bassa, a costo del tearing. Scelta da competitivo SENZA G-SYNC. ATTENZIONE: se usi G-SYNC/VRR la configurazione ottimale è l'opposto — V-Sync ON nel pannello + cap FPS sotto il refresh — quindi NON applicare questo tweak in quel caso.",
+    "hardware_prerequisites": [
+      "gpu:nvidia"
+    ],
+    "expected_impact": "Latenza più bassa rispetto a V-Sync attiva quando l'FPS supera il refresh. Nessun beneficio (e tearing) se eri già senza V-Sync o se usi G-SYNC.",
+    "evidence_level": "plausible",
+    "sources": [
+      "https://www.nvidia.com/en-us/geforce/guides/gfecnt/202010/system-latency-optimization-guide/",
+      "https://github.com/NVIDIA/nvapi/blob/main/NvApiDriverSettings.h"
+    ],
+    "risk": "low",
+    "risk_notes": "Introduce screen tearing. Da NON usare con G-SYNC/FreeSync (lì serve V-Sync ON + framecap). Reversibile.",
+    "rollback": "Pannello NVIDIA → Sincronizzazione verticale → Usa impostazione applicazione 3D (oppure undo automatico di Verdict).",
+    "manual_steps": "Pannello di controllo NVIDIA → Gestisci impostazioni 3D → Sincronizzazione verticale → Disattivata.",
+    "conflicts_with": [],
+    "measurable": true,
+    "apply": {
+      "method": "nvidia-drs",
+      "operations": [
+        {
+          "path": "0x00A879CF",
+          "value_after": "0x08416747",
+          "verify": "0x08416747",
+          "kind": "dword"
+        }
+      ],
+      "requires_reboot": false,
+      "undo": "auto-journal",
+      "gui_only_reason": null
+    }
+  },
+  {
     "id": "resizable-bar-enable",
     "name": "Resizable BAR / Smart Access Memory",
     "category": "gpu",
