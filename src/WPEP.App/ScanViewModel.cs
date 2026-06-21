@@ -48,11 +48,24 @@ public sealed class ScanViewModel : ViewModelBase
     public bool HasTimelineResult => TimelineHeadline.Length > 0;
     public ObservableCollection<TimelineChange> TimelineChanges { get; } = [];
 
-    public bool IsScanning { get => _isScanning; set => Set(ref _isScanning, value); }
+    public bool IsScanning { get => _isScanning; set { if (Set(ref _isScanning, value)) Raise(nameof(RescanLabel)); } }
+    public string RescanLabel => _isScanning ? "Scansione…" : "Rescan";
     public string Motherboard { get => _motherboard; set => Set(ref _motherboard, value); }
     public string Bios { get => _bios; set => Set(ref _bios, value); }
     public string Cpu { get => _cpu; set => Set(ref _cpu, value); }
     public string Ram { get => _ram; set => Set(ref _ram, value); }
+
+    // GPU divise per riga coerente: dedicata (discreta) e integrata (iGPU), distinte.
+    private string _gpuPrimary = "—", _gpuPrimaryLabel = "Scheda grafica", _gpuIntegrated = "";
+    public string GpuPrimary { get => _gpuPrimary; set => Set(ref _gpuPrimary, value); }
+    public string GpuPrimaryLabel { get => _gpuPrimaryLabel; set => Set(ref _gpuPrimaryLabel, value); }
+    public string GpuIntegrated { get => _gpuIntegrated; set => Set(ref _gpuIntegrated, value); }
+    public bool HasIntegratedGpu => _gpuIntegrated.Length > 0;
+
+    // Prova visibile che il rescan ha fatto qualcosa: orario + contatore.
+    private string _lastScanned = "";
+    private int _scanCount;
+    public string LastScanned { get => _lastScanned; set => Set(ref _lastScanned, value); }
 
     public ObservableCollection<string> MemoryModules { get; } = [];
     public ObservableCollection<string> Disks { get; } = [];
@@ -72,6 +85,7 @@ public sealed class ScanViewModel : ViewModelBase
 
     public async Task ScanAsync()
     {
+        if (IsScanning) return; // niente scansioni concorrenti (rescan durante una scansione)
         IsScanning = true;
         try
         {
@@ -91,6 +105,13 @@ public sealed class ScanViewModel : ViewModelBase
             Gpus.Clear();
             foreach (var g in hw.Gpus)
                 Gpus.Add(g);
+            // Riga coerente: dedicata (discreta) vs integrata (iGPU), etichettate distintamente.
+            var primary = GpuPicker.Best(hw.Gpus);
+            GpuPrimary = primary.Length > 0 ? primary : "—";
+            GpuPrimaryLabel = GpuPicker.IsIntegrated(primary) ? "Scheda grafica" : "Scheda grafica dedicata";
+            var integrated = hw.Gpus.FirstOrDefault(g => GpuPicker.IsIntegrated(g) && g != primary) ?? "";
+            GpuIntegrated = integrated;
+            Raise(nameof(HasIntegratedGpu));
             Findings.Clear();
             foreach (var f in hw.Findings)
                 Findings.Add(ToRow(f));
@@ -176,6 +197,9 @@ public sealed class ScanViewModel : ViewModelBase
         finally
         {
             IsScanning = false;
+            _scanCount++;
+            // Cambia a ogni rescan (anche con hardware identico) → prova visibile che ha girato.
+            LastScanned = $"Scansionato alle {System.DateTime.Now:HH:mm:ss}  ·  #{_scanCount}";
         }
         ScanCompleted?.Invoke();
     }

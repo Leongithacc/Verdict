@@ -47,12 +47,15 @@ public static class GpuPicker
             Regex.IsMatch(g, @"\bArc\b", RegexOptions.IgnoreCase));
         if (discrete is not null) return discrete;
         // 2) Anything that isn't an obvious integrated GPU ("…Graphics", "UHD", "Iris").
-        var notIntegrated = gpus.FirstOrDefault(g =>
-            !g.Contains("UHD", StringComparison.OrdinalIgnoreCase) &&
-            !g.Contains("Iris", StringComparison.OrdinalIgnoreCase) &&
-            !g.TrimEnd().EndsWith("Graphics", StringComparison.OrdinalIgnoreCase));
+        var notIntegrated = gpus.FirstOrDefault(g => !IsIntegrated(g));
         return notIntegrated ?? gpus[0];
     }
+
+    /// <summary>True for an obvious integrated GPU (iGPU): "…Graphics", Intel UHD/Iris.</summary>
+    public static bool IsIntegrated(string g) =>
+        g.Contains("UHD", StringComparison.OrdinalIgnoreCase) ||
+        g.Contains("Iris", StringComparison.OrdinalIgnoreCase) ||
+        g.TrimEnd().EndsWith("Graphics", StringComparison.OrdinalIgnoreCase);
 }
 
 public static class HardwareScanner

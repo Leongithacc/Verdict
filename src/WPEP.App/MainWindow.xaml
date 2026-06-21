@@ -758,7 +758,7 @@
       <ScrollViewer VerticalScrollBarVisibility="Auto">
         <StackPanel Margin="32,24" MaxWidth="720" HorizontalAlignment="Left">
           <DockPanel Margin="0,0,0,12">
-            <Button DockPanel.Dock="Right" Style="{StaticResource GhostButton}" Content="Rescan"
+            <Button DockPanel.Dock="Right" Style="{StaticResource GhostButton}" Content="{Binding RescanLabel}"
                     Command="{Binding RescanCommand}" VerticalAlignment="Top" />
             <Button DockPanel.Dock="Right" Style="{StaticResource PrimaryButton}" Content="Esporta PNG"
                     Click="OnExportBuildSheet" VerticalAlignment="Top" Margin="0,0,8,0" />
@@ -775,14 +775,8 @@
             <StackPanel>
               <TextBlock Text="LÉON'S RIG" FontSize="13" FontWeight="Bold" Opacity="0.7"
                          Foreground="{DynamicResource Accent}" />
-              <TextBlock Text="{Binding Cpu}" Style="{StaticResource H2}" Margin="0,2,0,0" />
-              <ItemsControl ItemsSource="{Binding Gpus}" Margin="0,2,0,0">
-                <ItemsControl.ItemTemplate>
-                  <DataTemplate>
-                    <TextBlock Text="{Binding}" Foreground="{DynamicResource Text}" FontWeight="SemiBold" />
-                  </DataTemplate>
-                </ItemsControl.ItemTemplate>
-              </ItemsControl>
+              <TextBlock Text="{Binding LastScanned}" FontSize="11" Opacity="0.6"
+                         Foreground="{DynamicResource TextMuted}" Margin="0,2,0,0" />
 
               <!-- Rig DNA (Lab feature): the build's collectible identity, tinted by its hue. -->
               <Border Margin="0,14,0,0" CornerRadius="10" Padding="0"
@@ -829,16 +823,31 @@
               <Border Height="1" Background="{DynamicResource Line}" Margin="0,14" />
 
               <Grid>
-                <Grid.ColumnDefinitions><ColumnDefinition Width="120"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                <Grid.ColumnDefinitions><ColumnDefinition Width="150"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
                 <Grid.RowDefinitions>
-                  <RowDefinition/><RowDefinition/><RowDefinition/><RowDefinition/>
+                  <RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/>
+                  <RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/>
                 </Grid.RowDefinitions>
-                <TextBlock Grid.Row="0" Grid.Column="0" Text="Scheda madre" Style="{StaticResource Muted}" />
-                <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding Motherboard}" Foreground="{DynamicResource Text}" />
-                <TextBlock Grid.Row="1" Grid.Column="0" Text="BIOS" Style="{StaticResource Muted}" Margin="0,6,0,0" />
-                <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding Bios}" Foreground="{DynamicResource Text}" Margin="0,6,0,0" />
-                <TextBlock Grid.Row="2" Grid.Column="0" Text="RAM" Style="{StaticResource Muted}" Margin="0,6,0,0" />
-                <StackPanel Grid.Row="2" Grid.Column="1" Margin="0,6,0,0">
+
+                <TextBlock Grid.Row="0" Grid.Column="0" Text="Processore" Style="{StaticResource Muted}" />
+                <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding Cpu}" Foreground="{DynamicResource Text}" FontWeight="SemiBold" TextWrapping="Wrap" />
+
+                <TextBlock Grid.Row="1" Grid.Column="0" Text="{Binding GpuPrimaryLabel}" Style="{StaticResource Muted}" Margin="0,6,0,0" />
+                <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding GpuPrimary}" Foreground="{DynamicResource Text}" FontWeight="SemiBold" Margin="0,6,0,0" TextWrapping="Wrap" />
+
+                <TextBlock Grid.Row="2" Grid.Column="0" Text="Scheda grafica integrata" Style="{StaticResource Muted}" Margin="0,6,0,0"
+                           Visibility="{Binding HasIntegratedGpu, Converter={StaticResource BoolToVis}}" />
+                <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding GpuIntegrated}" Foreground="{DynamicResource TextMuted}" Margin="0,6,0,0" TextWrapping="Wrap"
+                           Visibility="{Binding HasIntegratedGpu, Converter={StaticResource BoolToVis}}" />
+
+                <TextBlock Grid.Row="3" Grid.Column="0" Text="Scheda madre" Style="{StaticResource Muted}" Margin="0,6,0,0" />
+                <TextBlock Grid.Row="3" Grid.Column="1" Text="{Binding Motherboard}" Foreground="{DynamicResource Text}" Margin="0,6,0,0" TextWrapping="Wrap" />
+
+                <TextBlock Grid.Row="4" Grid.Column="0" Text="BIOS" Style="{StaticResource Muted}" Margin="0,6,0,0" />
+                <TextBlock Grid.Row="4" Grid.Column="1" Text="{Binding Bios}" Foreground="{DynamicResource Text}" Margin="0,6,0,0" />
+
+                <TextBlock Grid.Row="5" Grid.Column="0" Text="RAM" Style="{StaticResource Muted}" Margin="0,6,0,0" />
+                <StackPanel Grid.Row="5" Grid.Column="1" Margin="0,6,0,0">
                   <TextBlock Text="{Binding Ram}" Foreground="{DynamicResource Text}" />
                   <ItemsControl ItemsSource="{Binding MemoryModules}">
                     <ItemsControl.ItemTemplate><DataTemplate>
@@ -847,8 +856,9 @@
                     </DataTemplate></ItemsControl.ItemTemplate>
                   </ItemsControl>
                 </StackPanel>
-                <TextBlock Grid.Row="3" Grid.Column="0" Text="Dischi" Style="{StaticResource Muted}" Margin="0,6,0,0" />
-                <ItemsControl Grid.Row="3" Grid.Column="1" ItemsSource="{Binding Disks}" Margin="0,6,0,0">
+
+                <TextBlock Grid.Row="6" Grid.Column="0" Text="Dischi" Style="{StaticResource Muted}" Margin="0,6,0,0" />
+                <ItemsControl Grid.Row="6" Grid.Column="1" ItemsSource="{Binding Disks}" Margin="0,6,0,0">
                   <ItemsControl.ItemTemplate><DataTemplate>
                     <TextBlock Text="{Binding}" Foreground="{DynamicResource Text}" />
                   </DataTemplate></ItemsControl.ItemTemplate>
