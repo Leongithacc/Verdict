@@ -58,12 +58,15 @@ public static class NvApi
     [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
     private delegate int DRS_DeleteProfileSetting_t(IntPtr session, IntPtr profile, uint settingId);
 
-    // NVDRS_SETTING (v1). The two value "unions" are sized to their largest member
-    // (NVDRS_BINARY_SETTING = 4 + 4 + NVAPI_BINARY_DATA_MAX). version is sizeof | (1<<16),
-    // computed at runtime via Marshal.SizeOf so it always matches THIS layout.
+    // NVDRS_SETTING (v1). The two value "unions" are sized to their largest member,
+    // NVDRS_BINARY_SETTING = { NvU32 valueLength; NvU8 valueData[NVAPI_BINARY_DATA_MAX]; }
+    // = 4 + 4096 = 4100 bytes (ONE NvU32, not two — un secondo NvU32 qui gonfiava la
+    // struct di 8 byte e NVAPI la rifiutava con -9 INCOMPATIBLE_STRUCT_VERSION). version
+    // è sizeof | (1<<16), calcolato a runtime via Marshal.SizeOf, quindi deve corrispondere
+    // ESATTAMENTE alla sizeof nativa (12320) perché NVAPI accetti la chiamata.
     private const int NVAPI_UNICODE_STRING_MAX = 2048;
     private const int NVAPI_BINARY_DATA_MAX = 4096;
-    private const int UnionSize = 4 + 4 + NVAPI_BINARY_DATA_MAX; // NVDRS_BINARY_SETTING
+    private const int UnionSize = 4 + NVAPI_BINARY_DATA_MAX; // NVDRS_BINARY_SETTING = 4100
 
     [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
     private struct NVDRS_SETTING
@@ -78,6 +81,12 @@ public static class NvApi
         [MarshalAs(UnmanagedType.ByValArray, SizeConst = UnionSize)] public byte[] predefinedValue;
         [MarshalAs(UnmanagedType.ByValArray, SizeConst = UnionSize)] public byte[] currentValue;
     }
+
+    /// <summary>Marshalled size of NVDRS_SETTING. DEVE essere uguale alla sizeof nativa (12320),
+    /// perché `version = sizeof | (1&lt;&lt;16)` e NVAPI rifiuta con -9 se non combacia. Esposto per
+    /// un test di regressione: un union mal dimensionato (era 4104 invece di 4100) rompeva
+    /// silenziosamente read E write del pannello NVIDIA.</summary>
+    public static int NvdrsSettingMarshalSize => Marshal.SizeOf<NVDRS_SETTING>();
 
     private static T? Resolve<T>(uint id) where T : Delegate
     {
@@ -117,9 +126,11 @@ public static class NvApi
         }
     }
 
-    /// <summary>-130 = the struct version/layout was rejected; any other status means GetSetting ran
-    /// and our marshalling was accepted (NOT_FOUND/-9 included).</summary>
-    private const int NVAPI_INCOMPATIBLE_STRUCT_VERSION = -130;
+    /// <summary>-9 = NVAPI_INCOMPATIBLE_STRUCT_VERSION: la struct (sizeof|version) è stata rifiutata.
+    /// Qualsiasi ALTRO stato significa che NVAPI ha accettato il marshalling ed eseguito la chiamata
+    /// (la setting semplicemente non è impostata sul profilo). NB: prima questo valeva erroneamente
+    /// -130 e il -9 veniva scambiato per "non trovato" → mascherava il rifiuto della struct.</summary>
+    private const int NVAPI_INCOMPATIBLE_STRUCT_VERSION = -9;
 
     /// <summary>READ-ONLY: reads the current DWORD value of a global-profile DRS setting (a NVIDIA
     /// Control Panel option). Opens a DRS session, loads settings, reads the base (global) profile,
@@ -159,7 +170,7 @@ public static class NvApi
             bool marshallingOk = s != NVAPI_INCOMPATIBLE_STRUCT_VERSION;
             if (s != 0)
                 return new(false, marshallingOk,
-                    0, $"status {s} su settingId 0x{settingId:X} (-9 = non impostato/default).");
+                    0, $"status {s} su settingId 0x{settingId:X} ({(s == NVAPI_INCOMPATIBLE_STRUCT_VERSION ? "-9 = struct RIFIUTATA" : "non impostato/default")}).");
 
             uint value = BitConverter.ToUInt32(setting.currentValue, 0);
             return new(true, true, value, $"0x{settingId:X} = {value} (tipo {setting.settingType}).");
@@ -246,8 +257,11 @@ public static class NvApi
             int s = create(out session); if (s != 0) return (false, $"CreateSession {s}.");
             s = load(session); if (s != 0) return (false, $"LoadSettings {s}.");
             s = getBase(session, out var profile); if (s != 0) return (false, $"GetBaseProfile {s}.");
+            // Nel flusso di undo normale la setting È presente (l'abbiamo appena scritta), quindi
+            // DeleteProfileSetting ritorna 0. NB: -9 NON è "già assente" (è INCOMPATIBLE_STRUCT_VERSION,
+            // e qui non passiamo struct) — la doppia-undo è già impedita dal flag Undone nel journal.
             s = del(session, profile, settingId);
-            if (s != 0 && s != -9) return (false, $"DeleteProfileSetting {s}."); // -9 = già assente = ok
+            if (s != 0) return (false, $"DeleteProfileSetting {s}.");
             s = save(session); if (s != 0) return (false, $"SaveSettings {s}.");
             return (true, $"Setting 0x{settingId:X} riportato al default.");
         }

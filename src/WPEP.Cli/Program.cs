@@ -1371,13 +1371,15 @@ static int RunNvidia()
     Console.WriteLine($"  {(probe.Available ? "[ok]" : "[!]")} {probe.Message}");
     if (!probe.Available) return 1;
 
-    Console.WriteLine("\n  DRS read (sola lettura, valida il marshalling delle struct):");
+    Console.WriteLine("\n  DRS read (sola lettura):");
     var r = WPEP.SystemAnalyzer.NvApi.ReadDwordSetting(WPEP.SystemAnalyzer.NvApi.Setting_PreferredPState);
     Console.WriteLine($"  {(r.Ok ? "[ok]" : r.MarshallingOk ? "[i]" : "[!]")} Power Management Mode: {r.Message}");
     if (r.Ok)
-        Console.WriteLine("\n  → DRS READ COMPLETO FUNZIONA: leggo i valori del pannello NVIDIA. Prossimo: WRITE (field-validate).");
+        Console.WriteLine("\n  → DRS READ+WRITE VALIDATI dal vivo: leggo e scrivo i valori del pannello NVIDIA\n    (write+verify+undo journaled). Struct NVDRS_SETTING corretta (sizeof|version accettata).");
     else if (r.MarshallingOk)
-        Console.WriteLine("\n  → MARSHALLING STRUCT VALIDATO (nessun -130): la sessione DRS e le struct sono\n    corrette. Il setting non e impostato (sei sul default). Il meccanismo read/write e pronto:\n    prossimo passo, leggere un setting impostato + aggiungere la WRITE (field-validate da Leon).");
+        Console.WriteLine("\n  → Sessione DRS e struct OK: questa setting non è impostata (sei sul default del driver).");
+    else
+        Console.WriteLine("\n  → [!] struct RIFIUTATA (-9 INCOMPATIBLE_STRUCT_VERSION): layout/version NVDRS_SETTING da rivedere.");
     return 0;
 }
 

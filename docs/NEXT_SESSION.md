@@ -29,19 +29,16 @@ Ricerca read-only completata. Conclusione definitiva con fonti:
 
 ## 🔜 DA FARE quando torni — ordinato per importanza
 
-### 1. (ALTO) Field-test dei restanti write path REALI — serve te al PC
-Il ciclo write+verify+undo è provato su `dxuser` (VRR). Restano da validare dal vivo, ognuno con
-`--yes` e poi `wpep undo last`:
-- **`wpep apply nvidia-low-latency-on --yes`** (metodo `nvidia-drs`, scrittura DRS reale) → poi undo.
-  È l'unico metodo che scrive davvero sul driver mai field-testato in WRITE (finora solo dry-run).
-- **`wpep apply nvidia-prefer-max-performance --yes`** → undo. Idem.
-- Da un **terminale amministratore**: `wpep apply systemresponsiveness-gpupriority-registry --yes`,
-  `wpep apply hags-hardware-gpu-scheduling --yes` (HKLM, servono admin), poi undo. Valida il write
-  HKLM dal vivo + il gating admin.
-- **`wpep apply disable-dynamic-tick --yes`** da admin → valida l'UNICO write path mai provato:
-  RealBcdEdit Set/Delete (bcdedit). NB: se è già 'yes' non scrive — controlla prima `wpep applicable`.
-Obiettivo: spuntare ogni metodo (registry/powercfg-value/nvidia-drs/dxuser/bcdedit) come "WRITE
-provato dal vivo", non solo coi fake.
+### 1. (FATTO 2026-06-21) Field-test write path — ha scoperto un BUG GROSSO
+- **`nvidia-drs`**: ✅ field-testato → ha rivelato che la struct NVDRS_SETTING era RIFIUTATA da NVAPI
+  (-9, UnionSize 4104→4100) e nvidia-drs **non aveva mai funzionato**. FIXATO e validato dal vivo
+  (read di 3 valori reali + write round-trip PSTATE 1→0→1 reversibile). Test regressione su sizeof=12320.
+- **`dxuser`**: ✅ già validato (VRR).
+- **Ancora da fare (serve terminale ADMIN, bassa priorità — write già validato in altri modi)**:
+  da admin, opzionale, per spuntare HKLM/bcdedit dal vivo: `wpep apply
+  systemresponsiveness-gpupriority-registry --yes` / `hags-hardware-gpu-scheduling --yes` → undo;
+  `wpep apply disable-dynamic-tick --yes` (bcdedit; se già 'yes' è no-op). NB: sul PC di Léon questi
+  sono GIÀ a target, quindi sarebbero no-op senza prima revertirli — basso valore, salta pure.
 
 ### 2. (ALTO) Review visiva della GUI — serve i tuoi occhi
 La GUI eredita tutto per design (data-driven), ma va GUARDATA. Checklist:

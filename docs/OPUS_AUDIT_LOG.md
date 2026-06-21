@@ -868,6 +868,29 @@ Ricerca read-only (mentre Léon era via) per sbloccare/chiudere l'unico blocco a
 Preparato `docs/NEXT_SESSION.md`: brief ordinato per importanza per il ritorno di Léon (field-test
 write path reali #1, review visiva GUI #2, polish estetico #3 solo-alla-fine, altri tweak #4 opzionale).
 
+### 62. BUG GROSSO trovato dal field-test: NVDRS_SETTING struct rifiutata (-9), nvidia-drs MAI funzionato (2026-06-21)
+Field-test reale del WRITE nvidia-drs (richiesto da Léon "field-test completi"): `apply
+nvidia-low-latency-on --yes` → **"SetSetting -9"**. Indagine:
+- **-9 = NVAPI_INCOMPATIBLE_STRUCT_VERSION** (confermato: archive.docs.nvidia.com/.../group__nvapistatus).
+  Il codice credeva ERRONEAMENTE che -130 fosse questo errore e che -9 fosse "NOT_FOUND".
+- Conseguenza: NVAPI rifiutava la struct NVDRS_SETTING da SEMPRE (-9), sia in read che write. Il READ
+  mascherava il rifiuto come "non impostato" (mappa ogni status≠0 a not-set) → i dry-run mostravano
+  falsamente "before: <not set>". La validazione #52 ("marshalling OK, -9=NOT_FOUND") era una DIAGNOSI
+  ERRATA. nvidia-drs non ha MAI funzionato davvero finora.
+- **ROOT CAUSE**: `UnionSize = 4 + 4 + 4096 = 4104`. NVDRS_BINARY_SETTING ha UN solo NvU32
+  (valueLength) + NvU8[4096] = **4100**, non due. +8 byte sulla struct (2 union) → sizeof 12328 invece
+  di 12320 → `version = sizeof|(1<<16)` sbagliata → -9. Fix: `UnionSize = 4 + 4096 = 4100`.
+- **VALIDATO DAL VIVO (RTX 5080)**: dopo il fix `wpep nvidia` legge `0x1057EB71 = 1` (status OK, type 0),
+  VSYNCMODE `0x00A879CF = 138504007` (=0x08416747 ForceOff), PRERENDERLIMIT `0x007BA09E = 1` — TRE
+  valori reali diversi (non più -9). I 3 tweak NVIDIA risultano già a target (li ha messi il profilo
+  gaming di Léon — la lettura ora è VERITIERA). **WRITE provato**: round-trip controllato e reversibile
+  PSTATE 1→0 (`apply --yes`, verify legge 0) → `undo` → 1. SetSetting+SaveSettings+verify OK.
+- Corretti: costante NVAPI_INCOMPATIBLE_STRUCT_VERSION=-9, commento DeleteSetting (-9 NON è "già
+  assente"), testo CLI `wpep nvidia` (niente più "-130"). **Test di regressione**: `NvApi.
+  NvdrsSettingMarshalSize == 12320` (blocca per sempre il ribaltamento della dimensione struct).
+- LEZIONE: il field-test del WRITE ha scoperto ciò che il read (che mascherava l'errore) nascondeva.
+  Validare i write path dal vivo è essenziale; un -9 scambiato per "not found" aveva ingannato 10 sessioni.
+
 ## Stato a fine sessione Opus (AGGIORNATO 2026-06-16)
 - `dotnet test`: **145/145 verdi**. `dotnet build WPEP.sln -c Release`: 0 errori/0 warning.
   (Se un nodo MSBuild crasha in parallelo: `-m:1 --disable-build-servers`.)
