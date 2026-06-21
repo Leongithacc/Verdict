@@ -917,6 +917,70 @@
     }
   },
   {
+    "id": "disable-diagtrack-telemetry",
+    "name": "Disattiva il servizio Telemetria (DiagTrack)",
+    "category": "background",
+    "description": "Disabilita il servizio 'Connected User Experiences and Telemetry' (DiagTrack), che raccoglie dati d'uso e li invia a Microsoft con attività di rete e disco in background. ONESTÀ: non aumenta gli FPS in modo misurabile — è una scelta di privacy e di riduzione del rumore di fondo, non un tweak di performance.",
+    "hardware_prerequisites": [],
+    "expected_impact": "FPS: invariati. Beneficio reale: niente raccolta/invio telemetria e un filo meno attività di rete/disco a vuoto.",
+    "evidence_level": "controversial",
+    "sources": [
+      "https://learn.microsoft.com/en-us/windows/privacy/configure-windows-diagnostic-data-in-your-organization"
+    ],
+    "risk": "low",
+    "risk_notes": "Nessun impatto su gaming/stabilità. Alcune funzioni diagnostiche/Feedback Hub smettono di inviare dati. Reversibile (riporta Start al valore precedente).",
+    "rollback": "Rimetti il servizio DiagTrack su Automatico (oppure undo automatico di Verdict).",
+    "manual_steps": "services.msc → Connected User Experiences and Telemetry → Tipo di avvio → Disabilitato.",
+    "conflicts_with": [],
+    "measurable": false,
+    "apply": {
+      "method": "registry",
+      "operations": [
+        {
+          "path": "HKLM\\SYSTEM\\CurrentControlSet\\Services\\DiagTrack\\Start",
+          "value_after": "4",
+          "verify": "4",
+          "kind": "dword"
+        }
+      ],
+      "requires_reboot": true,
+      "undo": "auto-journal",
+      "gui_only_reason": null
+    }
+  },
+  {
+    "id": "disable-consumer-features",
+    "name": "Disattiva app promozionali / consumer features",
+    "category": "background",
+    "description": "Impedisce a Windows di installare automaticamente app suggerite/promozionali e contenuti pubblicitari nel menu Start (candy crush & co.). ONESTÀ: non tocca gli FPS — riduce installazioni e attività in background non richieste, e pulisce il sistema.",
+    "hardware_prerequisites": [],
+    "expected_impact": "FPS: invariati. Beneficio: niente app promozionali auto-installate, meno bloat e attività di rete in background.",
+    "evidence_level": "plausible",
+    "sources": [
+      "https://learn.microsoft.com/en-us/windows/configuration/start/cloud-content"
+    ],
+    "risk": "low",
+    "risk_notes": "Nessun impatto su gaming. Policy documentata da Microsoft. Reversibile.",
+    "rollback": "Rimetti DisableWindowsConsumerFeatures a 0 / rimuovi il valore (oppure undo automatico di Verdict).",
+    "manual_steps": "gpedit / registro: HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\CloudContent → DisableWindowsConsumerFeatures = 1.",
+    "conflicts_with": [],
+    "measurable": false,
+    "apply": {
+      "method": "registry",
+      "operations": [
+        {
+          "path": "HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows\\CloudContent\\DisableWindowsConsumerFeatures",
+          "value_after": "1",
+          "verify": "1",
+          "kind": "dword"
+        }
+      ],
+      "requires_reboot": false,
+      "undo": "auto-journal",
+      "gui_only_reason": null
+    }
+  },
+  {
     "id": "disable-startup-bloat",
     "name": "Riduci i programmi in avvio automatico",
     "category": "background",
