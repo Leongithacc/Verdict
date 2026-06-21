@@ -8,7 +8,9 @@ namespace WPEP.Execution;
 public interface INvidiaDrs
 {
     /// <summary>Current DWORD value of a global-profile setting. Found=false means it isn't set
-    /// explicitly (the driver default is in effect).</summary>
+    /// explicitly (the driver default is in effect). THROWS se l'interop NVAPI fallisce (struct
+    /// rifiutata, GPU non NVIDIA, init KO) — un fallimento NON deve mai essere mascherato come
+    /// "non impostato" (è il bug che ha nascosto per sessioni il rifiuto della struct -9).</summary>
     (bool Found, uint Value) ReadDword(uint settingId);
 
     /// <summary>Sets a global-profile DWORD setting and saves. Throws on NVAPI failure.</summary>
@@ -25,6 +27,13 @@ public sealed class RealNvidiaDrs : INvidiaDrs
     public (bool Found, uint Value) ReadDword(uint settingId)
     {
         var r = NvApi.ReadDwordSetting(settingId);
+        // MarshallingOk=false => l'interop NON ha eseguito la lettura in modo affidabile
+        // (struct rifiutata -9, NVAPI non inizializzata, GPU non NVIDIA...). Fallire FORTE,
+        // mai restituire un falso "non impostato": è proprio la maschera che ci ha ingannato.
+        if (!r.MarshallingOk)
+            throw new InvalidOperationException(
+                $"NVIDIA DRS read: interop NVAPI non affidabile su 0x{settingId:X} — {r.Message}");
+        // Eseguita davvero: Ok=true => valore valido; Ok=false => setting non impostato (default driver).
         return (r.Ok, r.Value);
     }
 

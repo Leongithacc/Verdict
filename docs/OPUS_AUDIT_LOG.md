@@ -891,6 +891,17 @@ nvidia-low-latency-on --yes` → **"SetSetting -9"**. Indagine:
 - LEZIONE: il field-test del WRITE ha scoperto ciò che il read (che mascherava l'errore) nascondeva.
   Validare i write path dal vivo è essenziale; un -9 scambiato per "not found" aveva ingannato 10 sessioni.
 
+### 63. HARDENING — il read nvidia-drs ora FALLISCE FORTE invece di mascherare (2026-06-21)
+Difesa runtime oltre al test di regressione #62: `RealNvidiaDrs.ReadDword` ora **throw** quando
+l'interop NVAPI non è affidabile (`NvDrsRead.MarshallingOk == false`: struct rifiutata -9, NVAPI non
+inizializzata, GPU non NVIDIA). Restituisce "non impostato" SOLO quando la chiamata è davvero
+eseguita ma la setting non è presente (MarshallingOk=true, Ok=false). Così il modo di guasto che ci
+ha ingannato (un -9 mascherato come "not set") non può più ripresentarsi per NESSUNA causa futura
+(driver/versione/GPU diversa), non solo per il 4104 specifico.
+Effetto visibile: `wpep applicable` ora mostra i 3 tweak NVIDIA come **✓ già a posto** (letti
+correttamente al loro valore reale), mentre PRIMA del fix li mostrava ○ applicabile per via del read
+mascherato. Test nvidia-drs (fake) e struct invariati e verdi.
+
 ## Stato a fine sessione Opus (AGGIORNATO 2026-06-16)
 - `dotnet test`: **145/145 verdi**. `dotnet build WPEP.sln -c Release`: 0 errori/0 warning.
   (Se un nodo MSBuild crasha in parallelo: `-m:1 --disable-build-servers`.)
