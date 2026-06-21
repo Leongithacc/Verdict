@@ -696,6 +696,142 @@
     }
   },
   {
+    "id": "nvidia-texture-filtering-performance",
+    "name": "Texture Filtering – Qualità: Prestazioni elevate",
+    "category": "gpu",
+    "description": "Sposta il bilanciamento qualità/prestazioni del filtraggio texture del driver verso il massimo delle prestazioni (High Performance). Il driver fa meno lavoro di filtraggio: qualche FPS in più nelle scene texture-heavy, con una perdita di nitidezza delle texture in lontananza di norma impercettibile in gioco. Su GPU potenti (es. RTX 5080) il guadagno è marginale; più rilevante su GPU limitate.",
+    "hardware_prerequisites": [
+      "gpu:nvidia"
+    ],
+    "expected_impact": "Pochi FPS nelle scene con molte texture; trascurabile su GPU di fascia alta. Leggero calo di nitidezza texture lontane.",
+    "evidence_level": "plausible",
+    "sources": [
+      "https://github.com/NVIDIA/nvapi/blob/main/NvApiDriverSettings.h"
+    ],
+    "risk": "low",
+    "risk_notes": "Solo qualità visiva (texture meno nitide in lontananza). Nessun rischio di stabilità. Reversibile.",
+    "rollback": "Pannello NVIDIA → Filtraggio trama – Qualità → Qualità (oppure undo automatico di Verdict).",
+    "manual_steps": "Pannello di controllo NVIDIA → Gestisci impostazioni 3D → Filtraggio trama – Qualità → Prestazioni elevate.",
+    "conflicts_with": [],
+    "measurable": true,
+    "apply": {
+      "method": "nvidia-drs",
+      "operations": [
+        {
+          "path": "0x00CE2691",
+          "value_after": "0x00000014",
+          "verify": "0x00000014",
+          "kind": "dword"
+        }
+      ],
+      "requires_reboot": false,
+      "undo": "auto-journal",
+      "gui_only_reason": null
+    }
+  },
+  {
+    "id": "nvidia-aniso-sample-optimization",
+    "name": "Ottimizzazione campioni anisotropici: On",
+    "category": "gpu",
+    "description": "Attiva l'ottimizzazione dei campioni del filtraggio anisotropico: il driver usa meno campioni dove l'impatto visivo è minimo. Piccolo guadagno di FPS nelle scene con molte texture, differenza visiva quasi sempre invisibile in movimento.",
+    "hardware_prerequisites": [
+      "gpu:nvidia"
+    ],
+    "expected_impact": "Guadagno FPS piccolo nelle scene texture-heavy; trascurabile su GPU potenti.",
+    "evidence_level": "plausible",
+    "sources": [
+      "https://github.com/NVIDIA/nvapi/blob/main/NvApiDriverSettings.h"
+    ],
+    "risk": "low",
+    "risk_notes": "Solo qualità del filtraggio anisotropico. Nessun rischio di stabilità. Reversibile.",
+    "rollback": "Pannello NVIDIA → Ottimizzazione campioni anisotropici → Disattivata (oppure undo automatico di Verdict).",
+    "manual_steps": "Pannello di controllo NVIDIA → Gestisci impostazioni 3D → Ottimizzazione campioni anisotropici → Attivata.",
+    "conflicts_with": [],
+    "measurable": true,
+    "apply": {
+      "method": "nvidia-drs",
+      "operations": [
+        {
+          "path": "0x00E73211",
+          "value_after": "1",
+          "verify": "1",
+          "kind": "dword"
+        }
+      ],
+      "requires_reboot": false,
+      "undo": "auto-journal",
+      "gui_only_reason": null
+    }
+  },
+  {
+    "id": "nvidia-negative-lod-clamp",
+    "name": "Negative LOD Bias: Clamp",
+    "category": "gpu",
+    "description": "Blocca (clamp) il bias LOD negativo: impedisce ai giochi di forzare texture più nitide del dovuto, che in movimento causano shimmering/aliasing fastidioso. In gioco competitivo riduce il rumore visivo sulle superfici in movimento. Consigliato insieme ai filtraggi orientati alle prestazioni.",
+    "hardware_prerequisites": [
+      "gpu:nvidia"
+    ],
+    "expected_impact": "Immagine più stabile in movimento (meno shimmer delle texture). Effetto sugli FPS nullo o trascurabile.",
+    "evidence_level": "plausible",
+    "sources": [
+      "https://github.com/NVIDIA/nvapi/blob/main/NvApiDriverSettings.h"
+    ],
+    "risk": "low",
+    "risk_notes": "Solo qualità visiva (texture leggermente meno nitide ma più stabili). Nessun rischio. Reversibile.",
+    "rollback": "Pannello NVIDIA → Bias LOD negativo → Consenti (oppure undo automatico di Verdict).",
+    "manual_steps": "Pannello di controllo NVIDIA → Gestisci impostazioni 3D → Bias LOD negativo → Blocca.",
+    "conflicts_with": [],
+    "measurable": true,
+    "apply": {
+      "method": "nvidia-drs",
+      "operations": [
+        {
+          "path": "0x0019BB68",
+          "value_after": "1",
+          "verify": "1",
+          "kind": "dword"
+        }
+      ],
+      "requires_reboot": false,
+      "undo": "auto-journal",
+      "gui_only_reason": null
+    }
+  },
+  {
+    "id": "nvidia-trilinear-optimization",
+    "name": "Ottimizzazione trilineare: On",
+    "category": "gpu",
+    "description": "Attiva l'ottimizzazione del filtraggio trilineare: il driver riduce il filtraggio trilineare completo dove non serve, risparmiando lavoro. Pochi FPS in più nelle scene texture-heavy, differenza visiva minima sulle transizioni mipmap.",
+    "hardware_prerequisites": [
+      "gpu:nvidia"
+    ],
+    "expected_impact": "Guadagno FPS piccolo nelle scene con molte texture; trascurabile su GPU di fascia alta.",
+    "evidence_level": "plausible",
+    "sources": [
+      "https://github.com/NVIDIA/nvapi/blob/main/NvApiDriverSettings.h"
+    ],
+    "risk": "low",
+    "risk_notes": "Solo qualità del filtraggio trilineare (transizioni mipmap). Nessun rischio. Reversibile.",
+    "rollback": "Pannello NVIDIA → Ottimizzazione trilineare → Disattivata (oppure undo automatico di Verdict).",
+    "manual_steps": "Pannello di controllo NVIDIA → Gestisci impostazioni 3D → Ottimizzazione trilineare → Attivata.",
+    "conflicts_with": [],
+    "measurable": true,
+    "apply": {
+      "method": "nvidia-drs",
+      "operations": [
+        {
+          "path": "0x002ECAF2",
+          "value_after": "1",
+          "verify": "1",
+          "kind": "dword"
+        }
+      ],
+      "requires_reboot": false,
+      "undo": "auto-journal",
+      "gui_only_reason": null
+    }
+  },
+  {
     "id": "resizable-bar-enable",
     "name": "Resizable BAR / Smart Access Memory",
     "category": "gpu",
