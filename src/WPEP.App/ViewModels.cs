@@ -549,7 +549,7 @@ public sealed class KbItemViewModel(TweakEntry entry)
 public sealed class KbViewModel : ViewModelBase
 {
     private readonly IReadOnlyList<KbItemViewModel> _all;
-    private string _filter = "All";
+    private string _filter = "Applicabili";
     private string _searchText = "";
     private KbItemViewModel? _selected;
     private string _loadError = "";
@@ -580,8 +580,10 @@ public sealed class KbViewModel : ViewModelBase
     public string MuseumSummary => $"{Museum.Count} miti sfatati con l'evidenza";
     public void RefreshMuseumFlag() => Raise(nameof(ShowPlaceboMuseum));
 
+    // Action-first: "Applicabili" (solo one-click) è il default — Verdict mostra ciò che FA.
+    // "Tutti" e i livelli di evidenza restano per chi vuole esplorare, ma non sono il primo impatto.
     public IReadOnlyList<string> Filters { get; } =
-        ["All", "Strong evidence", "Plausible", "Controversial", "Placebo", "Risky"];
+        ["Applicabili", "Tutti", "Strong evidence", "Plausible", "Controversial", "Placebo", "Risky"];
 
     public ObservableCollection<KbItemViewModel> Entries { get; } = [];
     public string Footer => _loadError.Length > 0
@@ -605,7 +607,12 @@ public sealed class KbViewModel : ViewModelBase
     private void Refresh()
     {
         Entries.Clear();
-        var query = _all.Where(i => _filter == "All" || i.Badge.Label == _filter);
+        var query = _filter switch
+        {
+            "Applicabili" => _all.Where(i => WPEP.Execution.ApplyPolicy.CanApply(i.Entry)),
+            "Tutti" => _all,
+            _ => _all.Where(i => i.Badge.Label == _filter),
+        };
         if (_searchText.Trim() is { Length: > 0 } search)
             query = query.Where(i =>
                 i.Name.Contains(search, StringComparison.OrdinalIgnoreCase) ||
