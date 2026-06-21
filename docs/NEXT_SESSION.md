@@ -3,6 +3,28 @@
 > Preparato in autonomia il 2026-06-20 da Opus 4.8 mentre Léon era via.
 > Menu ordinato per importanza: scegli da qui quando torni.
 
+## ⭐ SVOLTA 2026-06-21 — da "v1 figa" a "app élite" (LEGGI QUESTO PRIMA)
+Léon ha guardato l'app e l'ha sentita "fatta da un bambino": troppe voci NON azionabili,
+knowledge base che "insegna" invece di "fare", lab che non sa dove si attivano, scan che "sembra
+non funzionare", e soprattutto **manca il feel/estetica**. Si è anche un po' esausto (gli è mancato
+Fable 5, che ho provato a chiamare ma è gated/non disponibile). DIREZIONE DECISA INSIEME:
+- **Verdict deve FARE, non INSEGNARE.** L'app mostra SOLO ciò che applica con un click; la roba
+  gui-only/educativa/knowledge-base passa dietro o sparisce. Corta, nera, cattiva, un'arma.
+- **Estetica villain/carbonio/cockpit (viola #4A0080)** → si fa col **pass Claude Design**, con Léon
+  presente. C'è già un CONCEPT visivo (SVG) mostrato in chat il 2026-06-21 — usarlo come riferimento.
+- **Catalogo esploso** dove ha senso, senza diventare un "tweaker generico" (no placebo).
+- Fatto il 2026-06-21: +4 tweak NVIDIA (texture filtering: QUALITY_ENHANCEMENTS 0x00CE2691=0x14,
+  aniso opt 0x00E73211, neg LOD clamp 0x0019BB68, trilinear 0x002ECAF2) + 2 "Game Focus" background
+  (DiagTrack, consumer-features) → **one-click 22 → 28**. Browser GUI ora parte da "Applicabili".
+  Artifact (CLI+GUI) RIPUBBLICATO: il tool che lancia Léon ha tutto.
+- ⚠️ **NOTA**: il PC di Léon è GIÀ super tweakkato (profilo BXTool), quindi molti tweak leggono "già
+  a posto" per lui → il cambiamento che SENTIRÀ è il design/feel, non il numero di tweak.
+- 🐞 **DA CAPIRE**: Léon dice "lo scan sembra non funzionare". La logica scan FUNZIONA (CLI ok,
+  auto-run nel costruttore MainViewModel). È un problema di UX/feedback GUI (non si vede che parte?
+  rescan sembra inerte?). NON diagnosticabile alla cieca: serve che Léon dica COSA vede, o il pass GUI.
+- 🧱 **LIMITE REALE**: la GUI WPF non è screenshottabile da computer-use (non registrata nel sistema).
+  Quindi feel/scan-UX/lab/skin = lavoro DA FARE VEDENDOLA con Léon. Non costruire l'estetica alla cieca.
+
 ## Dove siamo (stato a fine sessione)
 - **7 commit oggi**, suite **279/279 verde**, write path **provato dal vivo** (VRR write→verify→undo, zero stalli, niente clobbering).
 - **One-click: 18 → 22.** Comando nuovo `wpep applicable` = panoramica a colpo d'occhio di tutto ciò che è applicabile con un click, con stato live.
