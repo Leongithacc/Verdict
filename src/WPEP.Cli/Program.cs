@@ -633,7 +633,7 @@ static int RunReport(string[] args)
     {
         var entries = WPEP.KnowledgeBase.KnowledgeBaseLoader.Load();
         var snapshot = WPEP.SystemAnalyzer.SnapshotBuilder.Build(DateTimeOffset.UtcNow);
-        var recommendations = WPEP.Advisor.AdvisorEngine.Advise(snapshot, entries);
+        var recommendations = WPEP.Advisor.AdvisorEngine.Advise(snapshot, entries, LiveAppliedDetector());
 
         WPEP.Statistics.NoiseFloorAnalyzer.NoiseReport? noise = null;
         if (noiseDir is not null)
@@ -675,7 +675,7 @@ static int RunAdvise(string[] args)
     }
 
     var snapshot = WPEP.SystemAnalyzer.SnapshotBuilder.Build(DateTimeOffset.UtcNow);
-    var all = WPEP.Advisor.AdvisorEngine.Advise(snapshot, entries);
+    var all = WPEP.Advisor.AdvisorEngine.Advise(snapshot, entries, LiveAppliedDetector());
 
     if (json)
     {
@@ -747,6 +747,20 @@ static int RunAdvise(string[] args)
 static WPEP.Execution.ExecutionEngine NewEngine() =>
     new(new WPEP.Execution.RealRegistryAccess(),
         WPEP.Execution.ExecutionEngine.DefaultJournalDirectory);
+
+// Stato live di un tweak per l'advisor: il motore legge il valore CORRENTE di ogni tweak
+// applicabile (registry/powercfg/nvidia-drs/dxuser). true = già a posto, false = da attivare,
+// null = non determinabile (gui-only, o lettura che richiede admin/fallita) → resta "non rilevabile".
+static Func<WPEP.KnowledgeBase.TweakEntry, bool?> LiveAppliedDetector()
+{
+    var engine = NewEngine();
+    return e =>
+    {
+        if (!WPEP.Execution.ApplyPolicy.CanApply(e)) return null;
+        try { return engine.BuildPlan(e).IsAlreadyApplied; }
+        catch { return null; }
+    };
+}
 
 // Regole condivise con la GUI: unica fonte in WPEP.Execution.ApplyPolicy.
 static bool EntryNeedsAdmin(WPEP.KnowledgeBase.TweakEntry e) => WPEP.Execution.ApplyPolicy.NeedsAdmin(e);

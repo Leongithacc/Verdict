@@ -254,7 +254,15 @@ public sealed class VerdictViewModel(MainViewModel main) : ViewModelBase
             {
                 var s = SnapshotBuilder.Build(DateTimeOffset.UtcNow);
                 var kb = KnowledgeBaseLoader.Load();
-                return (s, AdvisorEngine.Advise(s, kb));
+                // Stato live: il motore legge il valore corrente di ogni tweak applicabile, così lo
+                // scan mostra "già attivo / da attivare" invece di "non rilevabile" per tutto ciò
+                // che Verdict sa fare. Resta "non rilevabile" solo per il davvero-manuale (in-game/BIOS).
+                return (s, AdvisorEngine.Advise(s, kb, e =>
+                {
+                    if (!main.Execution.CanApply(e)) return null;
+                    try { return main.Execution.BuildPlan(e).IsAlreadyApplied; }
+                    catch { return null; }
+                }));
             });
             sw.Stop();
             Apply(snapshot, recommendations);

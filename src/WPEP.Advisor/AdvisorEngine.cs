@@ -30,22 +30,39 @@ public static class AdvisorEngine
     private const string HighPerfPlanGuid = "8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c";
     private const string UltimatePlanGuid = "e9a42b02-d5df-448d-aa00-03f14749eb61";
 
+    /// <param name="liveApplied">Opzionale: dato un tweak, dice se è GIÀ al valore desiderato
+    /// (true), NON applicato (false), o non determinabile (null). Lo fornisce il chiamante usando
+    /// l'ExecutionEngine, che sa leggere lo stato live di OGNI tweak applicabile (registry/powercfg/
+    /// nvidia-drs/dxuser). Senza questo, lo stato della maggior parte dei tweak resta "non rilevabile"
+    /// anche quando il motore saprebbe leggerlo — il bug che faceva sembrare lo scan inutile.</param>
     public static IReadOnlyList<Recommendation> Advise(
-        SystemSnapshot snapshot, IReadOnlyList<TweakEntry> entries)
+        SystemSnapshot snapshot, IReadOnlyList<TweakEntry> entries,
+        Func<TweakEntry, bool?>? liveApplied = null)
     {
         return entries
-            .Select(e => Classify(snapshot, e))
+            .Select(e => Classify(snapshot, e, liveApplied))
             .OrderBy(r => r.Classification)
             .ThenBy(r => r.Entry.Id)
             .ToArray();
     }
 
-    private static Recommendation Classify(SystemSnapshot s, TweakEntry e)
+    private static Recommendation Classify(SystemSnapshot s, TweakEntry e, Func<TweakEntry, bool?>? liveApplied)
     {
         if (!IsApplicable(s, e, out string applicabilityNote))
             return new Recommendation(e, Classification.NotApplicable, applicabilityNote);
 
         (bool? active, string stateNote) = DetectState(s, e);
+
+        // Se il detector statico non sa lo stato, chiedi al MOTORE: legge il valore live del tweak.
+        // Così "non rilevabile" diventa "già attivo" o "da attivare" per tutto ciò che Verdict sa
+        // applicare; resta "non rilevabile" SOLO per il davvero-manuale (in-game/BIOS), che è onesto.
+        if (active is null && liveApplied is not null)
+        {
+            bool? live = liveApplied(e);
+            if (live == true) { active = true; stateNote = "Già attivo ✓"; }
+            else if (live == false) { stateNote = "Da attivare — Verdict lo fa in un click"; }
+        }
+
         if (active == true)
             return new Recommendation(e, Classification.AlreadyActive, stateNote);
 
