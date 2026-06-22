@@ -7,11 +7,8 @@
 Un workflow adversariale ha trovato 16 bug confermati. Fixati subito: nvidia-drs in isCreate (Undo),
 pipe async in RealPowerCfg/RealBcdEdit.Run (anti-deadlock), ~25 stringhe UI tradotte in italiano.
 **ANCORA DA FARE (in ordine di valore):**
-1. **(HIGH) Apply congela la UI fino a 12s**: `ApplyFlow.Confirm()` chiama `_exec.Execute(_plan)` SINCRONO
-   sul thread UI (ApplyDialogViewModel + ApplyAllViewModel), e Execute fa TryCreateRestorePoint
-   (WaitForExit 12s). Fix: `await Task.Run(...)` con IsBusy; + UN solo restore-point per batch in
-   ExecuteAll (overload Execute(plan, createRestorePoint:false)). NB: per Léon (apply non-admin) il
-   restore-point fallisce veloce, quindi freeze piccolo — ma su apply admin con VSS lento è reale.
+1. ✅ **FATTO (commit af59520)** Apply non congela più la UI: Confirm (single+all) su `await Task.Run`;
+   + un solo restore-point per batch (Execute(plan, createRestorePoint:false)).
 2. **(MEDIUM) Scan: 7 sessioni NVAPI complete per scansione** (una Initialize/LoadSettings/Unload per
    tweak nvidia-drs). Fix: `INvidiaDrs.ReadDwords(IEnumerable<uint>)` che apre UNA sessione e legge in
    batch; il liveApplied detector pre-calcola gli nvidia-drs in un colpo. Gira in Task.Run (no UI block)
