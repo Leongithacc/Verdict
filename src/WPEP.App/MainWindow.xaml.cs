@@ -57,14 +57,27 @@ public partial class MainWindow : Window
         try
         {
             // BuildSheet lives inside a DataTemplate (own namescope), so find it in the tree.
-            if (FindByName(this, "BuildSheet") is not FrameworkElement el
-                || el.ActualWidth < 1 || el.ActualHeight < 1)
+            if (FindByName(this, "BuildSheet") is not FrameworkElement el)
                 return;
+            el.UpdateLayout(); // assicura l'altezza piena PRIMA di misurare (no taglio del fondo)
+            double w = el.ActualWidth, h = el.ActualHeight;
+            if (w < 1 || h < 1) return;
+
             const double scale = 2.0;
             var rtb = new RenderTargetBitmap(
-                (int)(el.ActualWidth * scale), (int)(el.ActualHeight * scale),
+                (int)System.Math.Ceiling(w * scale), (int)System.Math.Ceiling(h * scale),
                 96 * scale, 96 * scale, PixelFormats.Pbgra32);
-            rtb.Render(el);
+            // VisualBrush su un DrawingVisual dimensionato all'altezza REALE: cattura l'intero
+            // build-sheet anche se è dentro uno ScrollViewer e scrollato (rtb.Render(el) diretto
+            // poteva troncare la parte inferiore). Sfondo opaco esplicito per un PNG pulito.
+            var dv = new DrawingVisual();
+            using (var ctx = dv.RenderOpen())
+            {
+                var bg = (el as System.Windows.Controls.Border)?.Background ?? Brushes.Black;
+                ctx.DrawRectangle(bg, null, new Rect(0, 0, w, h));
+                ctx.DrawRectangle(new VisualBrush(el) { Stretch = Stretch.None }, null, new Rect(0, 0, w, h));
+            }
+            rtb.Render(dv);
             var png = new PngBitmapEncoder();
             png.Frames.Add(BitmapFrame.Create(rtb));
             var path = Path.Combine(

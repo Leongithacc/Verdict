@@ -1,5 +1,6 @@
 using System.Management;
 using System.Text.RegularExpressions;
+using Microsoft.Win32;
 
 namespace WPEP.SystemAnalyzer;
 
@@ -51,11 +52,15 @@ public static class GpuPicker
         return notIntegrated ?? gpus[0];
     }
 
-    /// <summary>True for an obvious integrated GPU (iGPU): "…Graphics", Intel UHD/Iris.</summary>
-    public static bool IsIntegrated(string g) =>
-        g.Contains("UHD", StringComparison.OrdinalIgnoreCase) ||
-        g.Contains("Iris", StringComparison.OrdinalIgnoreCase) ||
-        g.TrimEnd().EndsWith("Graphics", StringComparison.OrdinalIgnoreCase);
+    /// <summary>True for an obvious integrated GPU (iGPU): "…Graphics", Intel UHD/Iris.
+    /// Ignora un eventuale suffisso "· N GB VRAM" così la classificazione regge sul nome arricchito.</summary>
+    public static bool IsIntegrated(string g)
+    {
+        var name = g.Split('·')[0].TrimEnd();
+        return name.Contains("UHD", StringComparison.OrdinalIgnoreCase) ||
+               name.Contains("Iris", StringComparison.OrdinalIgnoreCase) ||
+               name.EndsWith("Graphics", StringComparison.OrdinalIgnoreCase);
+    }
 }
 
 public static class HardwareScanner
@@ -162,27 +167,85 @@ public static class HardwareScanner
 
     private static List<DiskInfo> ReadDisks()
     {
+        // Win32_DiskDrive.MediaType dice solo "Fixed hard disk media" anche per gli SSD: inutile.
+        // Il tipo vero (SSD/HDD + NVMe/SATA) viene da MSFT_PhysicalDisk.
+        var types = ReadDiskTypes();
         var list = new List<DiskInfo>();
-        foreach (var o in Query("SELECT Model, Size, MediaType FROM Win32_DiskDrive"))
+        foreach (var o in Query("SELECT Model, Size FROM Win32_DiskDrive"))
         {
             double gb = (ToLong(o["Size"]) ?? 0) / 1024d / 1024d / 1024d;
             if (gb < 1) continue; // skip card readers / phantom drives
-            list.Add(new DiskInfo(Str(o["Model"]).Trim(), Math.Round(gb), Str(o["MediaType"]).Trim()));
+            var model = Str(o["Model"]).Trim();
+            var media = types.FirstOrDefault(t =>
+                model.Contains(t.Key, StringComparison.OrdinalIgnoreCase) ||
+                t.Key.Contains(model, StringComparison.OrdinalIgnoreCase)).Value ?? "";
+            list.Add(new DiskInfo(model, Math.Round(gb), media));
         }
         return list;
     }
 
+    /// <summary>Tipo disco reale (FriendlyName → "NVMe SSD" / "SATA SSD" / "HDD") da
+    /// MSFT_PhysicalDisk. Best-effort: se il namespace Storage non risponde, niente tipo.</summary>
+    private static Dictionary<string, string> ReadDiskTypes()
+    {
+        var map = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        foreach (var o in Query(@"root\Microsoft\Windows\Storage",
+            "SELECT FriendlyName, MediaType, BusType FROM MSFT_PhysicalDisk"))
+        {
+            var name = Str(o["FriendlyName"]).Trim();
+            string kind = (ToInt(o["MediaType"]) ?? 0) switch { 4 => "SSD", 3 => "HDD", _ => "" };
+            string bus = (ToInt(o["BusType"]) ?? 0) switch { 17 => "NVMe", 11 => "SATA", 7 => "USB", _ => "" };
+            string label = bus.Length > 0 && kind.Length > 0 ? $"{bus} {kind}"
+                : kind.Length > 0 ? kind : bus;
+            if (name.Length > 0 && label.Length > 0)
+                map[name] = label;
+        }
+        return map;
+    }
+
     private static List<string> ReadGpus()
     {
+        var vram = ReadGpuVramMap();
         var list = new List<string>();
         string[] virt = ["Basic", "Virtual", "Meta", "Parsec", "Remote", "Mirror", "IddCx", "OBS"];
         foreach (var o in Query("SELECT Name FROM Win32_VideoController"))
         {
             var n = Str(o["Name"]).Trim();
-            if (n.Length > 0 && !virt.Any(v => n.Contains(v, StringComparison.OrdinalIgnoreCase)))
-                list.Add(n);
+            if (n.Length == 0 || virt.Any(v => n.Contains(v, StringComparison.OrdinalIgnoreCase)))
+                continue;
+            // Arricchisci col VRAM reale (registro qwMemorySize: corretto anche >4 GB, a differenza
+            // di Win32_VideoController.AdapterRAM che è un uint32 e tronca a 4 GB).
+            // ≥1 GB: gli iGPU hanno una carveout minuscola (sotto il GB) → niente "0 GB VRAM".
+            if (vram.TryGetValue(n, out var bytes) && bytes >= 1024L * 1024 * 1024)
+                n = $"{n}  ·  {Math.Round(bytes / 1024d / 1024d / 1024d)} GB VRAM";
+            list.Add(n);
         }
         return list;
+    }
+
+    /// <summary>VRAM reale per GPU (nome → byte) dal registro: la classe display adapters espone
+    /// HardwareInformation.qwMemorySize, accurato anche per schede &gt;4 GB. Best-effort: se non
+    /// disponibile, i nomi restano semplici.</summary>
+    private static Dictionary<string, long> ReadGpuVramMap()
+    {
+        var map = new Dictionary<string, long>(StringComparer.OrdinalIgnoreCase);
+        try
+        {
+            using var cls = Registry.LocalMachine.OpenSubKey(
+                @"SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}");
+            if (cls is null) return map;
+            foreach (var sub in cls.GetSubKeyNames())
+            {
+                if (!Regex.IsMatch(sub, @"^\d{4}$")) continue;
+                using var k = cls.OpenSubKey(sub);
+                if (k?.GetValue("DriverDesc") is string desc && desc.Trim().Length > 0 &&
+                    k.GetValue("HardwareInformation.qwMemorySize") is { } qw &&
+                    long.TryParse(qw.ToString(), out var bytes) && bytes > 0)
+                    map[desc.Trim()] = bytes;
+            }
+        }
+        catch { /* registro non leggibile: nessun VRAM, nomi semplici */ }
+        return map;
     }
 
     private static IEnumerable<ManagementBaseObject> Query(string wql)
@@ -190,6 +253,16 @@ public static class HardwareScanner
         ManagementObjectCollection results;
         try { results = new ManagementObjectSearcher(wql).Get(); }
         catch { yield break; } // WMI hiccup must never crash the scan
+        foreach (ManagementBaseObject o in results)
+            yield return o;
+    }
+
+    /// <summary>Query in un namespace WMI specifico (es. root\Microsoft\Windows\Storage).</summary>
+    private static IEnumerable<ManagementBaseObject> Query(string scope, string wql)
+    {
+        ManagementObjectCollection results;
+        try { results = new ManagementObjectSearcher(new ManagementScope(scope), new ObjectQuery(wql)).Get(); }
+        catch { yield break; }
         foreach (ManagementBaseObject o in results)
             yield return o;
     }

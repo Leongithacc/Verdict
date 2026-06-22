@@ -865,18 +865,8 @@
                 </ItemsControl>
               </Grid>
 
-              <Border Height="1" Background="{DynamicResource Line}" Margin="0,14" />
-              <ItemsControl ItemsSource="{Binding Findings}">
-                <ItemsControl.ItemTemplate>
-                  <DataTemplate>
-                    <StackPanel Orientation="Horizontal" Margin="0,2">
-                      <TextBlock Text="{Binding Mark}" Foreground="{Binding ColorKey, Converter={StaticResource TokenBrush}}"
-                                 FontWeight="Bold" Width="18" />
-                      <TextBlock Text="{Binding Text}" Foreground="{DynamicResource Text}" TextWrapping="Wrap" />
-                    </StackPanel>
-                  </DataTemplate>
-                </ItemsControl.ItemTemplate>
-              </ItemsControl>
+              <!-- Sezione findings/diagnosi RIMOSSA (Léon 2026-06-22): il build-sheet è solo
+                   inventario COMPONENTI, niente nag tipo "RAM 5600 vs 6000" o driver nvidia. -->
 
               <!-- Multi-monitor optimizer (Lab feature): shown only when the module is on. -->
               <StackPanel Visibility="{Binding ShowMultiMonitor, Converter={StaticResource BoolToVis}}">

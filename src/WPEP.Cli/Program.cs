@@ -1192,7 +1192,8 @@ static int RunScan()
     foreach (var g in hw.Gpus)
         Console.WriteLine($"GPU          : {g}");
     foreach (var d in hw.Disks)
-        Console.WriteLine($"Disco        : {d.Model}  {d.CapacityGb:F0} GB".TrimEnd());
+        Console.WriteLine($"Disco        : {d.Model}  {d.CapacityGb:F0} GB"
+            + (d.Media.Length > 0 ? $"  · {d.Media}" : "").TrimEnd());
 
     if (hw.Findings.Count > 0)
     {

@@ -101,7 +101,8 @@ public sealed class ScanViewModel : ViewModelBase
                 MemoryModules.Add($"{m.CapacityGb:F0} GB @ {m.SpeedMtps?.ToString() ?? "?"} MT/s   ·   {m.Vendor} {m.Part}".Trim());
             Disks.Clear();
             foreach (var d in hw.Disks)
-                Disks.Add($"{d.Model}   ·   {d.CapacityGb:F0} GB");
+                Disks.Add($"{d.Model}   ·   {d.CapacityGb:F0} GB"
+                    + (d.Media.Length > 0 ? $"   ·   {d.Media}" : ""));
             Gpus.Clear();
             foreach (var g in hw.Gpus)
                 Gpus.Add(g);
