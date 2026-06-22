@@ -148,12 +148,16 @@ public sealed class ExecutionEngine(
 
     /// <summary>Applies a plan: journal first, write, verify by re-reading.
     /// Any mismatch stops the session immediately.</summary>
-    public string Execute(ExecutionPlan plan)
+    public string Execute(ExecutionPlan plan) => Execute(plan, createRestorePoint: true);
+
+    /// <param name="createRestorePoint">false quando il restore-point è già stato creato UNA volta
+    /// per l'intero batch (ExecuteAll) — evita N checkpoint (e N×12s) per "Applica tutti".</param>
+    private string Execute(ExecutionPlan plan, bool createRestorePoint)
     {
         var session = new JournalSession
         {
             StartedAtUtc = DateTimeOffset.UtcNow,
-            RestorePointCreated = TryCreateRestorePoint($"Verdict: {plan.TweakId}"),
+            RestorePointCreated = createRestorePoint && TryCreateRestorePoint($"Verdict: {plan.TweakId}"),
         };
         var file = System.IO.Path.Combine(journalDirectory,
             $"session-{DateTime.Now:yyyyMMdd-HHmmss}-{plan.TweakId}.json");
@@ -195,10 +199,13 @@ public sealed class ExecutionEngine(
     /// if it stopped, which plan stopped it.</summary>
     public (int Applied, string? StoppedAt) ExecuteAll(IReadOnlyList<ExecutionPlan> plans)
     {
+        // UN solo restore-point per l'intero batch invece di uno per plan (evita N×12s di attesa).
+        if (plans.Count > 0)
+            _ = TryCreateRestorePoint($"Verdict: apply-all ({plans.Count} tweak)");
         int applied = 0;
         foreach (var plan in plans)
         {
-            try { Execute(plan); applied++; }
+            try { Execute(plan, createRestorePoint: false); applied++; }
             catch (Exception ex) { return (applied, $"{plan.TweakName}: {ex.Message}"); }
         }
         return (applied, null);

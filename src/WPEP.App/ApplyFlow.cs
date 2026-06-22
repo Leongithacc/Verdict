@@ -115,19 +115,19 @@ public sealed class ApplyDialogViewModel : ViewModelBase
         {
             _plan = _exec.BuildPlan(entry);
             PlanText = _plan.Describe() +
-                (_plan.RequiresReboot ? "\n\nRequires a reboot to take effect." : "");
+                (_plan.RequiresReboot ? "\n\nRichiede un riavvio per avere effetto." : "");
             if (_plan.IsAlreadyApplied)
                 Status = "Già al valore desiderato: nessuna modifica necessaria.";
             else if (AdminBlocked)
-                Status = "This change writes to HKLM and needs administrator. " +
-                         "Relaunch as administrator first.";
+                Status = "Questa modifica scrive in HKLM e serve amministratore. " +
+                         "Riavvia come amministratore prima.";
         }
         catch (Exception ex)
         {
             _plan = null;
             PlanText = "";
-            Status = "This tweak can't be applied automatically — apply it by hand " +
-                     "(see How to). Reason: " + ex.Message;
+            Status = "Questo tweak non è applicabile automaticamente — fallo a mano " +
+                     "(vedi Come fare). Motivo: " + ex.Message;
         }
         Raise(nameof(AdminBlocked));
         Raise(nameof(HasPlan));
@@ -136,22 +136,26 @@ public sealed class ApplyDialogViewModel : ViewModelBase
         IsOpen = true;
     }
 
-    private void Confirm()
+    private async void Confirm()
     {
         if (_plan is null)
             return;
         IsBusy = true;
         try
         {
-            var file = _exec.Execute(_plan);
+            // Execute fa restore-point + scritture: gira su un thread di background così la UI
+            // resta viva (mostra "in corso") invece di congelarsi fino a 12s. La continuazione
+            // riprende sul thread UI (binding sicuri).
+            var plan = _plan;
+            var file = await System.Threading.Tasks.Task.Run(() => _exec.Execute(plan));
             Applied = true;
-            Status = $"Applied and verified. Undo available in Changes.\nJournal: {Path.GetFileName(file)}";
-            _main.TerminalLine = $"$ verdict apply {_plan.TweakId} · {_plan.Operations.Count} writes · journaled";
+            Status = $"Applicato e verificato. Puoi annullare da Modifiche.\nJournal: {Path.GetFileName(file)}";
+            _main.TerminalLine = $"$ verdict apply {plan.TweakId} · {plan.Operations.Count} scritture · journaled";
             _main.Changes.Refresh();
         }
         catch (Exception ex)
         {
-            Status = $"STOPPED: {ex.Message}";
+            Status = $"FERMATO: {ex.Message}";
         }
         finally
         {
@@ -233,7 +237,7 @@ public sealed class ApplyAllViewModel : ViewModelBase
             if (_exec.NeedsAdmin(e) && !elevated)
             {
                 _adminSkipped++;
-                lines.Add($"• {e.Name}\n    [needs administrator — skipped]");
+                lines.Add($"• {e.Name}\n    [serve amministratore — saltato]");
                 continue;
             }
             try
@@ -241,7 +245,7 @@ public sealed class ApplyAllViewModel : ViewModelBase
                 var plan = _exec.BuildPlan(e);
                 if (plan.IsAlreadyApplied)
                 {
-                    lines.Add($"• {e.Name}\n    [already at desired value — nothing to do]");
+                    lines.Add($"• {e.Name}\n    [già al valore desiderato — niente da fare]");
                     continue;
                 }
                 _ready.Add((e, plan));
@@ -251,15 +255,15 @@ public sealed class ApplyAllViewModel : ViewModelBase
             }
             catch (Exception ex)
             {
-                lines.Add($"• {e.Name}\n    [can't apply automatically: {ex.Message}]");
+                lines.Add($"• {e.Name}\n    [non applicabile automaticamente: {ex.Message}]");
             }
         }
 
-        Title = $"Apply {_ready.Count} recommended tweak(s)";
+        Title = $"Applica {_ready.Count} tweak consigliati";
         PlanText = string.Join("\n\n", lines) +
-            (reboots > 0 ? $"\n\n{reboots} of these need a reboot to take effect." : "");
+            (reboots > 0 ? $"\n\n{reboots} di questi richiedono un riavvio per avere effetto." : "");
         Status = _adminSkipped > 0 && !elevated
-            ? $"{_adminSkipped} tweak(s) need administrator — relaunch as admin to include them."
+            ? $"{_adminSkipped} tweak richiedono amministratore — riavvia come admin per includerli."
             : "";
         Raise(nameof(HasPlan));
         Raise(nameof(ShowApplyButton));
@@ -268,14 +272,16 @@ public sealed class ApplyAllViewModel : ViewModelBase
         IsOpen = true;
     }
 
-    private void Confirm()
+    private async void Confirm()
     {
         IsBusy = true;
         int ok;
         string? stoppedAt;
         try
         {
-            (ok, stoppedAt) = _exec.ExecuteAll([.. _ready.Select(r => r.Plan)]);
+            // Su thread di background: N tweak × (restore-point + scritture) non congelano la UI.
+            var plans = _ready.Select(r => r.Plan).ToArray();
+            (ok, stoppedAt) = await System.Threading.Tasks.Task.Run(() => _exec.ExecuteAll(plans));
         }
         finally
         {
@@ -283,9 +289,9 @@ public sealed class ApplyAllViewModel : ViewModelBase
         }
         Applied = true;
         Status = stoppedAt is null
-            ? $"Applied and verified {ok} tweak(s). Undo each in Changes."
-            : $"Applied {ok}, then STOPPED at {stoppedAt}. Applied tweaks are journaled and undoable.";
-        _main.TerminalLine = $"$ verdict apply-all · {ok} tweaks · journaled";
+            ? $"Applicati e verificati {ok} tweak. Annulla ognuno da Modifiche."
+            : $"Applicati {ok}, poi FERMATO a {stoppedAt}. I tweak applicati sono journaled e annullabili.";
+        _main.TerminalLine = $"$ verdict apply-all · {ok} tweak · journaled";
         _main.Changes.Refresh();
     }
 
