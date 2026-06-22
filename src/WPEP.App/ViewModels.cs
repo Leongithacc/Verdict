@@ -287,25 +287,27 @@ public sealed class VerdictViewModel(MainViewModel main) : ViewModelBase
         var recommendations = allRecommendations.Where(r => r.Entry.Game is null).ToArray();
         var gameSpecific = allRecommendations.Where(r => r.Entry.Game is not null).ToArray();
 
+        // "Che FA, non insegna": raggruppa per AZIONE, non per classificazione. In alto ciò che
+        // Verdict può accendere con un click; i manuali (gui-only/in-game/BIOS) declassati in fondo.
         Groups.Clear();
-        var groupDefs = new (Classification[] Classes, string Label, string Color)[]
-        {
-            ([Classification.Recommended], "Worth doing", "Ok"),
-            ([Classification.Optional, Classification.OptionalWithWarning], "Maybe — judge for yourself", "Info"),
-            ([Classification.NotRecommended], "Risky — read first", "Danger"),
-            ([Classification.Placebo], "Skip it — placebo", "Neutral"),
-            ([Classification.AlreadyActive], "Already optimal", "OkDim"),
-            ([Classification.NotApplicable], "Not applicable to this PC", "Neutral"),
-        };
+        static bool Actionable(Classification c) => c is Classification.Recommended
+            or Classification.Optional or Classification.OptionalWithWarning;
 
-        foreach (var (classes, label, color) in groupDefs)
+        void AddGroup(string label, string color, IEnumerable<Recommendation> items)
         {
-            var group = new VerdictGroup(label, color);
-            foreach (var r in recommendations.Where(r => classes.Contains(r.Classification)))
-                group.Items.Add(new VerdictItem(r.Entry, r.StateNote, main));
-            if (group.Items.Count > 0)
-                Groups.Add(group);
+            var g = new VerdictGroup(label, color);
+            foreach (var r in items) g.Items.Add(new VerdictItem(r.Entry, r.StateNote, main));
+            if (g.Items.Count > 0) Groups.Add(g);
         }
+
+        AddGroup("Da attivare ora — un click", "Ok",
+            recommendations.Where(r => Actionable(r.Classification) && main.Execution.CanApply(r.Entry)));
+        AddGroup("Già a posto", "OkDim",
+            recommendations.Where(r => r.Classification == Classification.AlreadyActive));
+        AddGroup("Manuali — li fai tu (Verdict ti dice come)", "Info",
+            recommendations.Where(r => Actionable(r.Classification) && !main.Execution.CanApply(r.Entry)));
+        AddGroup("Da evitare / placebo", "Neutral",
+            recommendations.Where(r => r.Classification is Classification.NotRecommended or Classification.Placebo));
 
         foreach (var gameGroup in gameSpecific.GroupBy(r => r.Entry.Game!))
         {
@@ -319,13 +321,8 @@ public sealed class VerdictViewModel(MainViewModel main) : ViewModelBase
             Groups.Add(group);
         }
 
-        int optimal = recommendations.Count(r => r.Classification == Classification.AlreadyActive);
-        int actionable = recommendations.Count(r => r.Classification
-            is Classification.AlreadyActive or Classification.Recommended
-            or Classification.Optional or Classification.OptionalWithWarning);
-
         WorthDoing = recommendations.Count(r => r.Classification == Classification.Recommended);
-        AlreadyOptimal = optimal;
+        AlreadyOptimal = recommendations.Count(r => r.Classification == Classification.AlreadyActive);
         PlaceboAvoided = recommendations.Count(r => r.Classification == Classification.Placebo);
 
         // "Apply all" only ever touches Recommended tweaks that are programmatically
@@ -340,18 +337,12 @@ public sealed class VerdictViewModel(MainViewModel main) : ViewModelBase
         Raise(nameof(HasApplicableRecommended));
         Raise(nameof(ApplyAllLabel));
 
-        Header = actionable > 0 && optimal == actionable && WorthDoing == 0
-            ? "Nothing left to optimize. Seriously. Go play."
-            : $"Your system: {optimal}/{actionable} checks optimal";
-        SubHeader = $"Last scanned {DateTime.Now:HH:mm} · {snapshot.CpuName} · {snapshot.GpuName} · " +
-                    "Read-only — WPEP never modifies your system";
-        // F8: states the probes couldn't read are counted, never invented.
-        int unknown = recommendations.Count(r =>
-            r.Classification is Classification.Recommended or Classification.Optional
-                or Classification.OptionalWithWarning &&
-            r.StateNote.Contains("non rilev", StringComparison.OrdinalIgnoreCase));
-        if (unknown > 0)
-            SubHeader += $" · {unknown} states not auto-detectable (check by hand via How to)";
+        int toApplyCount = recommendations.Count(r =>
+            Actionable(r.Classification) && main.Execution.CanApply(r.Entry));
+        Header = toApplyCount > 0
+            ? $"{toApplyCount} tweak da attivare con un click"
+            : "Niente da attivare — sei già a posto. Vai a giocare.";
+        SubHeader = $"Scansionato alle {DateTime.Now:HH:mm} · {snapshot.GpuName} · sola lettura, Verdict non scrive nulla finché non premi tu";
 
         if (snapshot.IsManagedDevice == true)
             SubHeader += "\n⚠ This looks like a company-managed device. Running third-party " +
@@ -359,7 +350,7 @@ public sealed class VerdictViewModel(MainViewModel main) : ViewModelBase
 
         // Verdict Score: remember the inputs we have now; EXPO arrives with the hardware scan,
         // so recompute when that completes too (see ScanCompleted wiring in ScanAsync).
-        _scoreDone = optimal;
+        _scoreDone = AlreadyOptimal;
         _scorePending = WorthDoing;
         RecomputeScore();
 
