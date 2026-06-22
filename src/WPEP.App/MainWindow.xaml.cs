@@ -43,7 +43,6 @@ public partial class MainWindow : Window
         _vm.Verdict.RecomputeScore();     // reflect a Score toggle made in the Lab
         _vm.Verdict.RecomputeRiskScope(); // reflect a Risk Slider toggle made in the Lab
         _vm.Verdict.RefreshGames();       // reflect an Optimize-for-game toggle made in the Lab
-        _vm.Verdict.RefreshStutterFlag(); // reflect an Explain-my-Stutter toggle made in the Lab
         _vm.CurrentPage = _vm.Verdict;
     }
     private void OnNavScan(object s, RoutedEventArgs e)
@@ -112,7 +111,8 @@ public partial class MainWindow : Window
     }
     private void OnNavDiagnostics(object s, RoutedEventArgs e)
     {
-        _vm.Diagnostics.RefreshNetworkFlag(); // Network Duel (Lab feature)
+        _vm.Diagnostics.RefreshNetworkFlag();  // Network Duel (Lab feature)
+        _vm.Diagnostics.RefreshStutterFlag();  // Explain my Stutter (Lab feature)
         _vm.CurrentPage = _vm.Diagnostics;
     }
     private void OnNavKb(object s, RoutedEventArgs e)

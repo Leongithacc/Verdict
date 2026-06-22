@@ -73,7 +73,7 @@ public static class FeatureCatalog
         new(MultiMonitor, "Multi-monitor optimizer", "Sceglie il primary giusto, VRR per-display, spegne i monitor inutili per l'input lag.",
             "Hardware", Status: FeatureStatus.Beta, Glyph: "🖥", Where: "Scan"),
         new(ExplainStutter, "Explain my Stutter", "Unisce DPC/ISR + frame data e ti dice QUALE driver causa lo stutter, in italiano semplice.",
-            "Hardware", Status: FeatureStatus.Experimental, Glyph: "🔍", Where: "Verdict"),
+            "Hardware", Status: FeatureStatus.Experimental, Glyph: "🔍", Where: "Diagnostica"),
         new(RigDna, "Rig DNA", "Firma generativa unica dal tuo hardware+config: una trading card da collezionare.",
             "Hardware", Status: FeatureStatus.Experimental, Glyph: "🧬", Where: "Scan"),
 
