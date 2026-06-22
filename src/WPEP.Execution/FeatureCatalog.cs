@@ -73,7 +73,7 @@ public static class FeatureCatalog
         new(MultiMonitor, "Multi-monitor optimizer", "Sceglie il primary giusto, VRR per-display, spegne i monitor inutili per l'input lag.",
             "Hardware", Status: FeatureStatus.Beta, Glyph: "🖥", Where: "Scan"),
         new(ExplainStutter, "Explain my Stutter", "Unisce DPC/ISR + frame data e ti dice QUALE driver causa lo stutter, in italiano semplice.",
-            "Hardware", Status: FeatureStatus.Experimental, Glyph: "🔍", Where: "Diagnostica"),
+            "Hardware", Status: FeatureStatus.Experimental, Glyph: "🔍", Where: "Verdict"),
         new(RigDna, "Rig DNA", "Firma generativa unica dal tuo hardware+config: una trading card da collezionare.",
             "Hardware", Status: FeatureStatus.Experimental, Glyph: "🧬", Where: "Scan"),
 
@@ -81,7 +81,7 @@ public static class FeatureCatalog
         new(Watchdog, "Watchdog (tray)", "Monitor in background: ti avvisa se l'EXPO si spegne, un tweak salta, le temp spikano.",
             "Automazione", Status: FeatureStatus.Experimental, Heavy: true, Glyph: "🛡", Where: "Modifiche"),
         new(RegressionSentinel, "Regression Sentinel", "Ri-benchmarka da solo e ti avvisa se le prestazioni PEGGIORANO (es. un Windows Update).",
-            "Automazione", Status: FeatureStatus.Experimental, Heavy: true, Glyph: "📉", Where: "Misura"),
+            "Automazione", Status: FeatureStatus.Experimental, Heavy: true, Glyph: "📉", Where: "CLI: wpep sentinel"),
         new(TimeMachine, "Time Machine", "Timeline \"cos'è cambiato dal sistema\" + rewind a un punto qualsiasi.",
             "Automazione", Status: FeatureStatus.Beta, Glyph: "⏳", Where: "Scan"),
 

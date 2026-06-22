@@ -424,6 +424,8 @@ public sealed class DiagnosticsViewModel(MainViewModel main) : ViewModelBase
     // ── Explain my Stutter (Lab feature) ─────────────────────────────────────
     private string _stutterHeadline = "", _stutterColor = "Ok";
     public bool ShowStutterExplain => main.Settings.IsFeatureEnabled(FeatureCatalog.ExplainStutter);
+    /// <summary>Riflette un toggle Explain-my-Stutter fatto nel Lab quando torni su Verdict.</summary>
+    public void RefreshStutterFlag() => Raise(nameof(ShowStutterExplain));
     public string StutterHeadline { get => _stutterHeadline; set => Set(ref _stutterHeadline, value); }
     public string StutterColor { get => _stutterColor; set => Set(ref _stutterColor, value); }
     public bool HasStutterResult => StutterHeadline.Length > 0;
