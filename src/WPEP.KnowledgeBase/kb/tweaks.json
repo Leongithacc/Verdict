@@ -952,7 +952,7 @@
     "id": "disable-consumer-features",
     "name": "Disattiva app promozionali / consumer features",
     "category": "background",
-    "description": "Impedisce a Windows di installare automaticamente app suggerite/promozionali e contenuti pubblicitari nel menu Start (candy crush & co.). ONESTÀ: non tocca gli FPS — riduce installazioni e attività in background non richieste, e pulisce il sistema.",
+    "description": "Imposta la policy che BLOCCA l'auto-installazione silenziosa di app suggerite/promozionali (candy crush & co.) e contenuti pubblicitari da parte di Windows. ONESTÀ: non tocca gli FPS, e non rimuove retroattivamente i suggerimenti già presenti in un profilo esistente (quelli dipendono anche da ContentDeliveryManager per-utente) — impedisce che ne arrivino di nuovi.",
     "hardware_prerequisites": [],
     "expected_impact": "FPS: invariati. Beneficio: niente app promozionali auto-installate, meno bloat e attività di rete in background.",
     "evidence_level": "plausible",

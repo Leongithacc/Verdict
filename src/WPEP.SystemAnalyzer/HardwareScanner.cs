@@ -176,9 +176,12 @@ public static class HardwareScanner
             double gb = (ToLong(o["Size"]) ?? 0) / 1024d / 1024d / 1024d;
             if (gb < 1) continue; // skip card readers / phantom drives
             var model = Str(o["Model"]).Trim();
-            var media = types.FirstOrDefault(t =>
-                model.Contains(t.Key, StringComparison.OrdinalIgnoreCase) ||
-                t.Key.Contains(model, StringComparison.OrdinalIgnoreCase)).Value ?? "";
+            // Match deterministico: prima nome esatto (caso normale, Model == FriendlyName), poi
+            // come fallback substring. Evita di accoppiare il disco sbagliato con modelli simili.
+            var media = types.TryGetValue(model, out var exact) ? exact
+                : types.FirstOrDefault(t =>
+                    model.Contains(t.Key, StringComparison.OrdinalIgnoreCase) ||
+                    t.Key.Contains(model, StringComparison.OrdinalIgnoreCase)).Value ?? "";
             list.Add(new DiskInfo(model, Math.Round(gb), media));
         }
         return list;
