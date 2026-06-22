@@ -147,24 +147,24 @@
               <StackPanel>
                 <TextBlock Style="{StaticResource Mono}" FontSize="26"
                            Foreground="{DynamicResource Ok}" Text="{Binding WorthDoing}" />
-                <TextBlock Style="{StaticResource H2}" Text="Worth doing" Margin="0,8,0,0" />
-                <TextBlock Style="{StaticResource Muted}" Text="Free improvements with real evidence" />
+                <TextBlock Style="{StaticResource H2}" Text="Da fare" Margin="0,8,0,0" />
+                <TextBlock Style="{StaticResource Muted}" Text="Miglioramenti gratis con evidenza reale" />
               </StackPanel>
             </Border>
             <Border Style="{StaticResource Card}" Margin="4,0">
               <StackPanel>
                 <TextBlock Style="{StaticResource Mono}" FontSize="26"
                            Foreground="{DynamicResource OkDim}" Text="{Binding AlreadyOptimal}" />
-                <TextBlock Style="{StaticResource H2}" Text="Already optimal" Margin="0,8,0,0" />
-                <TextBlock Style="{StaticResource Muted}" Text="Nothing to do here. That's good news." />
+                <TextBlock Style="{StaticResource H2}" Text="Già ottimale" Margin="0,8,0,0" />
+                <TextBlock Style="{StaticResource Muted}" Text="Niente da fare qui. Ottima notizia." />
               </StackPanel>
             </Border>
             <Border Style="{StaticResource Card}" Margin="8,0,0,0">
               <StackPanel>
                 <TextBlock Style="{StaticResource Mono}" FontSize="26"
                            Foreground="{DynamicResource Neutral}" Text="{Binding PlaceboAvoided}" />
-                <TextBlock Style="{StaticResource H2}" Text="Placebo avoided" Margin="0,8,0,0" />
-                <TextBlock Style="{StaticResource Muted}" Text="Popular tweaks that don't actually work" />
+                <TextBlock Style="{StaticResource H2}" Text="Placebo evitati" Margin="0,8,0,0" />
+                <TextBlock Style="{StaticResource Muted}" Text="Tweak famosi che non fanno niente" />
               </StackPanel>
             </Border>
           </UniformGrid>
@@ -206,10 +206,10 @@
                             <TextBlock Grid.Column="1" Style="{StaticResource Muted}"
                                        Text="{Binding StateNote}" VerticalAlignment="Center" Margin="16,0,0,0" />
                             <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
-                              <Button Style="{StaticResource GhostButton}" Content="How to"
+                              <Button Style="{StaticResource GhostButton}" Content="Come fare"
                                       Padding="10,4" FontSize="12" Margin="8,0,0,0"
                                       Command="{Binding HowToCommand}" />
-                              <Button Style="{StaticResource GhostButton}" Content="Open settings"
+                              <Button Style="{StaticResource GhostButton}" Content="Apri impostazioni"
                                       Padding="10,4" FontSize="12" Margin="6,0,0,0"
                                       Command="{Binding OpenSettingsCommand}"
                                       Visibility="{Binding CanOpenSettings, Converter={StaticResource BoolToVis}}" />
@@ -385,7 +385,7 @@
             <StackPanel>
               <TextBlock Style="{StaticResource Body}" Text="{Binding BlockerText}" />
               <StackPanel Orientation="Horizontal" Margin="0,12,0,0">
-                <Button Style="{StaticResource PrimaryButton}" Content="Relaunch as administrator"
+                <Button Style="{StaticResource PrimaryButton}" Content="Riavvia come amministratore"
                         Command="{Binding RelaunchAsAdminCommand}"
                         Visibility="{Binding IsElevated, Converter={StaticResource BoolToVisInverted}}" />
                 <Button Style="{StaticResource PrimaryButton}" Content="Download PresentMon (10 MB, verified)"
@@ -485,7 +485,7 @@
                    Visibility="{Binding IsElevated, Converter={StaticResource BoolToVis}}" />
           <TextBlock Style="{StaticResource Muted}" Text="seconds" Margin="6,0,0,0" VerticalAlignment="Center"
                      Visibility="{Binding IsElevated, Converter={StaticResource BoolToVis}}" />
-          <Button Style="{StaticResource PrimaryButton}" Content="Relaunch as administrator"
+          <Button Style="{StaticResource PrimaryButton}" Content="Riavvia come amministratore"
                   Command="{Binding RelaunchAsAdminCommand}"
                   Visibility="{Binding IsElevated, Converter={StaticResource BoolToVisInverted}}" />
         </StackPanel>
@@ -743,9 +743,9 @@
         <TextBlock Style="{StaticResource H1}" Text="Report" />
         <TextBlock Style="{StaticResource Body}" Text="{Binding Status}" Margin="0,12,0,16" />
         <StackPanel Orientation="Horizontal">
-          <Button Style="{StaticResource PrimaryButton}" Content="Generate report"
+          <Button Style="{StaticResource PrimaryButton}" Content="Genera report"
                   Command="{Binding GenerateCommand}" />
-          <Button Style="{StaticResource GhostButton}" Content="Open last report"
+          <Button Style="{StaticResource GhostButton}" Content="Apri ultimo report"
                   Command="{Binding OpenCommand}" Margin="12,0,0,0"
                   Visibility="{Binding LastPath, Converter={StaticResource NullToVis}}" />
         </StackPanel>
@@ -1358,7 +1358,7 @@
             <TextBlock Style="{StaticResource H2}" FontSize="20" Foreground="{DynamicResource Accent}"
                        Text="Verdict" />
             <TextBlock Style="{StaticResource Muted}" FontSize="11" TextWrapping="Wrap"
-                       Text="The only optimizer that tells you when to stop optimizing." />
+                       Text="L'unico ottimizzatore che ti dice quando smettere di ottimizzare." />
           </StackPanel>
           <StackPanel>
             <RadioButton x:Name="NavVerdict" Style="{StaticResource NavButton}" Content="Verdict"
@@ -1396,16 +1396,16 @@
         <StackPanel>
           <TextBlock Style="{StaticResource H1}" Foreground="{DynamicResource Accent}" Text="Verdict" />
           <TextBlock Style="{StaticResource Body}" Margin="0,12,0,0"
-                     Text="Verdict measures, diagnoses and recommends. It never modifies your system." />
+                     Text="Verdict misura, diagnostica e consiglia. Non modifica nulla finché non sei tu a decidere." />
           <TextBlock Style="{StaticResource Muted}" Margin="0,8,0,0"
-                     Text="The only optimizer that tells you when to stop optimizing." />
+                     Text="L'unico ottimizzatore che ti dice quando smettere di ottimizzare." />
           <TextBlock Style="{StaticResource Muted}" Margin="0,16,0,0" Text="What WPEP will never do:" />
           <TextBlock Style="{StaticResource Body}" Margin="0,4,0,0"
                      Text="· Write to your system&#x0a;· Claim to measure end-to-end input latency&#x0a;· Show you an improvement that isn't statistically real" />
-          <Button Style="{StaticResource PrimaryButton}" Content="Scan my system" Margin="0,24,0,0"
+          <Button Style="{StaticResource PrimaryButton}" Content="Scansiona il PC" Margin="0,24,0,0"
                   HorizontalAlignment="Left" Command="{Binding StartFirstScanCommand}" />
           <TextBlock Style="{StaticResource Muted}" FontSize="11" Margin="0,8,0,0"
-                     Text="The scan is read-only and needs no administrator." />
+                     Text="La scansione è in sola lettura e non serve amministratore." />
         </StackPanel>
       </Border>
     </Grid>
@@ -1419,7 +1419,7 @@
           <TextBlock Style="{StaticResource H2}" Text="{Binding Title}" />
           <TextBlock Style="{StaticResource Muted}" Margin="0,4,0,0"
                      Visibility="{Binding HasPlan, Converter={StaticResource BoolToVis}}"
-                     Text="Dry run — exactly what will change. Verdict reads the current value, writes the new one, then re-reads to verify. Nothing happens until you confirm." />
+                     Text="Anteprima — esattamente cosa cambierà. Verdict legge il valore attuale, scrive il nuovo, poi rilegge per verificare. Non succede niente finché non confermi." />
 
           <Border Background="{DynamicResource Surface2}" CornerRadius="6" Padding="14" Margin="0,12,0,0"
                   Visibility="{Binding HasPlan, Converter={StaticResource BoolToVis}}">
@@ -1438,10 +1438,10 @@
           <TextBlock Style="{StaticResource Muted}" Text="{Binding Status}" Margin="0,12,0,0" TextWrapping="Wrap" />
 
           <StackPanel Orientation="Horizontal" Margin="0,16,0,0">
-            <Button Style="{StaticResource PrimaryButton}" Content="Apply now"
+            <Button Style="{StaticResource PrimaryButton}" Content="Applica ora"
                     Command="{Binding ConfirmCommand}"
                     Visibility="{Binding ShowApplyButton, Converter={StaticResource BoolToVis}}" />
-            <Button Style="{StaticResource PrimaryButton}" Content="Relaunch as administrator"
+            <Button Style="{StaticResource PrimaryButton}" Content="Riavvia come amministratore"
                     Command="{Binding RelaunchAsAdminCommand}" Margin="0,0,8,0"
                     Visibility="{Binding AdminBlocked, Converter={StaticResource BoolToVis}}" />
             <Button Style="{StaticResource GhostButton}" Content="Close"
@@ -1459,7 +1459,7 @@
         <StackPanel>
           <TextBlock Style="{StaticResource H2}" Text="{Binding Title}" />
           <TextBlock Style="{StaticResource Muted}" Margin="0,4,0,0"
-                     Text="Dry run — every change below, across all recommended tweaks. Each is written, re-read to verify, and journaled individually so you can undo any of them on the Changes page. Nothing happens until you confirm." />
+                     Text="Anteprima — ogni modifica qui sotto, su tutti i tweak consigliati. Ognuna viene scritta, riletta per verifica e tracciata singolarmente così puoi annullarla dalla pagina Modifiche. Non succede niente finché non confermi." />
 
           <Border Background="{DynamicResource Surface2}" CornerRadius="6" Padding="14" Margin="0,12,0,0"
                   Visibility="{Binding HasPlan, Converter={StaticResource BoolToVis}}">
@@ -1471,10 +1471,10 @@
           <TextBlock Style="{StaticResource Muted}" Text="{Binding Status}" Margin="0,12,0,0" TextWrapping="Wrap" />
 
           <StackPanel Orientation="Horizontal" Margin="0,16,0,0">
-            <Button Style="{StaticResource PrimaryButton}" Content="Apply all now"
+            <Button Style="{StaticResource PrimaryButton}" Content="Applica tutti ora"
                     Command="{Binding ConfirmCommand}"
                     Visibility="{Binding ShowApplyButton, Converter={StaticResource BoolToVis}}" />
-            <Button Style="{StaticResource PrimaryButton}" Content="Relaunch as administrator"
+            <Button Style="{StaticResource PrimaryButton}" Content="Riavvia come amministratore"
                     Command="{Binding RelaunchAsAdminCommand}" Margin="8,0,0,0"
                     Visibility="{Binding AdminBlocked, Converter={StaticResource BoolToVis}}" />
             <Button Style="{StaticResource GhostButton}" Content="Close"

@@ -142,8 +142,8 @@ public sealed record GameSettingRow(string Name, string Detail);
 
 public sealed class VerdictViewModel(MainViewModel main) : ViewModelBase
 {
-    private string _header = "Scanning…";
-    private string _subHeader = "Read-only — WPEP never modifies your system";
+    private string _header = "Scansione in corso…";
+    private string _subHeader = "Sola lettura — Verdict non scrive nulla finché non premi tu";
     private bool _isScanning;
     private int _worthDoing, _alreadyOptimal, _placeboAvoided;
     // The recommended tweaks that can be applied programmatically — fuels "Apply all".
@@ -159,7 +159,7 @@ public sealed class VerdictViewModel(MainViewModel main) : ViewModelBase
 
     public int ApplicableRecommendedCount => _applicableRecommended.Count;
     public bool HasApplicableRecommended => _applicableRecommended.Count > 0;
-    public string ApplyAllLabel => $"Apply all recommended ({_applicableRecommended.Count})";
+    public string ApplyAllLabel => $"Applica tutti i consigliati ({_applicableRecommended.Count})";
 
     // ── Verdict Score (Lab feature, default-ON) ──────────────────────────────
     // The honest 0–100 number. Gated by the feature flag so the user can hide it.
@@ -240,13 +240,13 @@ public sealed class VerdictViewModel(MainViewModel main) : ViewModelBase
     public void SetIdle(string header)
     {
         Header = header;
-        SubHeader = "Read-only — WPEP never modifies your system";
+        SubHeader = "Sola lettura — Verdict non scrive nulla finché non premi tu";
     }
 
     public async Task ScanAsync()
     {
         IsScanning = true;
-        Header = "Scanning…";
+        Header = "Scansione in corso…";
         var sw = Stopwatch.StartNew();
         try
         {
@@ -270,7 +270,7 @@ public sealed class VerdictViewModel(MainViewModel main) : ViewModelBase
         }
         catch (Exception ex)
         {
-            Header = "Scan failed";
+            Header = "Scansione fallita";
             SubHeader = ex.Message;
         }
         finally
@@ -345,8 +345,8 @@ public sealed class VerdictViewModel(MainViewModel main) : ViewModelBase
         SubHeader = $"Scansionato alle {DateTime.Now:HH:mm} · {snapshot.GpuName} · sola lettura, Verdict non scrive nulla finché non premi tu";
 
         if (snapshot.IsManagedDevice == true)
-            SubHeader += "\n⚠ This looks like a company-managed device. Running third-party " +
-                         "diagnostic tools may violate your organization's IT policy. Get IT approval first.";
+            SubHeader += "\n⚠ Sembra un dispositivo gestito dall'azienda. Usare strumenti di terze " +
+                         "parti potrebbe violare la policy IT: chiedi prima l'ok all'IT.";
 
         // Verdict Score: remember the inputs we have now; EXPO arrives with the hardware scan,
         // so recompute when that completes too (see ScanCompleted wiring in ScanAsync).

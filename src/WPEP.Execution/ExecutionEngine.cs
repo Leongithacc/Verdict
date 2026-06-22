@@ -223,7 +223,7 @@ public sealed class ExecutionEngine(
                 continue;
 
             var (exists, value) = ReadCurrent(entry);
-            bool isCreate = entry.Method is "registry" or "bcdedit" or "dxuser" && !entry.ExistedBefore;
+            bool isCreate = entry.Method is "registry" or "bcdedit" or "dxuser" or "nvidia-drs" && !entry.ExistedBefore;
             bool alreadyReverted = isCreate ? !exists : (exists && value == entry.ValueBefore);
             bool matchesOurWrite = exists && value == entry.ValueAfter;
 

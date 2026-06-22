@@ -68,9 +68,18 @@ public sealed class RealPowerCfg : IPowerCfg
             CreateNoWindow = true,
         };
         using var p = Process.Start(psi)!;
-        string output = p.StandardOutput.ReadToEnd();
-        string err = p.StandardError.ReadToEnd();
-        p.WaitForExit(10000);
+        // Drena ENTRAMBE le pipe in parallelo PRIMA di WaitForExit: ReadToEnd sequenziale
+        // poteva deadlockare se stderr si riempie mentre siamo bloccati su stdout (stesso
+        // anti-pattern corretto nel restore-point). + timeout/kill: niente blocco infinito.
+        var outTask = p.StandardOutput.ReadToEndAsync();
+        var errTask = p.StandardError.ReadToEndAsync();
+        if (!p.WaitForExit(10000))
+        {
+            try { p.Kill(entireProcessTree: true); } catch { /* già uscito */ }
+            throw new InvalidOperationException($"powercfg {args} non risponde (timeout 10s).");
+        }
+        string output = outTask.GetAwaiter().GetResult();
+        string err = errTask.GetAwaiter().GetResult();
         if (p.ExitCode != 0)
             throw new InvalidOperationException($"powercfg {args} fallito: {err.Trim()}");
         return output;

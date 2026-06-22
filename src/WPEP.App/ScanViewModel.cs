@@ -49,7 +49,7 @@ public sealed class ScanViewModel : ViewModelBase
     public ObservableCollection<TimelineChange> TimelineChanges { get; } = [];
 
     public bool IsScanning { get => _isScanning; set { if (Set(ref _isScanning, value)) Raise(nameof(RescanLabel)); } }
-    public string RescanLabel => _isScanning ? "Scansione…" : "Rescan";
+    public string RescanLabel => _isScanning ? "Scansione…" : "Riscansiona";
     public string Motherboard { get => _motherboard; set => Set(ref _motherboard, value); }
     public string Bios { get => _bios; set => Set(ref _bios, value); }
     public string Cpu { get => _cpu; set => Set(ref _cpu, value); }

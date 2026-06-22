@@ -60,9 +60,16 @@ public sealed class RealBcdEdit : IBcdEdit
             CreateNoWindow = true,
         };
         using var p = Process.Start(psi)!;
-        string output = p.StandardOutput.ReadToEnd();
-        string err = p.StandardError.ReadToEnd();
-        p.WaitForExit(10000);
+        // Drena le pipe in parallelo prima di WaitForExit (no deadlock) + timeout/kill.
+        var outTask = p.StandardOutput.ReadToEndAsync();
+        var errTask = p.StandardError.ReadToEndAsync();
+        if (!p.WaitForExit(10000))
+        {
+            try { p.Kill(entireProcessTree: true); } catch { /* già uscito */ }
+            throw new InvalidOperationException($"bcdedit {args} non risponde (timeout 10s).");
+        }
+        string output = outTask.GetAwaiter().GetResult();
+        string err = errTask.GetAwaiter().GetResult();
         if (p.ExitCode != 0)
             throw new InvalidOperationException(
                 $"bcdedit {args} fallito (serve admin?): {(err + output).Trim()}");

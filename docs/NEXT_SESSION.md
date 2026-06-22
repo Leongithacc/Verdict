@@ -3,6 +3,31 @@
 > Preparato in autonomia il 2026-06-20 da Opus 4.8 mentre Léon era via.
 > Menu ordinato per importanza: scegli da qui quando torni.
 
+## 🔬 REVIEW MULTI-AGENTE 2026-06-22 — finding RIMASTI da fixare
+Un workflow adversariale ha trovato 16 bug confermati. Fixati subito: nvidia-drs in isCreate (Undo),
+pipe async in RealPowerCfg/RealBcdEdit.Run (anti-deadlock), ~25 stringhe UI tradotte in italiano.
+**ANCORA DA FARE (in ordine di valore):**
+1. **(HIGH) Apply congela la UI fino a 12s**: `ApplyFlow.Confirm()` chiama `_exec.Execute(_plan)` SINCRONO
+   sul thread UI (ApplyDialogViewModel + ApplyAllViewModel), e Execute fa TryCreateRestorePoint
+   (WaitForExit 12s). Fix: `await Task.Run(...)` con IsBusy; + UN solo restore-point per batch in
+   ExecuteAll (overload Execute(plan, createRestorePoint:false)). NB: per Léon (apply non-admin) il
+   restore-point fallisce veloce, quindi freeze piccolo — ma su apply admin con VSS lento è reale.
+2. **(MEDIUM) Scan: 7 sessioni NVAPI complete per scansione** (una Initialize/LoadSettings/Unload per
+   tweak nvidia-drs). Fix: `INvidiaDrs.ReadDwords(IEnumerable<uint>)` che apre UNA sessione e legge in
+   batch; il liveApplied detector pre-calcola gli nvidia-drs in un colpo. Gira in Task.Run (no UI block)
+   ma è spreco + cresce col catalogo.
+3. **(MEDIUM) Su GPU non-NVIDIA con GpuName vuoto** il gate gpu:nvidia fail-OPEN → 7 eccezioni NVAPI
+   per scan (catturate, "non rilevabile"). Fix: rendere gpu:nvidia fail-CLOSED per i tweak nvidia-drs
+   (GpuName vuoto NON conta come NVIDIA presente). Non tocca Léon (GPU rilevata).
+4. **(MEDIUM) Resto stringhe UI inglesi**: pagina Settings, pagina Changes/Modifiche, Diagnostics,
+   badge "Strong evidence"+filtri evidenza, "Start over"/"Explain my Stutter"/"Scenario protocol"/
+   "Seconds per run"/"Start baseline"/"Trust mode"/"Expected impact"/"How to (manual)". Tradurre.
+5. **(LOW) powercfg-value confronta solo indice AC** ma scrive AC+DC: su laptop semantica scorretta
+   (desktop ok). 6. **(LOW) nvidia-drs default==target** mostra "Da attivare" invece di "Già attivo"
+   (NVAPI non espone i default). 7. **(LOW) disable-consumer-features**: la descrizione promette più di
+   quello che fa (serve anche ContentDeliveryManager HKCU) → restringere la descrizione. 8. **(LOW)
+   match disco per nome** può sbagliare con 2 dischi stesso modello → join per indice/DeviceID.
+
 ## ⭐ SVOLTA 2026-06-21 — da "v1 figa" a "app élite" (LEGGI QUESTO PRIMA)
 Léon ha guardato l'app e l'ha sentita "fatta da un bambino": troppe voci NON azionabili,
 knowledge base che "insegna" invece di "fare", lab che non sa dove si attivano, scan che "sembra
