@@ -17,11 +17,12 @@ pipe async in RealPowerCfg/RealBcdEdit.Run (anti-deadlock), ~25 stringhe UI trad
 4. **(MEDIUM) Resto stringhe UI inglesi**: pagina Settings, pagina Changes/Modifiche, Diagnostics,
    badge "Strong evidence"+filtri evidenza, "Start over"/"Explain my Stutter"/"Scenario protocol"/
    "Seconds per run"/"Start baseline"/"Trust mode"/"Expected impact"/"How to (manual)". Tradurre.
+4. **(MEDIUM) Resto stringhe UI inglesi** (Settings/Changes/Diagnostics/badge evidenza) → Léon: si
+   fanno ALLA FINE col pass Claude Design, non ora.
 5. **(LOW) powercfg-value confronta solo indice AC** ma scrive AC+DC: su laptop semantica scorretta
-   (desktop ok). 6. **(LOW) nvidia-drs default==target** mostra "Da attivare" invece di "Già attivo"
-   (NVAPI non espone i default). 7. **(LOW) disable-consumer-features**: la descrizione promette più di
-   quello che fa (serve anche ContentDeliveryManager HKCU) → restringere la descrizione. 8. **(LOW)
-   match disco per nome** può sbagliare con 2 dischi stesso modello → join per indice/DeviceID.
+   (desktop ok → non urgente). 6. **(LOW) nvidia-drs default==target** mostra "Da attivare" invece di
+   "Già attivo" (NVAPI non espone i default; cosmetico). 7. ✅ FATTO descrizione disable-consumer-features
+   onesta. 8. ✅ FATTO match disco exact-first.
 
 ## ⭐ SVOLTA 2026-06-21 — da "v1 figa" a "app élite" (LEGGI QUESTO PRIMA)
 Léon ha guardato l'app e l'ha sentita "fatta da un bambino": troppe voci NON azionabili,
