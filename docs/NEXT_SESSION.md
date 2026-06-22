@@ -9,13 +9,11 @@ pipe async in RealPowerCfg/RealBcdEdit.Run (anti-deadlock), ~25 stringhe UI trad
 **ANCORA DA FARE (in ordine di valore):**
 1. ✅ **FATTO (commit af59520)** Apply non congela più la UI: Confirm (single+all) su `await Task.Run`;
    + un solo restore-point per batch (Execute(plan, createRestorePoint:false)).
-2. **(MEDIUM) Scan: 7 sessioni NVAPI complete per scansione** (una Initialize/LoadSettings/Unload per
-   tweak nvidia-drs). Fix: `INvidiaDrs.ReadDwords(IEnumerable<uint>)` che apre UNA sessione e legge in
-   batch; il liveApplied detector pre-calcola gli nvidia-drs in un colpo. Gira in Task.Run (no UI block)
-   ma è spreco + cresce col catalogo.
-3. **(MEDIUM) Su GPU non-NVIDIA con GpuName vuoto** il gate gpu:nvidia fail-OPEN → 7 eccezioni NVAPI
-   per scan (catturate, "non rilevabile"). Fix: rendere gpu:nvidia fail-CLOSED per i tweak nvidia-drs
-   (GpuName vuoto NON conta come NVIDIA presente). Non tocca Léon (GPU rilevata).
+2. ✅ **FATTO** Scan batch NVAPI: nuovo `NvApi.ReadDwordSettings` + `LiveState.Detector` (condiviso
+   CLI/GUI) leggono TUTTI i nvidia-drs in UNA sessione. Bonus: niente più eccezioni per-tweak su
+   macchine non-NVIDIA (la sessione fallisce una volta e ritorna nvOk=false). Stati identici verificati.
+3. ~~(MEDIUM) gate gpu:nvidia fail-open → eccezioni~~ → il sintomo (spam eccezioni) è risolto dal
+   batch #2 (nvOk=false, niente throw). Resta solo cosmetico (mostra "non rilevabile" su non-NVIDIA).
 4. **(MEDIUM) Resto stringhe UI inglesi**: pagina Settings, pagina Changes/Modifiche, Diagnostics,
    badge "Strong evidence"+filtri evidenza, "Start over"/"Explain my Stutter"/"Scenario protocol"/
    "Seconds per run"/"Start baseline"/"Trust mode"/"Expected impact"/"How to (manual)". Tradurre.

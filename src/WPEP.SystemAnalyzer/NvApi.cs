@@ -184,6 +184,55 @@ public static class NvApi
         }
     }
 
+    /// <summary>Legge PIÙ setting DRS in UNA sola sessione NVAPI (Initialize/CreateSession/
+    /// LoadSettings/Unload una volta sola invece che per ogni setting). Lo scan ne legge ~7 a colpo:
+    /// così paga un solo LoadSettings (che rilegge l'intero DB profili) invece di 7.
+    /// Ritorna SessionOk=false se l'interop fallisce o la struct è rifiutata (-9): il chiamante tratta
+    /// tutti come "non determinabile". Il dizionario contiene SOLO i setting effettivamente impostati.</summary>
+    public static (bool SessionOk, IReadOnlyDictionary<uint, uint> Values) ReadDwordSettings(
+        IReadOnlyCollection<uint> settingIds)
+    {
+        var values = new Dictionary<uint, uint>();
+        if (settingIds.Count == 0) return (true, values);
+        IntPtr session = IntPtr.Zero;
+        DRS_DestroySession_t? destroy = null;
+        try
+        {
+            var init = Resolve<Initialize_t>(Id_Initialize);
+            if (init is null || init() != 0) return (false, values);
+            var create = Resolve<DRS_CreateSession_t>(Id_DRS_CreateSession);
+            var load = Resolve<DRS_LoadSettings_t>(Id_DRS_LoadSettings);
+            var getBase = Resolve<DRS_GetBaseProfile_t>(Id_DRS_GetBaseProfile);
+            var getSetting = Resolve<DRS_GetSetting_t>(Id_DRS_GetSetting);
+            destroy = Resolve<DRS_DestroySession_t>(Id_DRS_DestroySession);
+            if (create is null || load is null || getBase is null || getSetting is null) return (false, values);
+            if (create(out session) != 0) return (false, values);
+            if (load(session) != 0) return (false, values);
+            if (getBase(session, out var profile) != 0) return (false, values);
+            foreach (var id in settingIds)
+            {
+                var setting = new NVDRS_SETTING
+                {
+                    version = (uint)(Marshal.SizeOf<NVDRS_SETTING>() | (1 << 16)),
+                    settingName = "",
+                    predefinedValue = new byte[UnionSize],
+                    currentValue = new byte[UnionSize],
+                };
+                int s = getSetting(session, profile, id, ref setting);
+                if (s == NVAPI_INCOMPATIBLE_STRUCT_VERSION) return (false, values); // struct rifiutata → sessione inaffidabile
+                if (s == 0) values[id] = BitConverter.ToUInt32(setting.currentValue, 0);
+                // s != 0 (non impostato): semplicemente assente dal dizionario
+            }
+            return (true, values);
+        }
+        catch { return (false, values); }
+        finally
+        {
+            if (session != IntPtr.Zero) destroy?.Invoke(session);
+            Resolve<Unload_t>(Id_Unload)?.Invoke();
+        }
+    }
+
     private const uint NVDRS_DWORD_TYPE = 0;
 
     /// <summary>Writes a DWORD value into a global-profile DRS setting (a NVIDIA Control Panel option)

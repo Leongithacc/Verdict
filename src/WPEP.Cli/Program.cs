@@ -633,7 +633,7 @@ static int RunReport(string[] args)
     {
         var entries = WPEP.KnowledgeBase.KnowledgeBaseLoader.Load();
         var snapshot = WPEP.SystemAnalyzer.SnapshotBuilder.Build(DateTimeOffset.UtcNow);
-        var recommendations = WPEP.Advisor.AdvisorEngine.Advise(snapshot, entries, LiveAppliedDetector());
+        var recommendations = WPEP.Advisor.AdvisorEngine.Advise(snapshot, entries, LiveDetector(entries));
 
         WPEP.Statistics.NoiseFloorAnalyzer.NoiseReport? noise = null;
         if (noiseDir is not null)
@@ -675,7 +675,7 @@ static int RunAdvise(string[] args)
     }
 
     var snapshot = WPEP.SystemAnalyzer.SnapshotBuilder.Build(DateTimeOffset.UtcNow);
-    var all = WPEP.Advisor.AdvisorEngine.Advise(snapshot, entries, LiveAppliedDetector());
+    var all = WPEP.Advisor.AdvisorEngine.Advise(snapshot, entries, LiveDetector(entries));
 
     if (json)
     {
@@ -748,19 +748,11 @@ static WPEP.Execution.ExecutionEngine NewEngine() =>
     new(new WPEP.Execution.RealRegistryAccess(),
         WPEP.Execution.ExecutionEngine.DefaultJournalDirectory);
 
-// Stato live di un tweak per l'advisor: il motore legge il valore CORRENTE di ogni tweak
-// applicabile (registry/powercfg/nvidia-drs/dxuser). true = già a posto, false = da attivare,
-// null = non determinabile (gui-only, o lettura che richiede admin/fallita) → resta "non rilevabile".
-static Func<WPEP.KnowledgeBase.TweakEntry, bool?> LiveAppliedDetector()
-{
-    var engine = NewEngine();
-    return e =>
-    {
-        if (!WPEP.Execution.ApplyPolicy.CanApply(e)) return null;
-        try { return engine.BuildPlan(e).IsAlreadyApplied; }
-        catch { return null; }
-    };
-}
+// Stato live per l'advisor: i nvidia-drs letti in UNA sola sessione NVAPI (batch), il resto via
+// motore. true = già a posto, false = da attivare, null = non determinabile (gui-only/admin/errore).
+static Func<WPEP.KnowledgeBase.TweakEntry, bool?> LiveDetector(
+    IReadOnlyList<WPEP.KnowledgeBase.TweakEntry> entries) =>
+    WPEP.Execution.LiveState.Detector(entries, WPEP.Execution.ApplyPolicy.CanApply, NewEngine().BuildPlan);
 
 // Regole condivise con la GUI: unica fonte in WPEP.Execution.ApplyPolicy.
 static bool EntryNeedsAdmin(WPEP.KnowledgeBase.TweakEntry e) => WPEP.Execution.ApplyPolicy.NeedsAdmin(e);
