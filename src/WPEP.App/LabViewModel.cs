@@ -35,6 +35,10 @@ public sealed class FeatureRow : ViewModelBase
     public bool IsAvailable => Module.Available;
     public bool IsComingSoon => !Module.Available;
 
+    /// <summary>DOVE appare il modulo una volta acceso — risolve "non so dove si attivano".</summary>
+    public string WhereLabel => Module.Where.Length > 0 ? $"appare in › {Module.Where}" : "";
+    public bool HasWhere => Module.Available && Module.Where.Length > 0;
+
     public bool Enabled
     {
         get => _settings.IsFeatureEnabled(Module.Id);
