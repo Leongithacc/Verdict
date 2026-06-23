@@ -21,10 +21,16 @@ Il cuore onesto di Verdict: PROVARE che un tweak funziona. Robustizzare PresentM
 frametime), **Latency Lab** before/after, **Ghost Tweak** (A/B alla cieca su te stesso). Verdict misura,
 non promette. *Posso costruirlo io (PresentMon già parzialmente integrato).*
 
-## 🎯 V4 — "Intelligenza per-gioco"
+## 🎯 V4 — "Intelligenza per-gioco" (FATTO il grosso — 2026-06-23)
 **Ottimizza per [gioco]** completo: tweak di sistema + impostazioni in-game/NVIDIA ottimali per QUEL
-titolo (Valorant, CS2, Apex...). **Network Duel** verso i server dei tuoi giochi (ping/jitter/
-bufferbloat). Detection giochi più profonda. *Posso costruirlo io (research per-titolo).*
+titolo. **Network Duel** verso i server dei tuoi giochi (ping/jitter). Detection giochi più profonda.
+- ✅ Impostazioni in-game arricchite e oneste: Valorant 6, CS2 6, Apex 5, Overwatch2 4, Fortnite 9.
+- ✅ Due titoli NUOVI first-class (rilevamento Steam + KB): **THE FINALS** (4) e **Rainbow Six
+  Siege** (4). Totale KB 120 voci.
+- ✅ **Network Duel game-aware**: `wpep network <gioco>` testa baseline + l'anchor di rotta
+  dell'ecosistema del titolo; guardia di accoppiamento (ogni slug-gioco KB ha un anchor).
+- ⏳ Restano (a richiesta): bufferbloat sotto-carico (idle-vs-loaded), altri titoli (Marvel Rivals,
+  CoD…), selettore gioco nel Network Duel della GUI (rimandabile a V2 design). *Posso costruirlo io.*
 
 ## 🛡 V5 — "Automazione & fiducia" (l'app ti guarda le spalle)
 **Watchdog** (icona tray): ti avvisa se l'EXPO si spegne, un tweak salta, le temp spikano. **Regression

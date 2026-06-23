@@ -3,6 +3,16 @@
 > Preparato in autonomia il 2026-06-20 da Opus 4.8 mentre Léon era via.
 > Menu ordinato per importanza: scegli da qui quando torni.
 
+## ✅ V4 "Intelligenza per-gioco" — FATTO il grosso (2026-06-23, commit ce242f7→8dd4b65)
+Vedi `docs/ROADMAP.md` (sez. V4) e audit log #64. In sintesi:
+- Impostazioni in-game arricchite/oneste: Valorant 6, **CS2 6, Apex 5, Overwatch2 4**, Fortnite 9.
+- 2 titoli NUOVI first-class (rilevamento Steam + KB): **THE FINALS** e **Rainbow Six Siege**. KB 120 voci.
+- **Network Duel game-aware**: `wpep network <gioco>` (baseline + anchor ecosistema) + guardia di
+  accoppiamento (test: ogni slug-gioco KB ha un anchor). Suite 286/286, artifact ripubblicato.
+- Restano a richiesta: bufferbloat sotto-carico, altri titoli, selettore-gioco nel Network Duel GUI.
+- **DECISIONE PROSSIMA SESSIONE**: o si continua con **V5** (Watchdog/Sentinel/Time Machine, lo
+  costruisco io) o si parte col **pass V2 Claude Design** (serve Léon per il giudizio look). Léon sceglie.
+
 ## 🔬 REVIEW MULTI-AGENTE 2026-06-22 — finding RIMASTI da fixare
 Un workflow adversariale ha trovato 16 bug confermati. Fixati subito: nvidia-drs in isCreate (Undo),
 pipe async in RealPowerCfg/RealBcdEdit.Run (anti-deadlock), ~25 stringhe UI tradotte in italiano.
