@@ -30,7 +30,29 @@ public sealed class WatchdogViewModel : ViewModelBase
 
     public RelayCommand CheckCommand => new(() => _ = CheckAsync(), () => CanCheck);
     public RelayCommand StartTrayCommand => new(StartTray);
-    public void RefreshFlag() => Raise(nameof(ShowWatchdog));
+    public void RefreshFlag()
+    {
+        Raise(nameof(ShowWatchdog));
+        Raise(nameof(AutostartEnabled)); // reflect the real Run-key state when the page opens
+    }
+
+    /// <summary>Opt-in: launch the tray guardian automatically at Windows logon (HKCU Run, reversible,
+    /// no admin). Bound to a checkbox; reads/writes the real registry value on toggle.</summary>
+    public bool AutostartEnabled
+    {
+        get => TrayAutostart.IsEnabled();
+        set
+        {
+            if (value == TrayAutostart.IsEnabled()) return;
+            bool ok = value ? TrayAutostart.Enable() : TrayAutostart.Disable();
+            Raise(nameof(AutostartEnabled));
+            Status = !ok
+                ? "Non sono riuscito a cambiare l'avvio automatico (registro)."
+                : value
+                    ? "Fatto: la sorveglianza partirà da sola a ogni avvio di Windows."
+                    : "Avvio automatico disattivato: la sorveglianza non parte più da sola.";
+        }
+    }
 
     /// <summary>Launch the background tray guardian (wpep-tray.exe) shipped next to the GUI. It runs
     /// the same read-only Watchdog pass on a timer and only notifies on NEW drift — no spam.</summary>
