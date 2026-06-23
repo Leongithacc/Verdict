@@ -959,3 +959,27 @@ mirror di Valorant; ogni voce con fonte verificata, framing anti-placebo.
 - **PROSSIMO V4**: Network Duel "verso i server dei tuoi giochi" — NetworkDuel.cs c'è già
   (ping anchor + avg/jitter/loss + grading testato), va reso GAME-AWARE (anchor per-publisher
   + baselines) e cablato (CLI/GUI). Poi: detection più profonda / altri titoli a richiesta.
+
+### 65. V5 "Automazione & fiducia" — Watchdog in background / tray host (2026-06-23)
+Léon ha scelto V5 ("la costruisco io"). L'engine c'era già (`wpep watch`/`sentinel`/`timeline`):
+il gap era l'AGENTE sempre-attivo + l'anti-spam. Commit `1f2ee54`.
+- **Core condiviso/testabile** (WPEP.Execution, WatchdogCheck.cs):
+  - `WatchAlert.Key` = identità STABILE (slegata dai conteggi nel titolo) → de-dupe affidabile.
+  - `WatchdogMonitor`: su passaggi successivi ritorna SOLO gli alert nuovi (ri-notifica se sparisce
+    e torna). Niente spam di notifiche.
+  - `WatchdogProbe.RunPass(detectDrift)`: UNICA raccolta+evaluate (EXPO/startup/baseline/drift) usata
+    da CLI `wpep watch`, pannello GUI e tray. `detectDrift` è un `Func<IReadOnlyList<DriftItem>>` per
+    restare disaccoppiato (ExecutionEngine nel CLI/tray, ExecutionService nella GUI). WatchdogViewModel
+    rifattorizzato per riusarla.
+- **Tray host**: NUOVO progetto `WPEP.Tray` (wpep-tray.exe), **pura WinForms ISOLATA dal WPF** — scelta
+  obbligata: `Directory.Build.props` ha ImplicitUsings+TreatWarningsAsErrors, mettere WinForms nel
+  progetto WPF avrebbe spaccato (`Brushes`/`Application` ambigui). Timer 10 min → WatchdogProbe →
+  WatchdogMonitor → balloon solo sui nuovi. Icona scudo status-aware (Shield/Warning/Information);
+  menu Controlla ora / Sospendi / Apri Verdict (lancia WPEP.exe accanto via AppContext.BaseDirectory)
+  / Esci. Read-only: guarda, non tocca.
+- **GUI**: pulsante "Avvia in background" nella card Watchdog (Changes) → lancia wpep-tray.exe.
+- Validazione: build **0/0**, suite **291/291**, tray smoke-test (Debug+Release) parte e resta vivo
+  senza crash. Artifact: App + **wpep-tray.exe** ripubblicati in artifacts/app (coesistono con WPEP.exe).
+- DA RIVEDERE/PROSSIMO: run-at-startup opt-in (HKCU Run, reversibile/journaled) per far partire il
+  tray al boot; intervallo configurabile; Regression Sentinel come secondo check del tray (ora fa solo
+  il Watchdog). Time Machine ha già `wpep timeline`/SystemTimeline — manca solo il "rewind" guidato in GUI.

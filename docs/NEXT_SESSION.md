@@ -10,8 +10,15 @@ Vedi `docs/ROADMAP.md` (sez. V4) e audit log #64. In sintesi:
 - **Network Duel game-aware**: `wpep network <gioco>` (baseline + anchor ecosistema) + guardia di
   accoppiamento (test: ogni slug-gioco KB ha un anchor). Suite 286/286, artifact ripubblicato.
 - Restano a richiesta: bufferbloat sotto-carico, altri titoli, selettore-gioco nel Network Duel GUI.
-- **DECISIONE PROSSIMA SESSIONE**: o si continua con **V5** (Watchdog/Sentinel/Time Machine, lo
-  costruisco io) o si parte col **pass V2 Claude Design** (serve Léon per il giudizio look). Léon sceglie.
+
+## ✅ V5 "Automazione & fiducia" — FATTO il grosso (2026-06-23, commit 1f2ee54)
+Léon ha scelto V5. Vedi `docs/ROADMAP.md` (V5) + audit #65.
+- **Tray host** NUOVO `WPEP.Tray` (wpep-tray.exe): agente WinForms isolato, poll 10 min, balloon SOLO
+  sui nuovi alert (WatchdogMonitor anti-spam). Avviabile da GUI ("Avvia in background"). Read-only.
+- Core condiviso testato: `WatchdogProbe.RunPass(detectDrift)` (CLI/GUI/tray) + `WatchAlert.Key` + monitor.
+- Artifact: App + wpep-tray.exe in artifacts/app (coesistono con WPEP.exe). Suite 291/291.
+- **PROSSIMO**: run-at-startup opt-in (HKCU Run reversibile), Sentinel come 2° check del tray, "rewind"
+  GUI per Time Machine. OPPURE passare al **pass V2 Claude Design** (serve Léon per il look). Léon sceglie.
 
 ## 🔬 REVIEW MULTI-AGENTE 2026-06-22 — finding RIMASTI da fixare
 Un workflow adversariale ha trovato 16 bug confermati. Fixati subito: nvidia-drs in isCreate (Undo),

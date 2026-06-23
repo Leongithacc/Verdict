@@ -32,10 +32,15 @@ titolo. **Network Duel** verso i server dei tuoi giochi (ping/jitter). Detection
 - ⏳ Restano (a richiesta): bufferbloat sotto-carico (idle-vs-loaded), altri titoli (Marvel Rivals,
   CoD…), selettore gioco nel Network Duel della GUI (rimandabile a V2 design). *Posso costruirlo io.*
 
-## 🛡 V5 — "Automazione & fiducia" (l'app ti guarda le spalle)
-**Watchdog** (icona tray): ti avvisa se l'EXPO si spegne, un tweak salta, le temp spikano. **Regression
-Sentinel**: ri-benchmarka da solo e avvisa se le prestazioni PEGGIORANO (es. dopo un Windows Update).
-**Time Machine**: timeline "cos'è cambiato" + rewind. *Posso costruirlo io (serve un tray host).*
+## 🛡 V5 — "Automazione & fiducia" (l'app ti guarda le spalle) — FATTO il grosso (2026-06-23)
+**Watchdog** (icona tray): ti avvisa se l'EXPO si spegne, un tweak salta, bloat all'avvio. **Regression
+Sentinel**: ri-benchmarka da solo e avvisa se le prestazioni PEGGIORANO. **Time Machine**: timeline
+"cos'è cambiato" + rewind.
+- ✅ **Tray host** `WPEP.Tray` (wpep-tray.exe): agente WinForms isolato, poll ogni 10 min, balloon SOLO
+  sui nuovi alert (WatchdogMonitor anti-spam). Avviabile dalla GUI ("Avvia in background"). Read-only.
+- ✅ Core condiviso testato: `WatchdogProbe` (unica raccolta CLI/GUI/tray) + `WatchAlert.Key` + monitor.
+- ⏳ Restano: run-at-startup opt-in (HKCU Run reversibile), intervallo configurabile, Sentinel come 2°
+  check del tray, "rewind" guidato in GUI per Time Machine (l'engine `wpep timeline` c'è già). *Io.*
 
 ## 🤖 V6 — "AI co-pilot"
 Linguaggio naturale: "rendi Valorant più fluido" → Verdict spiega e propone. *Serve un LLM: o API key,
