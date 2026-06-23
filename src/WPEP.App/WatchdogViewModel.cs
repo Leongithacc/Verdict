@@ -1,7 +1,6 @@
 using System.Collections.ObjectModel;
 using System.Threading.Tasks;
 using WPEP.Execution;
-using WPEP.SystemAnalyzer;
 
 namespace WPEP.App;
 
@@ -30,7 +29,26 @@ public sealed class WatchdogViewModel : ViewModelBase
     public ObservableCollection<WatchAlertRow> Alerts { get; } = [];
 
     public RelayCommand CheckCommand => new(() => _ = CheckAsync(), () => CanCheck);
+    public RelayCommand StartTrayCommand => new(StartTray);
     public void RefreshFlag() => Raise(nameof(ShowWatchdog));
+
+    /// <summary>Launch the background tray guardian (wpep-tray.exe) shipped next to the GUI. It runs
+    /// the same read-only Watchdog pass on a timer and only notifies on NEW drift — no spam.</summary>
+    private void StartTray()
+    {
+        try
+        {
+            var exe = System.IO.Path.Combine(System.AppContext.BaseDirectory, "wpep-tray.exe");
+            if (!System.IO.File.Exists(exe))
+            {
+                Status = "Agente di sorveglianza non trovato (wpep-tray.exe). Ripubblica l'app e riprova.";
+                return;
+            }
+            System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(exe) { UseShellExecute = true });
+            Status = "Sorveglianza avviata: cerca l'icona scudo «Verdict» nel tray, vicino all'orologio. Ti avvisa solo se qualcosa cambia.";
+        }
+        catch (System.Exception ex) { Status = $"Avvio sorveglianza fallito: {ex.Message}"; }
+    }
 
     private async Task CheckAsync()
     {
@@ -39,27 +57,15 @@ public sealed class WatchdogViewModel : ViewModelBase
         Alerts.Clear();
         try
         {
-            var (expoNow, startupNow, reverted) = await Task.Run(() =>
-            {
-                var hw = HardwareScanner.Scan();
-                int startup = FreshInstallScanner.EnumerateStartup().Count(i => !i.IsMicrosoft);
-                var drift = _main.Execution.DetectDrift();
-                return (hw.ExpoEnabled, startup, drift);
-            });
+            // Same single gather/evaluate the CLI and the background tray host use.
+            var pass = await Task.Run(() => WatchdogProbe.RunPass(_main.Execution.DetectDrift));
 
-            var baseline = SystemTimeline.LoadAll().LastOrDefault();
-            var inputs = new WatchInputs(
-                ExpoBaseline: baseline?.ExpoEnabled, ExpoNow: expoNow,
-                StartupBaseline: baseline?.ThirdPartyStartup ?? startupNow, StartupNow: startupNow,
-                Reverted: reverted);
-
-            var alerts = WatchdogCheck.Evaluate(inputs);
-            foreach (var a in alerts)
+            foreach (var a in pass.Alerts)
                 Alerts.Add(new WatchAlertRow(ColorFor(a.Level), a.Title, a.Detail));
-            WorstColor = ColorFor(WatchdogCheck.Worst(alerts));
-            Status = baseline is null
-                ? "Controllo eseguito. Nota: nessuna baseline salvata — apri la pagina Scan una volta per darle un riferimento."
-                : "Controllo eseguito.";
+            WorstColor = ColorFor(WatchdogCheck.Worst(pass.Alerts));
+            Status = pass.HasBaseline
+                ? "Controllo eseguito."
+                : "Controllo eseguito. Nota: nessuna baseline salvata — apri la pagina Scan una volta per darle un riferimento.";
         }
         catch (System.Exception ex) { Status = $"Controllo fallito: {ex.Message}"; }
         finally { IsBusy = false; }
