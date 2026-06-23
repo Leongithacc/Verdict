@@ -52,7 +52,7 @@ switch (args[0])
     case "panic":
         return RunPanic(args.Skip(1).ToArray());
     case "selftest":
-        return RunSelfTest();
+        return RunSelfTest(args.Skip(1).ToArray());
     case "doctor":
         return RunDoctor();
     case "scan":
@@ -1497,8 +1497,11 @@ static int RunDoctor()
 
 // Verifica il motore di apply su QUESTO PC. Logica condivisa con la GUI in
 // WPEP.Execution.EngineSelfTest (chiave usa-e-getta, journal temp, cleanup totale).
-static int RunSelfTest()
+static int RunSelfTest(string[] args)
 {
+    if (args.Contains("--writes"))
+        return RunSelfTestWrites();
+
     Console.WriteLine("Verdict self-test — verifica il motore di apply (write+verify+undo) su QUESTO PC.");
     Console.WriteLine($"Chiave usa-e-getta: {WPEP.Execution.EngineSelfTest.ScratchPath}  (nessuna impostazione reale viene toccata)\n");
 
@@ -1508,9 +1511,38 @@ static int RunSelfTest()
         Console.WriteLine($"{++n}) {step.Name,-38} {(step.Ok ? "OK" : "FALLITO")}  ({step.Detail})");
 
     Console.WriteLine($"\nRisultato: {(result.Passed ? "PASS — il motore di apply funziona su questo PC (registry write+verify+undo)." : "FAIL — vedi sopra.")}");
-    Console.WriteLine("NB: questo valida il metodo 'registry'. I path reali powercfg/bcdedit\n" +
-                      "vanno verificati applicando un tweak vero (richiedono scrivere su power/boot).");
+    Console.WriteLine("Suggerimento: 'wpep selftest --writes' prova TUTTI i metodi (powercfg/bcdedit/dxuser/nvidia-drs).");
     return result.Passed ? 0 : 1;
+}
+
+// Trust: esercita OGNI write-path su target sicuri (throwaway/no-op). Niente cambia davvero.
+static int RunSelfTestWrites()
+{
+    Console.WriteLine("Verdict self-test SCRITTURE — esercita OGNI metodo di apply su QUESTO PC.");
+    Console.WriteLine("Solo target sicuri: chiave/schema usa-e-getta o riscrittura di un valore su se stesso.");
+    Console.WriteLine("Niente di reale viene modificato.\n");
+
+    var probes = WPEP.Execution.WriteSelfTest.RunAll();
+    foreach (var p in probes)
+    {
+        string mark = p.Status switch
+        {
+            WPEP.Execution.ProbeStatus.Pass => "PASS",
+            WPEP.Execution.ProbeStatus.Fail => "FAIL",
+            _ => "SALTATO",
+        };
+        Console.WriteLine($"  [{mark,-7}] {p.Method,-11} {p.Detail}");
+    }
+
+    bool ok = WPEP.Execution.WriteSelfTest.AllOk(probes);
+    int passed = probes.Count(p => p.Status == WPEP.Execution.ProbeStatus.Pass);
+    int skipped = probes.Count(p => p.Status == WPEP.Execution.ProbeStatus.Skip);
+    Console.WriteLine($"\nRisultato: {(ok ? "PASS" : "FAIL")} — {passed} provati, {skipped} saltati, " +
+                      $"{probes.Count(p => p.Status == WPEP.Execution.ProbeStatus.Fail)} falliti.");
+    if (skipped > 0)
+        Console.WriteLine("(I 'SALTATO' non sono errori: di solito mancano admin (bcdedit) o GPU NVIDIA. " +
+                          "Per bcdedit, rilancia da admin.)");
+    return ok ? 0 : 1;
 }
 
 static string ClassificationLabel(WPEP.Advisor.Classification c) => c switch
