@@ -60,4 +60,44 @@ public class NetworkDuelTests
             Assert.False(string.IsNullOrWhiteSpace(a.Host));
         });
     }
+
+    [Fact]
+    public void AnchorsFor_KnownGame_IsBaselinesPlusItsPublisher()
+    {
+        var a = NetworkDuel.AnchorsFor("thefinals");
+        // baselines (2) + exactly one publisher anchor for the title.
+        Assert.Equal(NetworkDuel.Baselines.Count + 1, a.Count);
+        Assert.Contains(a, x => x.Host == "1.1.1.1");
+        Assert.Contains(a, x => x.Host == "8.8.8.8");
+        Assert.Contains(a, x => x.Host == NetworkDuel.GamePublisher["thefinals"].Host);
+    }
+
+    [Fact]
+    public void AnchorsFor_IsCaseInsensitive()
+    {
+        Assert.Equal(NetworkDuel.AnchorsFor("thefinals"), NetworkDuel.AnchorsFor("THEFINALS"));
+    }
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData("")]
+    [InlineData("not-a-game")]
+    public void AnchorsFor_UnknownOrEmpty_FallsBackToDefault(string? game)
+    {
+        Assert.Equal(NetworkDuel.Anchors, NetworkDuel.AnchorsFor(game));
+    }
+
+    /// <summary>Coupling guard: every per-game KB slug must have a network route-anchor, so a new
+    /// title can't ship with in-game tweaks but no `wpep network &lt;game&gt;` route test.</summary>
+    [Fact]
+    public void GamePublisher_CoversEveryKbGameSlug()
+    {
+        var slugs = WPEP.KnowledgeBase.KnowledgeBaseLoader.Load()
+            .Where(e => e.Game is { Length: > 0 })
+            .Select(e => e.Game!)
+            .Distinct(System.StringComparer.OrdinalIgnoreCase);
+        foreach (var slug in slugs)
+            Assert.True(NetworkDuel.GamePublisher.ContainsKey(slug),
+                $"Lo slug-gioco KB '{slug}' non ha un anchor in NetworkDuel.GamePublisher.");
+    }
 }

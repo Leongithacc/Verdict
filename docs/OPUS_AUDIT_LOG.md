@@ -936,3 +936,26 @@ mascherato. Test nvidia-drs (fake) e struct invariati e verdi.
 - Launcher: C:\Scripts\verdict.vbs (no console), fuori dal repo. Tema GUI: +preset "Villain",
   sfondo piu scuro; report HTML allineato.
 - Boundary Fable→Opus invariato: ultimo commit Fable `53e9fdc`. ~37 commit Opus dopo.
+
+### 64. V4 "Intelligenza per-gioco" — arricchimento in-game + 2 titoli nuovi (2026-06-23)
+Continuazione della roadmap a versioni (V4). Tre sotto-traguardi, tutti gui-only/onesti, schema
+mirror di Valorant; ogni voce con fonte verificata, framing anti-placebo.
+- **A — arricchite impostazioni in-game** (commit `ce242f7`): CS2 3→6 (display fullscreen + nota
+  onesta 4:3=preferenza-non-FPS, grafica/leggibilità + Boost Player Contrast con AVVISO ombre,
+  launch options oneste vs folklore), Apex 1→5 (fullscreen esclusivo, grafica competitiva
+  Volumetric Lighting off, sblocco +fps_max + Reflex, Adaptive Resolution Target=0), OW2 1→4
+  (fullscreen, Render Scale 100/Dynamic Render Scale off, cap FPS con VRR).
+- **B — 2 titoli nuovi FIRST-CLASS** (commit `80c9ac6`): THE FINALS + Rainbow Six Siege.
+  Rilevamento Steam app-manifest (TheFinals 2073850, R6 359550) in SystemSnapshot +
+  SnapshotBuilder + GameInstalled + lista doctor. KB +8 (4+4). GUI nasconde/mostra via
+  GameInstalled (già gestito). ⚠️ DA RIVEDERE: app id Steam (Epic/Ubisoft Connect non rilevati,
+  graceful-false → sezione nascosta solo se Steam presente senza il gioco).
+- Stato KB: **120 voci, 0 id duplicati**. Per-gioco: valorant 6, cs2 6, apex 5, overwatch2 4,
+  thefinals 4, r6siege 4, fortnite 9.
+- Validazione: build solution **0/0**, suite **280/280** (52s), CLI verificata live
+  (`wpep games`, `wpep optimize cs2|apex|overwatch2|thefinals|r6siege`). Artifact CLI+GUI
+  **ripubblicato** (GUI non in esecuzione): artifacts/kb + artifacts/app/kb a 120 voci,
+  Release wpep.exe elenca i 7 giochi.
+- **PROSSIMO V4**: Network Duel "verso i server dei tuoi giochi" — NetworkDuel.cs c'è già
+  (ping anchor + avg/jitter/loss + grading testato), va reso GAME-AWARE (anchor per-publisher
+  + baselines) e cablato (CLI/GUI). Poi: detection più profonda / altri titoli a richiesta.

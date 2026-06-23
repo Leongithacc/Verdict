@@ -12,16 +12,48 @@ public sealed record NetworkResult(
 /// anchors, not the exact match server. The grading is pure/testable; the ping is best-effort I/O.</summary>
 public static class NetworkDuel
 {
-    /// <summary>Anchors chosen to (usually) answer ICMP: low-latency DNS + a couple of game-adjacent
-    /// CDNs. Honest: it's your route quality, not a specific match server.</summary>
-    public static IReadOnlyList<(string Target, string Host)> Anchors { get; } =
+    /// <summary>Always-on reference points: low-latency public DNS that (usually) answer ICMP.
+    /// They tell you your baseline route quality, independent of any game.</summary>
+    public static IReadOnlyList<(string Target, string Host)> Baselines { get; } =
     [
         ("Cloudflare (baseline)", "1.1.1.1"),
         ("Google (baseline)", "8.8.8.8"),
-        ("Riot / Valorant (CDN)", "riotgames.com"),
-        ("Steam / CS2 (CDN)", "steamcommunity.com"),
-        ("Epic / Fortnite (CDN)", "epicgames.com"),
     ];
+
+    /// <summary>One publisher route-anchor per supported title. HONEST: these are the publisher's
+    /// public CDN/site, NOT the actual match server (which is regional and usually blocks ICMP).
+    /// It measures the quality of the path toward that ecosystem, which is the best a user-mode,
+    /// no-admin tool can do safely. Keys match the KB `game` slugs.</summary>
+    public static IReadOnlyDictionary<string, (string Target, string Host)> GamePublisher { get; } =
+        new Dictionary<string, (string, string)>(StringComparer.OrdinalIgnoreCase)
+        {
+            ["valorant"] = ("Riot / Valorant (CDN)", "riotgames.com"),
+            ["cs2"] = ("Steam / CS2 (CDN)", "steamcommunity.com"),
+            ["fortnite"] = ("Epic / Fortnite (CDN)", "epicgames.com"),
+            ["apex"] = ("EA / Apex (CDN)", "ea.com"),
+            ["overwatch2"] = ("Blizzard / Overwatch 2 (CDN)", "blizzard.com"),
+            ["thefinals"] = ("Embark / THE FINALS (sito)", "embark-studios.com"),
+            ["r6siege"] = ("Ubisoft / Rainbow Six (CDN)", "ubisoft.com"),
+        };
+
+    /// <summary>Default anchor set (no game chosen): baselines + the three most common ecosystems.
+    /// Honest: it's your route quality, not a specific match server.</summary>
+    public static IReadOnlyList<(string Target, string Host)> Anchors { get; } =
+    [
+        .. Baselines,
+        GamePublisher["valorant"],
+        GamePublisher["cs2"],
+        GamePublisher["fortnite"],
+    ];
+
+    /// <summary>Game-aware anchors: the baselines plus THAT title's publisher route-anchor.
+    /// Unknown/empty game falls back to the default <see cref="Anchors"/> set. Pure and testable.</summary>
+    public static IReadOnlyList<(string Target, string Host)> AnchorsFor(string? game)
+    {
+        if (game is { Length: > 0 } g && GamePublisher.TryGetValue(g, out var pub))
+            return [.. Baselines, pub];
+        return Anchors;
+    }
 
     /// <summary>Best-effort ICMP ping. Returns one entry per attempt: the RTT in ms, or null on
     /// timeout/error (counted as loss). Pure-ish wrapper around Ping; no analysis here.</summary>

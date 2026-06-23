@@ -64,7 +64,7 @@ switch (args[0])
     case "fresh":
         return RunFresh();
     case "network":
-        return RunNetwork();
+        return RunNetwork(args.Skip(1).ToArray());
     case "timeline":
         return RunTimeline();
     case "museum":
@@ -1252,16 +1252,27 @@ static int RunFresh()
     return 0;
 }
 
-static int RunNetwork()
+static int RunNetwork(string[] args)
 {
-    Console.WriteLine("Network Duel — qualità di rotta verso anchor pubblici (ICMP, best-effort)\n");
-    foreach (var (target, host) in WPEP.SystemAnalyzer.NetworkDuel.Anchors)
+    string? game = args.Length > 0 ? args[0] : null;
+    var anchors = WPEP.SystemAnalyzer.NetworkDuel.AnchorsFor(game);
+    bool gameKnown = game is { Length: > 0 }
+        && WPEP.SystemAnalyzer.NetworkDuel.GamePublisher.ContainsKey(game);
+
+    if (game is { Length: > 0 } && gameKnown)
+        Console.WriteLine($"Network Duel — qualità di rotta per '{game}' (baseline + ecosistema, ICMP best-effort)\n");
+    else if (game is { Length: > 0 })
+        Console.WriteLine($"Network Duel — '{game}' non ha un anchor dedicato: uso il set di default (ICMP best-effort)\n");
+    else
+        Console.WriteLine("Network Duel — qualità di rotta verso anchor pubblici (ICMP, best-effort)\n");
+
+    foreach (var (target, host) in anchors)
     {
         var rtts = WPEP.SystemAnalyzer.NetworkDuel.PingHost(host, 10);
         var r = WPEP.SystemAnalyzer.NetworkDuel.Analyze(target, host, rtts);
         Console.WriteLine($"   {r.Grade,-18} {target,-26} avg {r.AvgMs,4:F0}ms · jit {r.JitterMs,3:F0} · loss {r.LossPercent,3:F0}%");
     }
-    Console.WriteLine("\n(Molti server di gioco bloccano l'ICMP: questi sono anchor di rotta, non il match server.)");
+    Console.WriteLine("\n(Molti server di gioco bloccano l'ICMP: questi sono anchor di rotta verso l'ecosistema, non il match server.)");
     return 0;
 }
 
@@ -1332,6 +1343,8 @@ static int RunOptimize(string[] args)
         Console.WriteLine("   (nessuna voce dedicata in KB per questo gioco)");
     foreach (var s in plan.InGameSettings)
         Console.WriteLine($"   - {s.Name}: {s.ExpectedImpact}");
+    if (WPEP.SystemAnalyzer.NetworkDuel.GamePublisher.ContainsKey(plan.Game))
+        Console.WriteLine($"\nTesta la rotta verso l'ecosistema di {plan.Game}:  wpep network {plan.Game}");
     return 0;
 }
 
