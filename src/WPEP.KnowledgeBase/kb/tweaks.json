@@ -2152,6 +2152,222 @@
     }
   },
   {
+    "id": "thefinals-reflex-on",
+    "name": "THE FINALS: NVIDIA Reflex On (+ Frame Warp su RTX 50)",
+    "category": "gpu",
+    "game": "thefinals",
+    "description": "THE FINALS integra NVIDIA Reflex e al lancio è stato uno dei primi titoli con Reflex 2 / Frame Warp. Reflex riduce la latenza di sistema allineando engine e rendering; su una RTX 50 il Frame Warp aggiorna il frame con l'ultimo input del mouse appena prima della presentazione. È un gioco impegnativo (Unreal Engine 5, distruzione fisica) quindi spesso GPU-bound: qui Reflex rende parecchio. Da tenere On (o On+Boost).",
+    "hardware_prerequisites": [
+      "gpu:nvidia"
+    ],
+    "expected_impact": "Riduzione di latenza documentata dal vendor, più evidente perché il gioco è spesso GPU-bound. Su RTX 50, il Frame Warp di Reflex 2 abbassa ulteriormente la latenza dove il titolo lo integra.",
+    "evidence_level": "evidence_strong",
+    "sources": [
+      "https://www.nvidia.com/en-us/geforce/news/reflex-2-even-lower-latency-gameplay-with-frame-warp/"
+    ],
+    "risk": "none",
+    "risk_notes": "",
+    "rollback": "Stessa impostazione → Off.",
+    "manual_steps": "THE FINALS → Impostazioni → Video → NVIDIA Reflex Low Latency → On (o On+Boost). Su RTX 50 il Frame Warp di Reflex 2 si attiva dove il titolo lo supporta.",
+    "conflicts_with": [],
+    "measurable": false,
+    "apply": {
+      "method": "gui-only",
+      "operations": [],
+      "requires_reboot": false,
+      "undo": "manual-steps",
+      "gui_only_reason": "In-game setting"
+    }
+  },
+  {
+    "id": "thefinals-display-fullscreen",
+    "name": "THE FINALS: schermo intero esclusivo",
+    "category": "gpu",
+    "game": "thefinals",
+    "description": "Modalità Schermo intero (esclusivo) invece di Senza bordi: dà il percorso di presentazione a latenza più bassa e lascia lavorare al meglio G-SYNC e Reflex; il Senza bordi passa per il compositor del desktop (DWM), aggiungendo un filo di latenza. Per il competitivo: Schermo intero.",
+    "hardware_prerequisites": [],
+    "expected_impact": "Latenza di presentazione più bassa e stabile vs senza bordi; G-SYNC/Reflex al meglio. Alt-tab un po' più lento, trade-off accettabile in competitiva.",
+    "evidence_level": "plausible",
+    "sources": [
+      "https://www.nvidia.com/en-us/geforce/guides/gfecnt/202010/system-latency-optimization-guide/"
+    ],
+    "risk": "none",
+    "risk_notes": "",
+    "rollback": "Stessa schermata → Senza bordi.",
+    "manual_steps": "THE FINALS → Impostazioni → Video → Modalità schermo → Schermo intero esclusivo.",
+    "conflicts_with": [],
+    "measurable": false,
+    "apply": {
+      "method": "gui-only",
+      "operations": [],
+      "requires_reboot": false,
+      "undo": "manual-steps",
+      "gui_only_reason": "In-game setting"
+    }
+  },
+  {
+    "id": "thefinals-graphics-competitive",
+    "name": "THE FINALS: impostazioni grafiche per FPS e leggibilità",
+    "category": "gpu",
+    "game": "thefinals",
+    "description": "Engine pesante (UE5): per FPS stabili e nemici leggibili abbassa Qualità complessiva, Ombre ed Effetti; le Texture puoi tenerle alte (con 16 GB di VRAM non rischi stutter). ⚠️ ATTENZIONE alla specificità del gioco: in THE FINALS la distruzione e gli effetti di esplosione sono INFORMAZIONE competitiva (ti dicono dove e come arrivano i nemici) — non azzerare tutto alla cieca come in un tac-shooter statico. L'obiettivo è frametime stabile e immagine leggibile, non uno schermo spoglio.",
+    "hardware_prerequisites": [],
+    "expected_impact": "FPS più alti e frametime più piatto nelle scene di distruzione (le più pesanti); immagine leggibile. Su GPU forte conta più la consistenza che l'FPS grezzo. Misurabile con 'wpep bench'.",
+    "evidence_level": "plausible",
+    "sources": [
+      "https://www.reachthefinals.com/"
+    ],
+    "risk": "none",
+    "risk_notes": "Solo qualità visiva. Non spingere gli effetti così in basso da perdere i segnali di distruzione utili.",
+    "rollback": "Stessa schermata → rialza le qualità.",
+    "manual_steps": "THE FINALS → Impostazioni → Video: Qualità complessiva = Basso/Medio; Ombre = Basso-Medio; Effetti = Medio (non azzerare: servono in gioco); Texture = Alta (hai VRAM); V-Sync = Off; cap FPS con Reflex.",
+    "conflicts_with": [],
+    "measurable": true,
+    "apply": {
+      "method": "gui-only",
+      "operations": [],
+      "requires_reboot": false,
+      "undo": "manual-steps",
+      "gui_only_reason": "In-game setting"
+    }
+  },
+  {
+    "id": "thefinals-upscaling-framegen",
+    "name": "THE FINALS: upscaling DLSS sì, Frame Generation con giudizio",
+    "category": "gpu",
+    "game": "thefinals",
+    "description": "Gioco pesante UE5: il DLSS Super Resolution (Qualità/Bilanciato) recupera molti FPS con minima perdita di qualità sulla tua RTX 5080, ancor meglio col modello 'Latest' (transformer) forzato dalla NVIDIA App. Il Frame Generation invece RADDOPPIA gli FPS percepiti MA aggiunge latenza: i frame interpolati non rispondono all'input. ONESTÀ per un competitivo veloce: Super Resolution = sì; Frame Generation = solo se sei molto GPU-bound e accetti il compromesso, sempre con Reflex On — altrimenti Off per la reattività pura.",
+    "hardware_prerequisites": [
+      "gpu:nvidia"
+    ],
+    "expected_impact": "DLSS SR: più FPS a parità di qualità (recupero reale su UE5). Frame Gen: fluidità visiva maggiore ma latenza in più — l'opposto di ciò che vuoi nei duelli rapidi. Da decidere consapevolmente, misurabile con 'wpep bench'.",
+    "evidence_level": "controversial",
+    "sources": [
+      "https://www.nvidia.com/en-us/geforce/news/the-finals-dlss-3-reflex/"
+    ],
+    "risk": "none",
+    "risk_notes": "Il Frame Generation aggiunge latenza: nei momenti competitivi può penalizzare la mira. Reversibile.",
+    "rollback": "Stessa schermata → Upscaling/Frame Generation su Off o valore precedente.",
+    "manual_steps": "THE FINALS → Impostazioni → Video: Upscaling = DLSS, Modalità = Qualità o Bilanciato; (NVIDIA App → DLSS Override → 'Latest'). Frame Generation = On solo se GPU-bound e con Reflex On, altrimenti Off.",
+    "conflicts_with": [],
+    "measurable": true,
+    "apply": {
+      "method": "gui-only",
+      "operations": [],
+      "requires_reboot": false,
+      "undo": "manual-steps",
+      "gui_only_reason": "In-game / NVIDIA App setting"
+    }
+  },
+  {
+    "id": "r6siege-reflex-on",
+    "name": "Rainbow Six Siege: NVIDIA Reflex On",
+    "category": "gpu",
+    "game": "r6siege",
+    "description": "Rainbow Six Siege integra NVIDIA Reflex (aggiunto da Ubisoft con NVIDIA). Riduce la latenza di sistema allineando engine e rendering: in un tac-shooter dove il primo colpo decide il duello, è tra le impostazioni che contano di più. Da tenere On (o On+Boost).",
+    "hardware_prerequisites": [
+      "gpu:nvidia"
+    ],
+    "expected_impact": "Riduzione di latenza documentata dal vendor. In Siege, dove peek e primo colpo sono tutto, la reattività più bassa è un vantaggio diretto. Nessuno svantaggio competitivo.",
+    "evidence_level": "evidence_strong",
+    "sources": [
+      "https://www.nvidia.com/en-us/geforce/news/reflex-low-latency-platform/"
+    ],
+    "risk": "none",
+    "risk_notes": "",
+    "rollback": "Stessa impostazione → Disabilitato.",
+    "manual_steps": "Rainbow Six Siege → Opzioni → Grafica → NVIDIA Reflex Low Latency → Abilitato (o Abilitato + Boost).",
+    "conflicts_with": [],
+    "measurable": false,
+    "apply": {
+      "method": "gui-only",
+      "operations": [],
+      "requires_reboot": false,
+      "undo": "manual-steps",
+      "gui_only_reason": "In-game setting"
+    }
+  },
+  {
+    "id": "r6siege-render-scaling-100",
+    "name": "Rainbow Six Siege: Render Scaling 100% + grafica competitiva",
+    "category": "gpu",
+    "game": "r6siege",
+    "description": "Siege ha un Render Scaling separato dalla risoluzione: tienilo a 100. ⚠️ Qui sta l'errore comune: sotto 100 l'immagine si fa molle e i nemici diventano meno leggibili (stai rinunciando a nitidezza per FPS che su RTX 5080 non ti servono); sopra 100 è supersampling che brucia FPS senza vantaggio competitivo. 100 è il punto giusto. Poi abbassa Ombre, Riflessi, Ambient Occlusion e Lens Effects; Texture Quality puoi tenerla alta (hai VRAM), Texture Filtering Anisotropic 16x. ONESTÀ: su RTX 5080 Siege vola, quindi è frametime stabile + leggibilità più che FPS grezzi.",
+    "hardware_prerequisites": [],
+    "expected_impact": "Immagine sempre nitida (render scaling al 100%) + frametime più piatto con effetti pesanti giù. Su hardware modesto anche FPS più alti; su GPU forte conta la consistenza. Misurabile con 'wpep bench'.",
+    "evidence_level": "plausible",
+    "sources": [
+      "https://www.ubisoft.com/en-us/game/rainbow-six/siege"
+    ],
+    "risk": "none",
+    "risk_notes": "Solo qualità visiva. Non scendere sotto Render Scaling 100 per inseguire FPS che non ti servono: perdi nitidezza.",
+    "rollback": "Stessa schermata → rialza le qualità / Render Scaling al valore precedente.",
+    "manual_steps": "Rainbow Six Siege → Opzioni → Grafica: Render Scaling = 100; Shadow Quality = Low/Medium; Reflection Quality = Low; Ambient Occlusion = Off; Lens Effects = Off; Texture Quality = High (hai VRAM); Texture Filtering = Anisotropic 16x.",
+    "conflicts_with": [],
+    "measurable": true,
+    "apply": {
+      "method": "gui-only",
+      "operations": [],
+      "requires_reboot": false,
+      "undo": "manual-steps",
+      "gui_only_reason": "In-game setting"
+    }
+  },
+  {
+    "id": "r6siege-display-fullscreen",
+    "name": "Rainbow Six Siege: schermo intero (esclusivo)",
+    "category": "gpu",
+    "game": "r6siege",
+    "description": "Modalità di visualizzazione Schermo intero invece di Senza bordi: presentazione a latenza più bassa e G-SYNC/Reflex al meglio; il Senza bordi passa per il compositor del desktop (DWM) aggiungendo un filo di latenza. Per il competitivo: Schermo intero.",
+    "hardware_prerequisites": [],
+    "expected_impact": "Latenza di presentazione più bassa e stabile vs senza bordi; G-SYNC/Reflex al meglio. Alt-tab un po' più lento, trade-off accettabile in ranked.",
+    "evidence_level": "plausible",
+    "sources": [
+      "https://www.nvidia.com/en-us/geforce/guides/gfecnt/202010/system-latency-optimization-guide/"
+    ],
+    "risk": "none",
+    "risk_notes": "",
+    "rollback": "Stessa schermata → Senza bordi.",
+    "manual_steps": "Rainbow Six Siege → Opzioni → Schermo → Modalità di visualizzazione → Schermo intero.",
+    "conflicts_with": [],
+    "measurable": false,
+    "apply": {
+      "method": "gui-only",
+      "operations": [],
+      "requires_reboot": false,
+      "undo": "manual-steps",
+      "gui_only_reason": "In-game setting"
+    }
+  },
+  {
+    "id": "r6siege-vsync-off-fpscap",
+    "name": "Rainbow Six Siege: V-Sync Off + cap FPS sensato con VRR",
+    "category": "gpu",
+    "game": "r6siege",
+    "description": "V-Sync = Off in gioco (il V-Sync in-game aggiunge buffering e latenza). Per il no-tearing a bassa latenza su monitor VRR usa la combo G-SYNC + V-Sync del Pannello NVIDIA + Reflex/cap, non il V-Sync del gioco. Siege ha un 'Frame Rate Limit' interno: con G-SYNC cappa ~3 FPS sotto il refresh (es. 237 su un 240Hz); senza VRR, cap alto o illimitato per la latenza minima accettando il tearing.",
+    "hardware_prerequisites": [
+      "monitor:high-refresh"
+    ],
+    "expected_impact": "Con G-SYNC + Reflex e cap corretto: frame pacing stabile, niente tearing, latenza bassa. Senza VRR: uncapped per latenza minima. Misurabile con 'wpep bench'.",
+    "evidence_level": "evidence_strong",
+    "sources": [
+      "https://www.nvidia.com/en-us/geforce/guides/system-latency-optimization-guide/"
+    ],
+    "risk": "none",
+    "risk_notes": "Senza G-SYNC, cappare sotto il refresh non serve. Reversibile.",
+    "rollback": "Opzioni → Grafica → V-Sync/Frame Rate Limit ai valori precedenti.",
+    "manual_steps": "Rainbow Six Siege → Opzioni → Grafica: V-Sync = Off; Frame Rate Limit = ~refresh−3 con G-SYNC (es. 237 per 240Hz). Pannello NVIDIA: G-SYNC On + V-Sync On.",
+    "conflicts_with": [],
+    "measurable": true,
+    "apply": {
+      "method": "gui-only",
+      "operations": [],
+      "requires_reboot": false,
+      "undo": "manual-steps",
+      "gui_only_reason": "In-game setting"
+    }
+  },
+  {
     "id": "laptop-dgpu-preference",
     "name": "Laptop: forza la GPU dedicata per il gioco (per-app GPU preference)",
     "category": "gpu",

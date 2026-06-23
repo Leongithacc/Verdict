@@ -1450,6 +1450,7 @@ static int RunDoctor()
         {
             ("fortnite", "Fortnite"), ("valorant", "Valorant"), ("cs2", "CS2"),
             ("apex", "Apex Legends"), ("overwatch2", "Overwatch 2"),
+            ("thefinals", "THE FINALS"), ("r6siege", "Rainbow Six Siege"),
         }
         .Where(g => snapshot.GameInstalled(g.Item1) == true)
         .Select(g => g.Item2).ToList();

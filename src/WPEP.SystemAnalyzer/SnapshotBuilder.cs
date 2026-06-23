@@ -68,8 +68,18 @@ public static class SnapshotBuilder
             Cs2Installed = Probe(ReadCs2Installed, (bool?)null),
             ApexInstalled = Probe(ReadApexInstalled, (bool?)null),
             Overwatch2Installed = Probe(ReadOverwatch2Installed, (bool?)null),
+            TheFinalsInstalled = Probe(ReadTheFinalsInstalled, (bool?)null),
+            R6SiegeInstalled = Probe(ReadR6SiegeInstalled, (bool?)null),
         };
     }
+
+    /// <summary>THE FINALS is Steam app 2073850. (Epic Games copies aren't detected
+    /// here; null/false only means 'not found via Steam', section stays shown on null.)</summary>
+    private static bool? ReadTheFinalsInstalled() => SteamAppInstalled(2073850);
+
+    /// <summary>Rainbow Six Siege is Steam app 359550. (Ubisoft Connect copies aren't
+    /// detected here; null/false only means 'not found via Steam'.)</summary>
+    private static bool? ReadR6SiegeInstalled() => SteamAppInstalled(359550);
 
     /// <summary>Riot writes per-product metadata here for every installed Riot game.</summary>
     private static bool? ReadValorantInstalled()
