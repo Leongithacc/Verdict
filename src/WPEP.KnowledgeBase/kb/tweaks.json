@@ -1916,6 +1916,110 @@
     }
   },
   {
+    "id": "val-display-fullscreen",
+    "name": "Valorant: Display Mode Fullscreen",
+    "category": "gpu",
+    "game": "valorant",
+    "description": "Imposta la modalità schermo su Fullscreen (esclusivo) invece di Windowed/Borderless. Il fullscreen esclusivo dà il percorso di presentazione a latenza più bassa e lascia che G-SYNC/Reflex lavorino al meglio. Borderless aggiunge la composizione del Desktop Window Manager (un filo di latenza in più).",
+    "hardware_prerequisites": [],
+    "expected_impact": "Latenza di presentazione leggermente più bassa e più stabile vs Borderless. Su Valorant (leggerissimo) il delta è piccolo ma è la scelta competitiva standard.",
+    "evidence_level": "plausible",
+    "sources": [
+      "https://www.nvidia.com/en-us/geforce/guides/gfecnt/202010/system-latency-optimization-guide/"
+    ],
+    "risk": "none",
+    "risk_notes": "Alt-tab leggermente più lento rispetto a borderless. Nessun rischio.",
+    "rollback": "Stessa impostazione → Windowed Fullscreen.",
+    "manual_steps": "Valorant → Impostazioni → Video → Generale → Modalità di visualizzazione → Schermo intero.",
+    "conflicts_with": [],
+    "measurable": false,
+    "apply": {
+      "method": "gui-only",
+      "operations": [],
+      "requires_reboot": false,
+      "undo": "manual-steps",
+      "gui_only_reason": "In-game setting"
+    }
+  },
+  {
+    "id": "val-graphics-min",
+    "name": "Valorant: qualità grafica al minimo + Multithreaded Rendering On",
+    "category": "gpu",
+    "game": "valorant",
+    "description": "Material/Texture/Detail/UI Quality su Basso, Multithreaded Rendering On. ONESTÀ: su una RTX 5080 Valorant gira già a centinaia di FPS, quindi NON è una questione di FPS grezzi — è di CONSISTENZA del frametime (meno picchi = mira più stabile) e di pulizia visiva (meno clutter, nemici più leggibili). Multithreaded Rendering usa più core e va tenuto On su CPU moderne.",
+    "hardware_prerequisites": [],
+    "expected_impact": "FPS già altissimi su GPU potente: il valore reale è frametime più piatto e immagine più pulita per il competitivo. Su hardware modesto, anche FPS sensibilmente più alti.",
+    "evidence_level": "plausible",
+    "sources": [
+      "https://playvalorant.com/en-us/news/game-updates/"
+    ],
+    "risk": "none",
+    "risk_notes": "Solo qualità visiva (texture/dettagli più poveri). Nessun rischio.",
+    "rollback": "Stessa schermata → rialza le qualità.",
+    "manual_steps": "Valorant → Impostazioni → Video → Qualità grafica: Material/Texture/Detail/UI Quality = Basso; Multithreaded Rendering = On.",
+    "conflicts_with": [],
+    "measurable": true,
+    "apply": {
+      "method": "gui-only",
+      "operations": [],
+      "requires_reboot": false,
+      "undo": "manual-steps",
+      "gui_only_reason": "In-game setting"
+    }
+  },
+  {
+    "id": "val-clarity-effects-off",
+    "name": "Valorant: effetti che sporcano off (Bloom/Distortion/Cast Shadows/Vignette)",
+    "category": "gpu",
+    "game": "valorant",
+    "description": "Disattiva Bloom, Distortion, Cast Shadows, First Person Shadows e Vignette; Anti-Aliasing su None o MSAA basso, Anisotropic 1x. Questi effetti aggiungono rumore visivo (bagliori, ombre, distorsioni) che nasconde i nemici, e lavoro GPU inutile. Toglierli rende la scena più LEGGIBILE in competitivo. Improve Clarity: On (a gusto).",
+    "hardware_prerequisites": [],
+    "expected_impact": "Immagine più pulita e leggibile (nemici più visibili), frametime più stabile. Effetto su FPS grezzi trascurabile su GPU potente.",
+    "evidence_level": "plausible",
+    "sources": [
+      "https://playvalorant.com/en-us/news/game-updates/"
+    ],
+    "risk": "none",
+    "risk_notes": "Solo estetica (gioco meno 'bello', più funzionale). Nessun rischio.",
+    "rollback": "Stessa schermata → riattiva gli effetti.",
+    "manual_steps": "Valorant → Impostazioni → Video → Qualità grafica: Bloom/Distortion/Cast Shadows/First Person Shadows/Vignette = Off; Anti-Aliasing = None o MSAA 2x; Anisotropic Filtering = 1x.",
+    "conflicts_with": [],
+    "measurable": false,
+    "apply": {
+      "method": "gui-only",
+      "operations": [],
+      "requires_reboot": false,
+      "undo": "manual-steps",
+      "gui_only_reason": "In-game setting"
+    }
+  },
+  {
+    "id": "val-fps-cap-reflex",
+    "name": "Valorant: cap FPS sensato + Reflex (latenza minima)",
+    "category": "gpu",
+    "game": "valorant",
+    "description": "Con G-SYNC + Reflex On, la config a latenza minima è cappare gli FPS poco sotto il refresh del monitor (es. 138 su 144Hz, 235 su 240Hz) tramite 'Limit FPS Always'. Reflex già auto-cappa quando attivo, ma un cap esplicito tiene la GPU lontana dal 100% di utilizzo dove la latenza esplode. Senza G-SYNC: uncapped o cap molto alto.",
+    "hardware_prerequisites": [],
+    "expected_impact": "Latenza di sistema più bassa e costante (GPU non satura). Documentato da NVIDIA come parte della config G-SYNC+Reflex ottimale.",
+    "evidence_level": "evidence_strong",
+    "sources": [
+      "https://www.nvidia.com/en-us/geforce/guides/gfecnt/202010/system-latency-optimization-guide/"
+    ],
+    "risk": "none",
+    "risk_notes": "Se NON usi G-SYNC, cappare sotto il refresh non serve: meglio uncapped. Reversibile.",
+    "rollback": "Limit FPS Always → Off.",
+    "manual_steps": "Valorant → Impostazioni → Video → Generale → Limit FPS Always = On, valore = refresh del monitor − ~3 (con G-SYNC). NVIDIA Reflex = On + Boost.",
+    "conflicts_with": [],
+    "measurable": true,
+    "apply": {
+      "method": "gui-only",
+      "operations": [],
+      "requires_reboot": false,
+      "undo": "manual-steps",
+      "gui_only_reason": "In-game setting"
+    }
+  },
+  {
     "id": "cs2-tickrate-launch-myth",
     "name": "CS2: il mito di '-tickrate 128' nelle launch options",
     "category": "network",
