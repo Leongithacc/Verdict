@@ -17,8 +17,16 @@ Léon ha scelto V5. Vedi `docs/ROADMAP.md` (V5) + audit #65.
   sui nuovi alert (WatchdogMonitor anti-spam). Avviabile da GUI ("Avvia in background"). Read-only.
 - Core condiviso testato: `WatchdogProbe.RunPass(detectDrift)` (CLI/GUI/tray) + `WatchAlert.Key` + monitor.
 - Artifact: App + wpep-tray.exe in artifacts/app (coesistono con WPEP.exe). Suite 291/291.
-- **PROSSIMO**: run-at-startup opt-in (HKCU Run reversibile), Sentinel come 2° check del tray, "rewind"
-  GUI per Time Machine. OPPURE passare al **pass V2 Claude Design** (serve Léon per il look). Léon sceglie.
+- ✅ Coda V5: avvio automatico con Windows (opt-in, reversibile, checkbox GUI). Restano (minori): Sentinel
+  nel tray, rewind GUI Time Machine, intervallo configurabile.
+
+## 🎨 V2 — HANDOFF CLAUDE DESIGN PRONTO (2026-06-23)
+Il pacchetto per la fase estetica è pronto (Léon: il design lo fa Claude Design):
+- `docs/CLAUDE_DESIGN_PROMPT.md` — **prompt pronto da incollare** in una sessione Claude Design col repo aperto.
+- `docs/CLAUDE_DESIGN_BRIEF.md` — brief completo: manifesto-file (cosa toccare/cosa no), inventario emoji
+  da sostituire (con codepoint), schermate V4/V5, guardrail (solo visivo, build 0/0 + 291 test verdi).
+- Cardini design: `src/WPEP.App/Themes/Theme.xaml` (token) + `src/WPEP.App/MainWindow.xaml` (pagine).
+  Claude Design lavora IN-REPO (nessuna copia file necessaria).
 
 ## 🔬 REVIEW MULTI-AGENTE 2026-06-22 — finding RIMASTI da fixare
 Un workflow adversariale ha trovato 16 bug confermati. Fixati subito: nvidia-drs in isCreate (Undo),

@@ -72,3 +72,52 @@ con VRAM e tipo NVMe, export PNG) · **Applica** (dialog anteprima dry-run) · *
   localizzato) → tradurre in place.
 - Niente driver kernel (anti-cheat). Niente dipendenze pesanti nuove senza motivo.
 - Léon ha una GPU NVIDIA (RTX 5080) + CPU AMD: il pannello NVIDIA one-click è un differenziatore unico.
+
+## 9. Delta dopo il brief originale (V4 + V5 — pagine in più da elevare)
+Il funzionale è cresciuto; il design deve coprire anche queste, restando coerente:
+- **Verdict → "Ottimizza per gioco"**: dropdown gioco + due liste (tweak di sistema · impostazioni
+  in-game). Titoli supportati: Valorant, CS2, Apex, Overwatch 2, Fortnite, THE FINALS, R6 Siege.
+- **Diagnostica → Network Duel**: tabella anchor (target · avg ms · jitter · loss · voto A–F con colore
+  semantico). C'è una variante per-gioco (`wpep network <gioco>`).
+- **Modifiche → Watchdog**: card con pallino-stato, lista alert, bottone "Controlla ora", bottone
+  **"Avvia in background"** + **checkbox "Avvia all'avvio di Windows"** (V5).
+- **Tray host (`WPEP.Tray`)**: agente WinForms separato (icona scudo + balloon). **FUORI SCOPE design**
+  (è system-tray nativo, non WPF) — al massimo nota a Léon, non toccarlo.
+
+## 10. Manifesto file (cosa toccare, cosa NO)
+Repo: `C:\Users\leon0\Projects\WPEP`, progetto `src/WPEP.App`. Build:
+`dotnet build WPEP.sln` (deve restare **0 errori, 0 warning** — `TreatWarningsAsErrors`). Test:
+`dotnet test WPEP.sln` (deve restare **verde**, 291 test).
+
+| File | Righe | Ruolo | Scope design |
+|---|---|---|---|
+| `Themes/Theme.xaml` | 159 | **Token colore + type scale + stili base** (Card/PrimaryButton/GhostButton/NavButton/Badge). Sorgente UNICA dei colori. | ⭐ PRIMARIO: qui vivono i temi/preset, le micro-interazioni degli stili, i nuovi controlli firma. |
+| `MainWindow.xaml` | 1499 | Sidebar nav + **un DataTemplate per pagina** (Verdict/Scan/Measure/Diagnostics/Kb/Report/Changes/Profiles/Lab/Settings) + Welcome. | ⭐ PRIMARIO: layout, gerarchia, spaziatura, gauge cockpit, sostituzione emoji, traduzioni in place. |
+| `Converters.cs` | 53 | `BoolToVis`, `TokenBrush` (string→Brush via DynamicResource), ecc. | ✅ OK aggiungere converter visivi. |
+| `App.xaml` | 12 | Merge di `Theme.xaml`. | ✅ OK (es. caricare il preset tema scelto). |
+| `MainWindow.xaml.cs` | 138 | Code-behind: navigazione + export PNG build-sheet. | ⚠️ Solo se serve un hook visivo; non cambiare la logica nav/export. |
+| `ViewModels.cs` | 801 | MainViewModel + VM (Verdict/Scan/Diagnostics/Kb/Report/Settings) + record di display. Alcune **stringhe IT + divisori `──`** sono qui. | ⚠️ Puoi ritoccare TESTI/etichette visibili e tradurre, MA non cambiare nomi proprietà/binding né logica. |
+| `*ViewModel.cs` / `MeasureWizard.cs` / `ApplyFlow.cs` (Scan/Lab/Ghost/Reaction/Profiles/Watchdog) | 98–438 | VM e flussi delle singole pagine; alcune stringhe/emoji qui. | ⚠️ Come sopra: testi/glyph sì, logica no. |
+| `Infrastructure.cs` | 196 | `ViewModelBase`, `RelayCommand`, servizi. | ⛔ Non toccare. |
+| `TrayAutostart.cs` | 49 | Registro HKCU per autostart tray. | ⛔ Non toccare. |
+
+## 11. Inventario glyph/emoji da sostituire (il "tell amatoriale")
+Sostituire con un set di icone coerente (vector path / icon font leggero, no emoji a colori). Posizioni esatte via grep.
+- **In `MainWindow.xaml`** (emoji-icona): 🎯 `U+1F3AF` · 🎭 `U+1F3AD` · 📈 `U+1F4C8` · ⚡ `U+26A1` ·
+  🛰 `U+1F6F0` · 🏛 `U+1F3DB` · ⏳ `U+23F3` · 🛡 `U+1F6E1`. (+ frecce `→` `U+2192` ×12 in testo: ok tenerle o stilarle.)
+- **In `.cs`**: 🎭 (GhostTweakViewModel) da sostituire; `─` `U+2500` ×224 sono **divisori di sezione** negli
+  header (es. "── Da attivare ──") → ridisegnarli come separatori veri; `⚠ U+26A0` ×10, `✓ U+2713`, `✗ U+2717`,
+  `› U+203A` sono semantici (decidi se iconizzare). `≥ ≈` restano testo.
+
+## 12. Guardrail (regole d'oro per non rompere il funzionale)
+1. **Solo visivo.** Cambia XAML (layout/stili/template), `Theme.xaml`, converter, testi/icone. **NON**
+   cambiare logica dei ViewModel, nomi di proprietà/`Binding`, comandi, firme, o il comportamento.
+2. **Deve sempre compilare 0/0 e passare i test** (`dotnet build WPEP.sln` + `dotnet test WPEP.sln`).
+   `TreatWarningsAsErrors` è attivo: niente warning (anche `using` inutili).
+3. **DynamicResource per i colori** (mai hard-code di esadecimali nelle pagine): così i temi restano
+   swappabili. Nuovi token → in `Theme.xaml`.
+4. **Temi personalizzabili**: lascia un meccanismo per cambiare preset da **Impostazioni** (ridefinendo i
+   token `Accent`/superfici). Villain come default forte.
+5. **Italiano**, voce diretta. Traduci le stringhe inglesi rimaste (Settings/Changes/badge evidenza/Diagnostics).
+6. **Niente dipendenze pesanti** nuove senza motivo (anti-cheat/peso). Icone preferibilmente vettoriali in-XAML.
+7. Il **tray** (`WPEP.Tray`, WinForms) è fuori scopo: non va ridisegnato qui.
