@@ -39,8 +39,10 @@ Sentinel**: ri-benchmarka da solo e avvisa se le prestazioni PEGGIORANO. **Time 
 - ✅ **Tray host** `WPEP.Tray` (wpep-tray.exe): agente WinForms isolato, poll ogni 10 min, balloon SOLO
   sui nuovi alert (WatchdogMonitor anti-spam). Avviabile dalla GUI ("Avvia in background"). Read-only.
 - ✅ Core condiviso testato: `WatchdogProbe` (unica raccolta CLI/GUI/tray) + `WatchAlert.Key` + monitor.
-- ⏳ Restano: run-at-startup opt-in (HKCU Run reversibile), intervallo configurabile, Sentinel come 2°
-  check del tray, "rewind" guidato in GUI per Time Machine (l'engine `wpep timeline` c'è già). *Io.*
+- ✅ **Avvio automatico con Windows** (opt-in, reversibile): `TrayAutostart` (HKCU Run, no admin) +
+  checkbox in GUI "Avvia la sorveglianza all'avvio di Windows".
+- ⏳ Restano: intervallo poll configurabile, Sentinel come 2° check del tray, "rewind" guidato in GUI
+  per Time Machine (l'engine `wpep timeline` c'è già). *Io.*
 
 ## 🤖 V6 — "AI co-pilot"
 Linguaggio naturale: "rendi Valorant più fluido" → Verdict spiega e propone. *Serve un LLM: o API key,

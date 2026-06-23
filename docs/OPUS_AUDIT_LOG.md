@@ -980,6 +980,10 @@ il gap era l'AGENTE sempre-attivo + l'anti-spam. Commit `1f2ee54`.
 - **GUI**: pulsante "Avvia in background" nella card Watchdog (Changes) → lancia wpep-tray.exe.
 - Validazione: build **0/0**, suite **291/291**, tray smoke-test (Debug+Release) parte e resta vivo
   senza crash. Artifact: App + **wpep-tray.exe** ripubblicati in artifacts/app (coesistono con WPEP.exe).
-- DA RIVEDERE/PROSSIMO: run-at-startup opt-in (HKCU Run, reversibile/journaled) per far partire il
-  tray al boot; intervallo configurabile; Regression Sentinel come secondo check del tray (ora fa solo
-  il Watchdog). Time Machine ha già `wpep timeline`/SystemTimeline — manca solo il "rewind" guidato in GUI.
+- **CODA FATTA (commit be3f38a)**: avvio automatico opt-in con Windows — `TrayAutostart` (HKCU\...\Run,
+  no admin, reversibile: Disable cancella il valore) + checkbox GUI nella card Watchdog. Suite 291/291.
+- DA RIVEDERE/PROSSIMO: intervallo poll configurabile; Regression Sentinel come secondo check del tray
+  (ora fa solo il Watchdog); Time Machine ha già `wpep timeline`/SystemTimeline — manca solo il "rewind"
+  guidato in GUI. NB OPERATIVO: smoke-test del tray lasciano istanze wpep-tray vive che LOCKANO i bin
+  (taskkill via shell veniva messo in background dal harness e non agiva) → usato desktop-commander
+  `kill_process <pid>` per chiuderle. Evitare di lanciare il tray ripetutamente in smoke-test.
