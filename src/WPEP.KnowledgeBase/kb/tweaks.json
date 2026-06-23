@@ -2074,6 +2074,84 @@
     }
   },
   {
+    "id": "cs2-display-fullscreen",
+    "name": "CS2: Display Mode a schermo intero + risoluzione nativa",
+    "category": "gpu",
+    "game": "cs2",
+    "description": "Source 2: la modalità Schermo intero (esclusivo) dà il percorso di presentazione a latenza più bassa rispetto a Finestra senza bordi, che passa per il compositor del desktop (DWM) aggiungendo un filo di latenza. ONESTÀ sul 4:3 stretchato ereditato da CS:GO: è una PREFERENZA visiva (modelli nemici un po' più larghi/leggibili, abitudine), NON un boost di performance né di hit-registration — con il sub-tick di CS2 il presunto vantaggio competitivo del 4:3 è estetico/abitudinario, non meccanico. Tieni il 16:9 nativo a meno che tu non venga dal 4:3 e ti trovi meglio così.",
+    "hardware_prerequisites": [],
+    "expected_impact": "Latenza di presentazione più bassa e stabile vs borderless. La risoluzione/aspect ratio non cambia hit-reg: è preferenza personale, non FPS.",
+    "evidence_level": "plausible",
+    "sources": [
+      "https://www.nvidia.com/en-us/geforce/guides/gfecnt/202010/system-latency-optimization-guide/"
+    ],
+    "risk": "none",
+    "risk_notes": "Alt-tab un filo più lento rispetto al borderless. Nessun rischio.",
+    "rollback": "Stessa schermata → Finestra senza bordi / aspect ratio precedente.",
+    "manual_steps": "CS2 → Impostazioni → Video → Modalità di visualizzazione = Schermo intero; Rapporto d'aspetto e Risoluzione = nativi del monitor (16:9), salvo preferenza personale per il 4:3.",
+    "conflicts_with": [],
+    "measurable": false,
+    "apply": {
+      "method": "gui-only",
+      "operations": [],
+      "requires_reboot": false,
+      "undo": "manual-steps",
+      "gui_only_reason": "In-game setting"
+    }
+  },
+  {
+    "id": "cs2-graphics-clarity",
+    "name": "CS2: grafica per leggibilità + Boost Player Contrast",
+    "category": "gpu",
+    "game": "cs2",
+    "description": "Boost Player Contrast = Enabled (impostazione CS2 che stacca i modelli nemici dallo sfondo: leggibilità pura, da tenere On). Poi qualità giù dove serve: Model/Texture Detail = Low, Shader/Particle Detail = Low, Ambient Occlusion = Low/Off; il Multicore Rendering è automatico in Source 2. ⚠️ NON abbassare tutto a cieca: Global Shadow Quality va tenuto almeno Medium — le ombre dei nemici rivelano piedi/posizioni dietro gli angoli, azzerarle ti toglie informazione utile. Qui 'più basso' NON è sempre 'meglio'. ONESTÀ: su RTX 5080 CS2 vola a centinaia di FPS, quindi il valore non è l'FPS grezzo ma il frametime più piatto (mira più stabile) e i nemici più leggibili.",
+    "hardware_prerequisites": [],
+    "expected_impact": "Frametime più stabile e nemici più leggibili (Boost Player Contrast + meno clutter). Su GPU potente l'FPS è già altissimo; su hardware modesto anche FPS sensibilmente più alti.",
+    "evidence_level": "plausible",
+    "sources": [
+      "https://www.counter-strike.net/news/update"
+    ],
+    "risk": "none",
+    "risk_notes": "Solo qualità visiva. Attenzione a non azzerare le ombre (Global Shadow Quality ≥ Medium): toglierebbero info competitiva.",
+    "rollback": "Stessa schermata → rialza le qualità / Boost Player Contrast = Disabled.",
+    "manual_steps": "CS2 → Impostazioni → Video → Avanzate: Boost Player Contrast = Enabled; Global Shadow Quality = Medium (non più basso); Model/Texture Detail = Low; Shader Detail = Low; Particle Detail = Low; Ambient Occlusion = Low/Off; Anti-Aliasing = 2x MSAA (equilibrio).",
+    "conflicts_with": [],
+    "measurable": true,
+    "apply": {
+      "method": "gui-only",
+      "operations": [],
+      "requires_reboot": false,
+      "undo": "manual-steps",
+      "gui_only_reason": "In-game setting"
+    }
+  },
+  {
+    "id": "cs2-launch-options-honest",
+    "name": "CS2: opzioni di avvio — cosa serve davvero e cosa è folklore",
+    "category": "background",
+    "game": "cs2",
+    "description": "In CS2 (Source 2) la maggior parte delle vecchie launch options di CS:GO è stata RIMOSSA o resa automatica. Ancora utili: '-novid' (salta l'intro) e abilitare la console ('-console' o dalle impostazioni). '-high' (priorità alta del processo) ha effetto reale SOLO se sei CPU-bound — su una CPU forte come la tua è trascurabile e a volte controproducente (può affamare i thread di sistema). NON servono più: '-threads', '-processheap', '-nojoy', '+mat_queue_mode' e il famigerato '-tickrate 128' (server MM gestiti da Valve, sub-tick — vedi voce dedicata). 'fps_max' va in console/autoexec, non come launch option.",
+    "hardware_prerequisites": [],
+    "expected_impact": "'-novid' è solo comodità (intro più rapido). '-high' conta solo se i benchmark mostrano CPU-bound. Tutto il resto è retaggio: aggiungerlo non rompe nulla ma non fa nulla. Niente FPS magici dalle launch options in CS2.",
+    "evidence_level": "plausible",
+    "sources": [
+      "https://www.counter-strike.net/news/update"
+    ],
+    "risk": "none",
+    "risk_notes": "'-high' su CPU modeste o sistemi carichi può peggiorare la fluidità (priorità troppo aggressiva). Reversibile.",
+    "rollback": "Steam → CS2 → Proprietà → Opzioni di avvio → svuota il campo.",
+    "manual_steps": "Steam → CS2 → Proprietà → Opzioni di avvio: '-novid' (comodità). Aggiungi '-high' solo se 'wpep bench' ti mostra CPU-bound. Lascia perdere -threads/-processheap/-tickrate: in Source 2 sono inutili.",
+    "conflicts_with": [],
+    "measurable": false,
+    "apply": {
+      "method": "gui-only",
+      "operations": [],
+      "requires_reboot": false,
+      "undo": "manual-steps",
+      "gui_only_reason": "Launch-option setting"
+    }
+  },
+  {
     "id": "laptop-dgpu-preference",
     "name": "Laptop: forza la GPU dedicata per il gioco (per-app GPU preference)",
     "category": "gpu",
@@ -2490,6 +2568,110 @@
     }
   },
   {
+    "id": "apex-display-fullscreen",
+    "name": "Apex Legends: Display Mode a schermo intero (esclusivo)",
+    "category": "gpu",
+    "game": "apex",
+    "description": "Apex offre Schermo intero (esclusivo) / Senza bordi / Finestra. Lo Schermo intero esclusivo dà la presentazione a latenza più bassa e lascia lavorare al meglio G-SYNC e Reflex; il Senza bordi passa per il compositor del desktop (DWM), aggiungendo un filo di latenza e non dando il vero G-SYNC esclusivo. Per il competitivo: Schermo intero.",
+    "hardware_prerequisites": [],
+    "expected_impact": "Latenza di presentazione più bassa e stabile vs senza bordi; G-SYNC/Reflex al meglio. Trade-off: alt-tab leggermente più lento, accettabile in ranked.",
+    "evidence_level": "plausible",
+    "sources": [
+      "https://www.nvidia.com/en-us/geforce/guides/gfecnt/202010/system-latency-optimization-guide/"
+    ],
+    "risk": "none",
+    "risk_notes": "",
+    "rollback": "Stessa schermata → Senza bordi.",
+    "manual_steps": "Apex Legends → Impostazioni → Video → Modalità di visualizzazione → Schermo intero.",
+    "conflicts_with": [],
+    "measurable": false,
+    "apply": {
+      "method": "gui-only",
+      "operations": [],
+      "requires_reboot": false,
+      "undo": "manual-steps",
+      "gui_only_reason": "In-game setting"
+    }
+  },
+  {
+    "id": "apex-graphics-competitive",
+    "name": "Apex Legends: impostazioni grafiche competitive (Volumetric Lighting off & co.)",
+    "category": "gpu",
+    "game": "apex",
+    "description": "I drain di FPS più pesanti in Apex sono noti e documentati: Volumetric Lighting = Disabled è il singolo toggle con più impatto (raggi di luce molto costosi). Poi: Dynamic Spot Shadows = Disabled, Sun Shadow Coverage = Low, Sun Shadow Detail = Low, Spot Shadow Detail = Disabled, Ambient Occlusion Quality = Disabled, Model/Effects/Texture Detail giù, Ragdolls = Low, Impact Marks = Low. ONESTÀ: su RTX 5080 punti più a frametime stabile e immagine leggibile (meno effetti = nemici più chiari) che a FPS grezzi — ma Volumetric Lighting off si sente anche su GPU forti nelle zone fumose/cariche.",
+    "hardware_prerequisites": [],
+    "expected_impact": "FPS più alti e soprattutto frametime più piatto nelle scene cariche (fumo, esplosioni, fine partita); immagine più leggibile. Volumetric Lighting off è il guadagno maggiore.",
+    "evidence_level": "plausible",
+    "sources": [
+      "https://www.nvidia.com/en-us/geforce/guides/apex-legends-graphics-and-performance-guide/"
+    ],
+    "risk": "none",
+    "risk_notes": "Solo qualità visiva (gioco meno 'bello', più leggibile e fluido). Nessun rischio.",
+    "rollback": "Stessa schermata → rialza le qualità / Volumetric Lighting On.",
+    "manual_steps": "Apex Legends → Impostazioni → Video: Volumetric Lighting = Disabled; Dynamic Spot Shadows = Disabled; Sun Shadow Coverage = Low; Sun Shadow Detail = Low; Spot Shadow Detail = Disabled; Ambient Occlusion Quality = Disabled; Model/Effects/Texture Detail = Low; Ragdolls = Low.",
+    "conflicts_with": [],
+    "measurable": true,
+    "apply": {
+      "method": "gui-only",
+      "operations": [],
+      "requires_reboot": false,
+      "undo": "manual-steps",
+      "gui_only_reason": "In-game setting"
+    }
+  },
+  {
+    "id": "apex-fps-cap-reflex",
+    "name": "Apex Legends: sblocca il cap FPS (+fps_max) + Reflex/cap sensato",
+    "category": "gpu",
+    "game": "apex",
+    "description": "Apex parte con un cap nascosto a 144 FPS. Nelle opzioni di avvio '+fps_max 0' (illimitato) o un valore alto sblocca il frame rate per sfruttare un monitor ad alto refresh. Con G-SYNC + Reflex la config a latenza minima è cappare ~3 FPS sotto il refresh (es. '+fps_max 237' su un 240Hz), così la GPU resta lontana dal 100% di utilizzo dove la latenza esplode; senza VRR, uncapped per la latenza più bassa accettando il tearing. Apex integra NVIDIA Reflex in-game: tienilo On.",
+    "hardware_prerequisites": [],
+    "expected_impact": "Senza il cap a 144 sfrutti davvero il monitor ad alto refresh; col cap corretto + Reflex la latenza resta bassa e costante (GPU non satura). Misurabile con 'wpep bench'.",
+    "evidence_level": "evidence_strong",
+    "sources": [
+      "https://www.nvidia.com/en-us/geforce/guides/gfecnt/202010/system-latency-optimization-guide/"
+    ],
+    "risk": "none",
+    "risk_notes": "Senza G-SYNC, cappare sotto il refresh non serve: meglio uncapped. Reversibile.",
+    "rollback": "Rimuovi '+fps_max' dalle opzioni di avvio (torna al cap 144).",
+    "manual_steps": "Steam/EA App → Apex → opzioni di avvio: '+fps_max 0' (illimitato) oppure '+fps_max <refresh−3>' con G-SYNC. In gioco: NVIDIA Reflex = Abilitato (+Boost). Verifica con 'wpep bench'.",
+    "conflicts_with": [],
+    "measurable": true,
+    "apply": {
+      "method": "gui-only",
+      "operations": [],
+      "requires_reboot": false,
+      "undo": "manual-steps",
+      "gui_only_reason": "In-game / launch-option setting"
+    }
+  },
+  {
+    "id": "apex-adaptive-res-off",
+    "name": "Apex Legends: Adaptive Resolution FPS Target = 0 (off)",
+    "category": "gpu",
+    "game": "apex",
+    "description": "'Adaptive Resolution FPS Target' abbassa DINAMICAMENTE la risoluzione di rendering per provare a tenere un target di FPS: il risultato è un'immagine che si fa molle/sfocata proprio nei momenti concitati (quando gli FPS calano), peggiorando la leggibilità dei nemici quando conta di più. I competitivi lo mettono a 0 (disattivato) e gestiscono gli FPS con le impostazioni grafiche, non sacrificando la nitidezza. ONESTÀ: se sei davvero GPU-limited e accetti meno nitidezza per più FPS, ha senso lasciarlo attivo; per la mira competitiva su RTX 5080 (dove non sei GPU-bound) lascialo OFF.",
+    "hardware_prerequisites": [],
+    "expected_impact": "Immagine sempre nitida (nessun calo di risoluzione nei momenti caldi). Su GPU forte non perdi FPS perché non eri GPU-bound; su GPU debole è un trade-off nitidezza/FPS consapevole.",
+    "evidence_level": "plausible",
+    "sources": [
+      "https://www.nvidia.com/en-us/geforce/guides/apex-legends-graphics-and-performance-guide/"
+    ],
+    "risk": "none",
+    "risk_notes": "",
+    "rollback": "Stessa schermata → rialza il valore se vuoi barattare nitidezza per FPS.",
+    "manual_steps": "Apex Legends → Impostazioni → Video → Adaptive Resolution FPS Target → 0.",
+    "conflicts_with": [],
+    "measurable": false,
+    "apply": {
+      "method": "gui-only",
+      "operations": [],
+      "requires_reboot": false,
+      "undo": "manual-steps",
+      "gui_only_reason": "In-game setting"
+    }
+  },
+  {
     "id": "ow2-reflex-on",
     "name": "Overwatch 2: NVIDIA Reflex + Riduci buffering",
     "category": "gpu",
@@ -2509,6 +2691,86 @@
     "manual_steps": "Overwatch 2 -> Opzioni -> Video -> NVIDIA Reflex -> Abilitato (o Abilitato+Boost); e imposta 'Riduci buffering' su Attivato.",
     "conflicts_with": [],
     "measurable": false,
+    "apply": {
+      "method": "gui-only",
+      "operations": [],
+      "requires_reboot": false,
+      "undo": "manual-steps",
+      "gui_only_reason": "In-game setting"
+    }
+  },
+  {
+    "id": "ow2-display-fullscreen",
+    "name": "Overwatch 2: Display Mode a schermo intero",
+    "category": "gpu",
+    "game": "overwatch2",
+    "description": "Overwatch 2 offre Schermo intero / Finestra / Finestra senza bordi. Lo Schermo intero (esclusivo) dà il percorso di presentazione a latenza più bassa e lascia lavorare al meglio G-SYNC e Reflex; il Senza bordi passa per il compositor del desktop (DWM), aggiungendo un filo di latenza. Per il competitivo: Schermo intero.",
+    "hardware_prerequisites": [],
+    "expected_impact": "Latenza di presentazione più bassa e stabile vs senza bordi; G-SYNC/Reflex al meglio. Alt-tab un po' più lento, trade-off accettabile in competitiva.",
+    "evidence_level": "plausible",
+    "sources": [
+      "https://www.nvidia.com/en-us/geforce/guides/overwatch-2-system-latency-optimization-guide/"
+    ],
+    "risk": "none",
+    "risk_notes": "",
+    "rollback": "Stessa schermata → Finestra senza bordi.",
+    "manual_steps": "Overwatch 2 → Opzioni → Video → Modalità di visualizzazione → Schermo intero.",
+    "conflicts_with": [],
+    "measurable": false,
+    "apply": {
+      "method": "gui-only",
+      "operations": [],
+      "requires_reboot": false,
+      "undo": "manual-steps",
+      "gui_only_reason": "In-game setting"
+    }
+  },
+  {
+    "id": "ow2-graphics-competitive",
+    "name": "Overwatch 2: grafica competitiva (Render Scale 100%, Dynamic Render Scale off)",
+    "category": "gpu",
+    "game": "overwatch2",
+    "description": "Dynamic Render Scale = Off e Render Scale = 100% sono i due più importanti: niente risoluzione che 'balla' nei teamfight → immagine sempre nitida e nemici leggibili quando si scatena il caos. Poi qualità giù: Texture/Effects/Lighting/Shadow Detail/Model Detail = Basso, Local Fog Detail = Basso, Ambient Occlusion = Disattivato, Local Reflections = Disattivato, Refraction Quality = Basso. ONESTÀ: OW2 su RTX 5080 supera tranquillamente i 300+ FPS, quindi il valore è frametime piatto nei teamfight e leggibilità (eroi più chiari) più che FPS grezzi; l'engine cappa comunque a 600.",
+    "hardware_prerequisites": [],
+    "expected_impact": "Frametime stabile nei teamfight + immagine sempre nitida (render scale fisso al 100%, niente sfocato dinamico) ed eroi più leggibili. Su hardware modesto anche FPS più alti.",
+    "evidence_level": "plausible",
+    "sources": [
+      "https://www.nvidia.com/en-us/geforce/guides/overwatch-2-system-latency-optimization-guide/"
+    ],
+    "risk": "none",
+    "risk_notes": "Solo qualità visiva. Nessun rischio.",
+    "rollback": "Stessa schermata → rialza le qualità / Dynamic Render Scale On.",
+    "manual_steps": "Overwatch 2 → Opzioni → Video → Dettagli grafici: Render Scale = 100% (Personalizzato); Dynamic Render Scale = Off; Texture/Effects/Lighting/Shadow Detail/Model Detail = Basso; Local Fog Detail = Basso; Ambient Occlusion = Disattivato; Local Reflections = Disattivato.",
+    "conflicts_with": [],
+    "measurable": true,
+    "apply": {
+      "method": "gui-only",
+      "operations": [],
+      "requires_reboot": false,
+      "undo": "manual-steps",
+      "gui_only_reason": "In-game setting"
+    }
+  },
+  {
+    "id": "ow2-fps-cap",
+    "name": "Overwatch 2: limite frame rate sensato (Personalizzato) con VRR",
+    "category": "gpu",
+    "game": "overwatch2",
+    "description": "OW2 ha 'Limita frame rate' = Personalizzato. Con G-SYNC + Reflex/'Riduci buffering', la config a latenza minima è cappare ~3 FPS sotto il refresh (es. 237 su un 240Hz): frame pacing stabile e niente tearing, senza il backpressure del V-Sync. Senza VRR, alza o illimita il cap (l'engine arriva fino a 600) per la latenza più bassa accettando il tearing. Attiva anche 'Mostra statistiche prestazioni' per vedere FPS e latenza a schermo.",
+    "hardware_prerequisites": [
+      "monitor:high-refresh"
+    ],
+    "expected_impact": "Con G-SYNC: frame pacing stabile e latenza contenuta col cap corretto. Senza VRR: cap alto/illimitato per latenza minima. Da decidere in base al monitor, misurabile con 'wpep bench'.",
+    "evidence_level": "evidence_strong",
+    "sources": [
+      "https://www.nvidia.com/en-us/geforce/guides/overwatch-2-system-latency-optimization-guide/"
+    ],
+    "risk": "none",
+    "risk_notes": "Senza G-SYNC, cappare sotto il refresh non serve. Reversibile.",
+    "rollback": "Limita frame rate → Visualizzazione/precedente.",
+    "manual_steps": "Overwatch 2 → Opzioni → Video → Limita frame rate = Personalizzato → ~refresh−3 con G-SYNC (es. 237 per 240Hz); senza VRR alza il cap. Attiva 'Mostra statistiche prestazioni'.",
+    "conflicts_with": [],
+    "measurable": true,
     "apply": {
       "method": "gui-only",
       "operations": [],
