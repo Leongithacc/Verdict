@@ -41,8 +41,10 @@ Sentinel**: ri-benchmarka da solo e avvisa se le prestazioni PEGGIORANO. **Time 
 - ✅ Core condiviso testato: `WatchdogProbe` (unica raccolta CLI/GUI/tray) + `WatchAlert.Key` + monitor.
 - ✅ **Avvio automatico con Windows** (opt-in, reversibile): `TrayAutostart` (HKCU Run, no admin) +
   checkbox in GUI "Avvia la sorveglianza all'avvio di Windows".
-- ⏳ Restano: intervallo poll configurabile, Sentinel come 2° check del tray, "rewind" guidato in GUI
-  per Time Machine (l'engine `wpep timeline` c'è già). *Io.*
+- ✅ **Sentinel nel tray**: `wpep sentinel` salva il verdetto (`SentinelStatusStore`); il tray ricorda
+  una REGRESSIONE con un balloon (onesto: il tray non può benchmarkare da solo).
+- ⏳ Restano: intervallo poll configurabile; "rewind" guidato in GUI per Time Machine (engine
+  `wpep timeline` c'è già) → attende il merge del design. *Io.*
 
 ## 🤖 V6 — "AI co-pilot"
 Linguaggio naturale: "rendi Valorant più fluido" → Verdict spiega e propone. *Serve un LLM: o API key,

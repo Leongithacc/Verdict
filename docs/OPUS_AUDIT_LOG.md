@@ -1006,3 +1006,18 @@ il path **bcdedit WRITE non era MAI stato esercitato dal vivo** (audit #29). `Wr
   4 PASS, bcdedit SKIP. Build 0/0, suite **293/293**. CLI ripubblicato in artifacts.
 - **AZIONE LÉON**: lancia `wpep selftest --writes` **da admin** una volta → conferma bcdedit dal vivo
   (è l'ultimo write-path non ancora provato sul campo).
+
+### 67. CODA V5 — Sentinel nel tray + audit KB onestà + 2 one-click sicuri (2026-06-23)
+Continuazione post-design, conflict-free col design (che lavora sulla COPIA Desktop).
+- **Audit onestà KB** (commit 0187071, report `docs/KB_AUDIT_2026-06.md`): ogni voce ora ha metodo
+  esplicito + fonte. 18 senza-apply → gui-only con motivo onesto; 4 fonti MS verificate; gate NV/AMD =
+  falsi positivi cross-vendor. 28 apply-spec esistenti verificati sani.
+- **Task #7 one-click** (commit 6b3c225): catalogo già maturo → +2 SICURI (disable-background-apps HKCU
+  GlobalUserDisabled, keyboard-fast-repeat HKCU KeyboardDelay/Speed). Niente padding controverso. KB 122 voci.
+- **Steam app-id verificati** via web: THE FINALS 2073850, R6 Siege 359550 (entrambi corretti).
+- **Sentinel nel tray** (commit 5e20868): ONESTO — il tray non può benchmarkare da solo, quindi non misura
+  regressioni passivamente. `SentinelStatusStore` (WPEP.Execution) persiste l'ultimo verdetto in
+  `%LOCALAPPDATA%\Verdict\sentinel-status.json` quando lanci `wpep sentinel`/GUI; il tray lo legge e fa
+  balloon su una REGRESSIONE nuova (de-dup per timestamp `_lastSentinelStamp`). Decoupled (il tray legge
+  solo un JSON, nessuna dipendenza nuova). Test round-trip + missing. Suite **295/295**. Verificato e2e
+  (sentinel scrive il file, tray lo consuma). CLI+Tray ripubblicati.
