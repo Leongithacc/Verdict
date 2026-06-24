@@ -987,3 +987,22 @@ il gap era l'AGENTE sempre-attivo + l'anti-spam. Commit `1f2ee54`.
   guidato in GUI. NB OPERATIVO: smoke-test del tray lasciano istanze wpep-tray vive che LOCKANO i bin
   (taskkill via shell veniva messo in background dal harness e non agiva) → usato desktop-commander
   `kill_process <pid>` per chiuderle. Evitare di lanciare il tray ripetutamente in smoke-test.
+
+### 66. TRUST — `wpep selftest --writes`: ogni write-path provato dal vivo (2026-06-23)
+Post-design, Tier 0 del piano d'attacco (`docs/POST_DESIGN_ATTACK_PLAN.md`). Chiude il buco storico:
+il path **bcdedit WRITE non era MAI stato esercitato dal vivo** (audit #29). `WriteSelfTest`
+(WPEP.Execution) prova OGNI metodo su target sicuri, senza cambiare nulla di reale (commit `76fa764`):
+- **registry** PASS — chiave usa-e-getta HKCU (pipeline engine completa).
+- **dxuser** PASS — coppia di prova nel REG_SZ globale + ripristino ESATTO dell'originale (siblings intatti).
+- **powercfg** PASS — esercita il path REALE (switch schema attivo) su un CLONE byte-identico, poi
+  ripristina l'originale e cancella il clone. NB: scelta dopo un FAIL iniziale — avevo usato VIDEOIDLE
+  (setting RANGE: stampa "Minimum 0x0" prima dell'AC → ParseAcIndex prendeva 0). Lo switch-schema è il
+  path davvero usato ed è robusto.
+- **bcdedit** SKIP senza admin / PASS da admin — no-op: riscrive un elemento sicuro
+  (disabledynamictick/bootmenupolicy/nx/recoveryenabled, il primo presente) al suo STESSO valore su
+  {current}. **Da admin esercita finalmente il write BCD.**
+- **nvidia-drs** PASS — no-op su Power Management Mode via NVAPI (riconferma live del path).
+- Esposto: `wpep selftest --writes` (per-metodo PASS/FAIL/SALTATO; Skip≠Fail). Verificato non-admin:
+  4 PASS, bcdedit SKIP. Build 0/0, suite **293/293**. CLI ripubblicato in artifacts.
+- **AZIONE LÉON**: lancia `wpep selftest --writes` **da admin** una volta → conferma bcdedit dal vivo
+  (è l'ultimo write-path non ancora provato sul campo).
