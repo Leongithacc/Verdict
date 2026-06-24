@@ -1379,6 +1379,9 @@ static int RunSentinel(string[] args)
             _ => "[i]",
         };
         Console.WriteLine($"  {mark} {verdict.Headline}");
+        // Persisti il verdetto: il tray lo legge e ti ricorda una regressione finché non rifai il check.
+        WPEP.Execution.SentinelStatusStore.Save(new WPEP.Execution.SentinelSnapshot(
+            verdict.Status.ToString(), verdict.Headline, DateTimeOffset.UtcNow.ToString("o")));
         return verdict.Status == WPEP.Statistics.SentinelStatus.Regressed ? 1 : 0;
     }
     catch (Exception ex) { Console.Error.WriteLine($"Sentinel fallito: {ex.Message}"); return 1; }

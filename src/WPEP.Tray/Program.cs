@@ -32,6 +32,7 @@ internal sealed class TrayContext : ApplicationContext
 
     private bool _busy;
     private bool _paused;
+    private string? _lastSentinelStamp;
 
     public TrayContext()
     {
@@ -95,6 +96,15 @@ internal sealed class TrayContext : ApplicationContext
             var fresh = _monitor.Update(pass.Alerts);
             foreach (var a in fresh)
                 Balloon(TipFor(a.Level), TitleFor(a.Level), $"{a.Title} — {a.Detail}");
+
+            // Sentinel: ricorda l'ultima REGRESSIONE misurata (il tray non può benchmarkare da solo;
+            // il verdetto lo scrive `wpep sentinel` / la GUI). Avvisa una volta per check nuovo.
+            var sentinel = SentinelStatusStore.Load();
+            if (sentinel is not null && sentinel.Status == "Regressed" && sentinel.CapturedAtIso != _lastSentinelStamp)
+            {
+                _lastSentinelStamp = sentinel.CapturedAtIso;
+                Balloon(ToolTipIcon.Warning, "Verdict — prestazioni", sentinel.Headline);
+            }
 
             if (announce && fresh.Count == 0)
                 Balloon(ToolTipIcon.Info, "Verdict",
