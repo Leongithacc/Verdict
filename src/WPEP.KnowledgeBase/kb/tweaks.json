@@ -3390,5 +3390,73 @@
       "undo": "auto-journal",
       "gui_only_reason": null
     }
+  },
+  {
+    "id": "disable-background-apps",
+    "name": "App in background disattivate (UWP) — meno carico a vuoto",
+    "category": "background",
+    "description": "Le app del Microsoft Store (UWP) possono restare attive in background a ricevere notifiche e aggiornarsi, consumando CPU/RAM/rete anche mentre giochi. Questo toglie il permesso GLOBALE di esecuzione in background a tutte le app UWP (Mail, Store, Meteo, Xbox...). Documentato da Microsoft come 'Attività in background delle app'. NB: non tocca i programmi desktop classici (.exe), solo le app UWP.",
+    "hardware_prerequisites": [],
+    "expected_impact": "Meno processi UWP attivi a vuoto: un po' di CPU/RAM/rete liberata durante il gioco. Beneficio modesto su un PC potente, più sensibile su hardware modesto. Reversibile.",
+    "evidence_level": "plausible",
+    "sources": [
+      "https://support.microsoft.com/en-us/windows/manage-background-activity-for-apps-in-windows-4f32dffe-b97c-40e8-a790-3ca10373a1ef"
+    ],
+    "risk": "none",
+    "risk_notes": "Le app UWP non riceveranno notifiche/aggiornamenti in background finché non le riapri. Reversibile.",
+    "rollback": "Reimposta GlobalUserDisabled=0 (o Impostazioni → Privacy e sicurezza → App in background).",
+    "manual_steps": "Impostazioni → Privacy e sicurezza → App in background → Off; oppure registro HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\BackgroundAccessApplications\\GlobalUserDisabled = 1.",
+    "conflicts_with": [],
+    "measurable": true,
+    "apply": {
+      "method": "registry",
+      "operations": [
+        {
+          "path": "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\BackgroundAccessApplications\\GlobalUserDisabled",
+          "value_after": "1",
+          "verify": "1",
+          "kind": "dword"
+        }
+      ],
+      "requires_reboot": false,
+      "undo": "auto-journal"
+    }
+  },
+  {
+    "id": "keyboard-fast-repeat",
+    "name": "Tastiera: ritardo di ripetizione minimo + velocità massima",
+    "category": "input",
+    "description": "Imposta il ritardo prima della ripetizione del tasto al minimo e la velocità di ripetizione al massimo (KeyboardDelay=0, KeyboardSpeed=31), i valori esposti da Windows via SystemParametersInfo. Tastiera più reattiva nella navigazione menu, chat e nel tenere premuto un tasto. ONESTÀ: è reattività di INPUT / qualità d'uso, NON FPS. Si applica al prossimo accesso a Windows.",
+    "hardware_prerequisites": [],
+    "expected_impact": "Tastiera più scattante (ripetizione immediata e veloce). QoL d'input, non tocca gli FPS. Reversibile; effetto al prossimo login.",
+    "evidence_level": "plausible",
+    "sources": [
+      "https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-systemparametersinfoa"
+    ],
+    "risk": "none",
+    "risk_notes": "Solo comodità d'uso. Se la ripetizione ti sembra troppo rapida, rimetti i default. Reversibile.",
+    "rollback": "Reimposta KeyboardDelay e KeyboardSpeed ai valori precedenti, o Pannello di controllo → Tastiera.",
+    "manual_steps": "Pannello di controllo → Tastiera → scheda Velocità: Ritardo di ripetizione = Breve, Velocità di ripetizione = Veloce. Oppure registro HKCU\\Control Panel\\Keyboard: KeyboardDelay=0, KeyboardSpeed=31.",
+    "conflicts_with": [],
+    "measurable": false,
+    "apply": {
+      "method": "registry",
+      "operations": [
+        {
+          "path": "HKCU\\Control Panel\\Keyboard\\KeyboardDelay",
+          "value_after": "0",
+          "verify": "0",
+          "kind": "string"
+        },
+        {
+          "path": "HKCU\\Control Panel\\Keyboard\\KeyboardSpeed",
+          "value_after": "31",
+          "verify": "31",
+          "kind": "string"
+        }
+      ],
+      "requires_reboot": false,
+      "undo": "auto-journal"
+    }
   }
 ]
