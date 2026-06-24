@@ -243,7 +243,14 @@
     "rollback": "Sicurezza di Windows → Sicurezza dispositivi → Isolamento core → Integrità della memoria → Attivato, riavvio.",
     "manual_steps": "Sicurezza di Windows → Sicurezza dispositivi → Dettagli isolamento core → Integrità della memoria → Disattivato → riavvio. SOLO dopo aver misurato un beneficio reale con wpep bench/compare e accettato consapevolmente il costo di sicurezza.",
     "conflicts_with": [],
-    "measurable": true
+    "measurable": true,
+    "apply": {
+      "method": "gui-only",
+      "operations": [],
+      "requires_reboot": false,
+      "undo": "manual-steps",
+      "gui_only_reason": "Compromesso sicurezza/prestazioni: Verdict lo spiega ma NON lo applica — abbassare una protezione è una scelta tua, manuale (Sicurezza di Windows)."
+    }
   },
   {
     "id": "disable-core-parking",
@@ -325,7 +332,14 @@
     "rollback": "Eliminare i valori TcpAckFrequency e TCPNoDelay dalla chiave dell'interfaccia, riavvio.",
     "manual_steps": "Solo se il gioco target usa TCP per il gameplay (verificare!). HKLM\\SYSTEM\\CurrentControlSet\\Services\\Tcpip\\Parameters\\Interfaces\\<GUID interfaccia attiva> → DWORD TcpAckFrequency=1 → riavvio.",
     "conflicts_with": [],
-    "measurable": true
+    "measurable": true,
+    "apply": {
+      "method": "gui-only",
+      "operations": [],
+      "requires_reboot": false,
+      "undo": "manual-steps",
+      "gui_only_reason": "Controverso e dipende dal gioco (inutile sui titoli UDP): non lo applichiamo a tappeto. Voce informativa, eventuale modifica manuale al registro."
+    }
   },
   {
     "id": "dns-change",
@@ -335,13 +349,22 @@
     "hardware_prerequisites": [],
     "expected_impact": "Zero sul ping e sulla latenza in partita. Eventuale beneficio percepibile solo nei caricamenti/connessioni iniziali se il DNS dell'ISP è particolarmente lento.",
     "evidence_level": "placebo",
-    "sources": [],
+    "sources": [
+      "https://www.cloudflare.com/learning/dns/what-is-dns/"
+    ],
     "risk": "none",
     "risk_notes": "",
     "rollback": "Impostazioni → Rete → proprietà della connessione → Assegnazione server DNS → Automatico (DHCP).",
     "manual_steps": "Non necessario per la latenza in-game. Se si vuole comunque (privacy/velocità di navigazione): Impostazioni → Rete e Internet → proprietà connessione → DNS manuale.",
     "conflicts_with": [],
-    "measurable": false
+    "measurable": false,
+    "apply": {
+      "method": "gui-only",
+      "operations": [],
+      "requires_reboot": false,
+      "undo": "manual-steps",
+      "gui_only_reason": "Placebo per il gaming: il DNS risolve i nomi, non tocca il ping in partita. Niente da applicare."
+    }
   },
   {
     "id": "windows-game-mode",
@@ -391,7 +414,14 @@
     "rollback": "Chiudere/disinstallare il tool.",
     "manual_steps": "Su Windows 11 non installare tool timer resolution: non possono influenzare il gioco. Se un gioco specifico ha problemi di timing è un bug del gioco, da segnalare allo sviluppatore.",
     "conflicts_with": [],
-    "measurable": false
+    "measurable": false,
+    "apply": {
+      "method": "gui-only",
+      "operations": [],
+      "requires_reboot": false,
+      "undo": "manual-steps",
+      "gui_only_reason": "Placebo su Windows 11: un tool esterno non cambia la timer resolution del processo del gioco. Niente da applicare."
+    }
   },
   {
     "id": "systemresponsiveness-gpupriority-registry",
@@ -1081,7 +1111,14 @@
     "rollback": "Gestione dispositivi → scheda di rete → Avanzate → Interrupt Moderation → Enabled (default).",
     "manual_steps": "Gestione dispositivi → Schede di rete → la tua NIC → Proprietà → Avanzate → 'Interrupt Moderation' → Disabled (e/o 'Interrupt Moderation Rate' → Off). Solo su ethernet cablata, solo se il ping/jitter conta più del carico CPU.",
     "conflicts_with": [],
-    "measurable": true
+    "measurable": true,
+    "apply": {
+      "method": "gui-only",
+      "operations": [],
+      "requires_reboot": false,
+      "undo": "manual-steps",
+      "gui_only_reason": "Dipende da NIC/driver: per ora manuale (candidato one-click). Si imposta nelle proprietà avanzate dell'adattatore di rete."
+    }
   },
   {
     "id": "mpo-disable",
@@ -1155,13 +1192,22 @@
     "hardware_prerequisites": [],
     "expected_impact": "Nessun effetto misurabile sul gaming su sistemi con SSD. Possibile peggioramento dei tempi di avvio delle applicazioni.",
     "evidence_level": "placebo",
-    "sources": [],
+    "sources": [
+      "https://learn.microsoft.com/en-us/troubleshoot/windows-client/performance/superfetch-sysmain-service-spikes-cpu"
+    ],
     "risk": "none",
     "risk_notes": "",
     "rollback": "services.msc → SysMain → Avvio: Automatico → Avvia.",
     "manual_steps": "Non farlo: nessuna evidenza di beneficio su SSD. Se proprio vuoi testarlo: services.msc → SysMain → Disabilitato → riavvio → misura con wpep bench/compare → tirane le conclusioni con i numeri.",
     "conflicts_with": [],
-    "measurable": true
+    "measurable": true,
+    "apply": {
+      "method": "gui-only",
+      "operations": [],
+      "requires_reboot": false,
+      "undo": "manual-steps",
+      "gui_only_reason": "Mito su SSD: SysMain non rallenta il gaming. Niente da disattivare (se proprio vuoi, è un servizio, da services.msc)."
+    }
   },
   {
     "id": "visual-effects-transparency-off",
@@ -1179,7 +1225,14 @@
     "rollback": "Impostazioni → Accessibilità → Effetti visivi → riattiva.",
     "manual_steps": "Non necessario per il gaming. Per il desktop su hardware debole: Impostazioni → Accessibilità → Effetti visivi → Effetti di trasparenza e Animazioni → Disattivati.",
     "conflicts_with": [],
-    "measurable": false
+    "measurable": false,
+    "apply": {
+      "method": "gui-only",
+      "operations": [],
+      "requires_reboot": false,
+      "undo": "manual-steps",
+      "gui_only_reason": "Estetica, non prestazioni: effetto sugli FPS trascurabile. Eventualmente lo regoli a mano nelle Impostazioni di Windows."
+    }
   },
   {
     "id": "hpet-platformclock-myth",
@@ -1199,7 +1252,14 @@
     "conflicts_with": [
       "disable-dynamic-tick"
     ],
-    "measurable": false
+    "measurable": false,
+    "apply": {
+      "method": "gui-only",
+      "operations": [],
+      "requires_reboot": false,
+      "undo": "manual-steps",
+      "gui_only_reason": "Mito: forzare/disattivare HPET via bcdedit non dà guadagni affidabili e può destabilizzare i timer. Sconsigliato, non lo applichiamo."
+    }
   },
   {
     "id": "pagefile-disable",
@@ -1217,7 +1277,14 @@
     "rollback": "Impostazioni prestazioni → Memoria virtuale → 'Gestisci automaticamente' → riavvio.",
     "manual_steps": "Sconsigliato. Lasciare 'Gestisci automaticamente dimensioni file di paging'. Se è stato disattivato in passato, riattivarlo.",
     "conflicts_with": [],
-    "measurable": false
+    "measurable": false,
+    "apply": {
+      "method": "gui-only",
+      "operations": [],
+      "requires_reboot": false,
+      "undo": "manual-steps",
+      "gui_only_reason": "Rischioso (crash/out-of-memory): non lo applichiamo noi. Gestisci il file di paging a mano solo se sai cosa fai."
+    }
   },
   {
     "id": "defender-game-exclusions",
@@ -1236,7 +1303,14 @@
     "rollback": "Sicurezza di Windows → Impostazioni protezione da virus → Esclusioni → rimuovi.",
     "manual_steps": "Sconsigliato come default. Se accetti il rischio per una libreria Steam pulita: Sicurezza di Windows → Protezione da virus e minacce → Gestisci impostazioni → Esclusioni → Aggiungi cartella.",
     "conflicts_with": [],
-    "measurable": true
+    "measurable": true,
+    "apply": {
+      "method": "gui-only",
+      "operations": [],
+      "requires_reboot": false,
+      "undo": "manual-steps",
+      "gui_only_reason": "Tocca la sicurezza (esclusioni antivirus): Verdict non modifica le tue protezioni — aggiungile a mano in Sicurezza di Windows se vuoi."
+    }
   },
   {
     "id": "high-priority-process",
@@ -1254,7 +1328,14 @@
     "rollback": "Gestione attività → Dettagli → processo → Imposta priorità → Normale (o riavvio del gioco).",
     "manual_steps": "Sconsigliato come default. Per test: Gestione attività → Dettagli → exe del gioco → Imposta priorità → Alta (MAI Realtime) → misura con wpep bench/compare.",
     "conflicts_with": [],
-    "measurable": true
+    "measurable": true,
+    "apply": {
+      "method": "gui-only",
+      "operations": [],
+      "requires_reboot": false,
+      "undo": "manual-steps",
+      "gui_only_reason": "Va deciso per-gioco e può essere controproducente: impostalo a mano dal Task Manager se davvero serve."
+    }
   },
   {
     "id": "usb-selective-suspend-off",
@@ -1367,7 +1448,14 @@
     "rollback": "Impostazioni del gioco → Frame Generation → On/Off a piacere.",
     "manual_steps": "Competitivo: Frame Generation OFF, Reflex ON. Single-player pesante: FG ON va benissimo (e Reflex viene attivato automaticamente). I numeri FPS con FG attivo non sono confrontabili con quelli senza: wpep bench li separa se PresentMon riporta FrameType.",
     "conflicts_with": [],
-    "measurable": true
+    "measurable": true,
+    "apply": {
+      "method": "gui-only",
+      "operations": [],
+      "requires_reboot": false,
+      "undo": "manual-steps",
+      "gui_only_reason": "Impostazione in-gioco / NVIDIA App con compromesso di latenza: la scegli tu nel gioco, non è un tweak di sistema."
+    }
   },
   {
     "id": "monitor-on-dgpu",
@@ -1437,7 +1525,14 @@
     "rollback": "Ottimizza unità → Modifica impostazioni → riattiva la pianificazione settimanale.",
     "manual_steps": "Non disattivarla. Verifica che sia attiva: Start → 'Deframmenta e ottimizza unità' → Ottimizzazione pianificata: Attivata (settimanale).",
     "conflicts_with": [],
-    "measurable": false
+    "measurable": false,
+    "apply": {
+      "method": "gui-only",
+      "operations": [],
+      "requires_reboot": false,
+      "undo": "manual-steps",
+      "gui_only_reason": "Mito: disattivare l'ottimizzazione unità non aiuta il gaming e su SSD il TRIM è utile. Niente da fare."
+    }
   },
   {
     "id": "router-bufferbloat-sqm",
@@ -1482,7 +1577,14 @@
     "rollback": "Se era stato disattivato: HKLM\\SYSTEM\\CurrentControlSet\\Services\\Tcpip6\\Parameters → eliminare DisabledComponents → riavvio.",
     "manual_steps": "Non farlo. Se IPv6 è già stato disattivato in passato, valuta di ripristinarlo (vedi rollback).",
     "conflicts_with": [],
-    "measurable": false
+    "measurable": false,
+    "apply": {
+      "method": "gui-only",
+      "operations": [],
+      "requires_reboot": false,
+      "undo": "manual-steps",
+      "gui_only_reason": "Placebo/controproducente: disattivare IPv6 non riduce la latenza e Microsoft lo sconsiglia. Niente da applicare."
+    }
   },
   {
     "id": "pbo-curve-optimizer",
@@ -1503,7 +1605,14 @@
     "rollback": "BIOS → PBO → Auto/Disabled, Curve Optimizer → 0.",
     "manual_steps": "Solo se accetti i rischi: BIOS → PBO → Advanced → Curve Optimizer → negative offset graduale (parti da -10, stress test, scendi di 5 alla volta). Misura il guadagno reale con wpep bench/compare prima di decidere se ne vale la pena.",
     "conflicts_with": [],
-    "measurable": true
+    "measurable": true,
+    "apply": {
+      "method": "gui-only",
+      "operations": [],
+      "requires_reboot": false,
+      "undo": "manual-steps",
+      "gui_only_reason": "Overclock/undervolt da BIOS: per natura manuale e a rischio stabilità. Verdict guida, non tocca il BIOS."
+    }
   },
   {
     "id": "mouse-polling-1000hz",
@@ -1539,13 +1648,22 @@
     "hardware_prerequisites": [],
     "expected_impact": "Nessun effetto misurabile sul gaming su sistemi SSD moderni. Ricerca file degradata.",
     "evidence_level": "placebo",
-    "sources": [],
+    "sources": [
+      "https://support.microsoft.com/en-us/windows/search-indexing-in-windows-da061c83-af6b-095c-0f7a-4dfecda4d15a"
+    ],
     "risk": "none",
     "risk_notes": "",
     "rollback": "services.msc → Windows Search → Automatico (avvio ritardato) → Avvia.",
     "manual_steps": "Non farlo. Il costo (ricerca rotta) supera il beneficio (zero misurabile).",
     "conflicts_with": [],
-    "measurable": false
+    "measurable": false,
+    "apply": {
+      "method": "gui-only",
+      "operations": [],
+      "requires_reboot": false,
+      "undo": "manual-steps",
+      "gui_only_reason": "Placebo su SSD: l'indicizzazione non pesa sul gaming. Niente da disattivare."
+    }
   },
   {
     "id": "debloat-scripts-telemetry",
@@ -1555,7 +1673,9 @@
     "hardware_prerequisites": [],
     "expected_impact": "FPS: dentro la varianza su sistemi sani. Rischio reale di rotture differite difficili da diagnosticare.",
     "evidence_level": "placebo",
-    "sources": [],
+    "sources": [
+      "https://learn.microsoft.com/en-us/windows/privacy/configure-windows-diagnostic-data-in-your-organization"
+    ],
     "risk": "medium",
     "risk_notes": "Script irreversibili o semi-irreversibili; componenti rotti si manifestano settimane dopo. Se proprio, preferire le impostazioni ufficiali (Privacy → Diagnostica → dati facoltativi off) che sono reversibili.",
     "rollback": "Dipende dallo script (spesso incompleto). Caso peggiore: ripristino/reinstallazione di Windows.",
@@ -1563,7 +1683,14 @@
     "conflicts_with": [
       "disable-startup-bloat"
     ],
-    "measurable": true
+    "measurable": true,
+    "apply": {
+      "method": "gui-only",
+      "operations": [],
+      "requires_reboot": false,
+      "undo": "manual-steps",
+      "gui_only_reason": "Rischioso: gli script di debloat di terze parti possono rompere Windows Update/Store e sono difficili da annullare. Verdict NON li esegue — al massimo regoli telemetria/privacy a mano nelle Impostazioni di Windows."
+    }
   },
   {
     "id": "defender-disable-completely",
@@ -1583,7 +1710,14 @@
     "conflicts_with": [
       "defender-game-exclusions"
     ],
-    "measurable": true
+    "measurable": true,
+    "apply": {
+      "method": "gui-only",
+      "operations": [],
+      "requires_reboot": false,
+      "undo": "manual-steps",
+      "gui_only_reason": "MAI in automatico: disattivare del tutto l'antivirus è pericoloso. Verdict non lo fa — è una scelta tua, manuale."
+    }
   },
   {
     "id": "in-game-raw-input-on",
