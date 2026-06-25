@@ -282,29 +282,36 @@ public sealed class ApplyAllViewModel : ViewModelBase
     {
         IsBusy = true;
         Status = "Scrivo i tweak…";
-        int ok;
-        string? stoppedAt;
         try
         {
             // Su thread di background: N tweak × (restore-point + scritture) non congelano la UI.
             var plans = _ready.Select(r => r.Plan).ToArray();
-            (ok, stoppedAt) = await System.Threading.Tasks.Task.Run(() => _exec.ExecuteAll(plans));
+            var (ok, stoppedAt) = await System.Threading.Tasks.Task.Run(() => _exec.ExecuteAll(plans));
+            Applied = true;
+            Status = stoppedAt is null
+                ? $"Applicati e verificati {ok} tweak. Annulla ognuno da Modifiche."
+                : $"Applicati {ok}, poi FERMATO a {stoppedAt}. I tweak applicati sono journaled e annullabili.";
+            _main.TerminalLine = $"$ verdict apply-all · {ok} tweak · journaled";
+            _main.Changes.Refresh();
+            _main.ShowToast(
+                stoppedAt is null
+                    ? $"{ok} tweak scritti e verificati · annullabili da Modifiche"
+                    : $"Applicati {ok}, poi fermato · niente a metà",
+                stoppedAt is null ? "Ok" : "Warn");
+        }
+        catch (Exception ex)
+        {
+            // Parità col percorso a singolo apply: un errore inatteso non deve diventare un crash
+            // grezzo. Aggiorno comunque Modifiche — i tweak journaled PRIMA del throw restano
+            // applicati e reversibili, e l'utente deve vederli.
+            Status = $"FERMATO: {ex.Message}";
+            _main.Changes.Refresh();
+            _main.ShowToast("Applica-tutto fermato · niente è stato lasciato a metà", "Danger");
         }
         finally
         {
             IsBusy = false;
         }
-        Applied = true;
-        Status = stoppedAt is null
-            ? $"Applicati e verificati {ok} tweak. Annulla ognuno da Modifiche."
-            : $"Applicati {ok}, poi FERMATO a {stoppedAt}. I tweak applicati sono journaled e annullabili.";
-        _main.TerminalLine = $"$ verdict apply-all · {ok} tweak · journaled";
-        _main.Changes.Refresh();
-        _main.ShowToast(
-            stoppedAt is null
-                ? $"{ok} tweak scritti e verificati · annullabili da Modifiche"
-                : $"Applicati {ok}, poi fermato · niente a metà",
-            stoppedAt is null ? "Ok" : "Warn");
     }
 
     private void Close()
@@ -384,11 +391,20 @@ public sealed class ChangesViewModel : ViewModelBase
         SelfTestStatus = "Verifica in corso…";
         _ = System.Threading.Tasks.Task.Run(() =>
         {
-            var r = Execution.EngineSelfTest.RunReal();
-            var detail = string.Join("  ·  ", r.Steps.Select(s => $"{s.Name}: {(s.Ok ? "OK" : "FALLITO")}"));
-            SelfTestStatus = (r.Passed
-                ? "✓ PASS — il motore di apply (write/verify/undo) funziona su questo PC."
-                : "✗ FAIL — vedi dettagli.") + "\n" + detail;
+            try
+            {
+                var r = Execution.EngineSelfTest.RunReal();
+                var detail = string.Join("  ·  ", r.Steps.Select(s => $"{s.Name}: {(s.Ok ? "OK" : "FALLITO")}"));
+                SelfTestStatus = (r.Passed
+                    ? "✓ PASS — il motore di apply (write/verify/undo) funziona su questo PC."
+                    : "✗ FAIL — vedi dettagli.") + "\n" + detail;
+            }
+            catch (Exception ex)
+            {
+                // Mai lasciare lo stato bloccato su "in corso…": un errore inatteso del self-test
+                // dev'essere onesto e visibile, non un crash-dialog differito (UnobservedTask).
+                SelfTestStatus = $"✗ FAIL — il self-test ha sollevato un errore: {ex.Message}";
+            }
         });
     });
 

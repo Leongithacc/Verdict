@@ -355,7 +355,7 @@
               <StackPanel Orientation="Horizontal">
                 <TextBlock Text="⚡" FontSize="16" VerticalAlignment="Center" />
                 <TextBlock Text="Reaction Lab" Style="{StaticResource H2}" Margin="8,0,0,0" />
-                <TextBlock Text="eyes → brain → hand → display" Style="{StaticResource Muted}"
+                <TextBlock Text="occhio → cervello → mano → schermo" Style="{StaticResource Muted}"
                            FontSize="11" VerticalAlignment="Center" Margin="10,2,0,0" />
               </StackPanel>
               <!-- The big target: click it as soon as it goes green. -->
@@ -642,7 +642,7 @@
                     Margin="24,0,0,0" Width="180" VerticalAlignment="Center" />
           <TextBox Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
                    Width="220" Margin="12,0,0,0" VerticalAlignment="Center"
-                   ToolTip="Search name, id or description" />
+                   ToolTip="Cerca per nome, id o descrizione" />
         </StackPanel>
         <Grid Grid.Row="1" Margin="0,16,0,0">
           <Grid.ColumnDefinitions>
