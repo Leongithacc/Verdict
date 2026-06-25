@@ -141,6 +141,7 @@ public sealed class ApplyDialogViewModel : ViewModelBase
         if (_plan is null)
             return;
         IsBusy = true;
+        Status = "Scrivo il valore…";
         try
         {
             // Execute fa restore-point + scritture: gira su un thread di background così la UI
@@ -148,14 +149,19 @@ public sealed class ApplyDialogViewModel : ViewModelBase
             // riprende sul thread UI (binding sicuri).
             var plan = _plan;
             var file = await System.Threading.Tasks.Task.Run(() => _exec.Execute(plan));
+            // L'engine ha già riletto per verificare; mostriamo la fase un attimo (percezione del design).
+            Status = "Rileggo per verificare…";
+            await System.Threading.Tasks.Task.Delay(450);
             Applied = true;
-            Status = $"Applicato e verificato. Puoi annullare da Modifiche.\nJournal: {Path.GetFileName(file)}";
+            Status = $"Scritto e verificato. Puoi annullare da Modifiche.\nJournal: {Path.GetFileName(file)}";
             _main.TerminalLine = $"$ verdict apply {plan.TweakId} · {plan.Operations.Count} scritture · journaled";
             _main.Changes.Refresh();
+            _main.ShowToast("Scritto e verificato · annullabile da Modifiche", "Ok");
         }
         catch (Exception ex)
         {
             Status = $"FERMATO: {ex.Message}";
+            _main.ShowToast("Applicazione fermata · niente è stato lasciato a metà", "Danger");
         }
         finally
         {
@@ -275,6 +281,7 @@ public sealed class ApplyAllViewModel : ViewModelBase
     private async void Confirm()
     {
         IsBusy = true;
+        Status = "Scrivo i tweak…";
         int ok;
         string? stoppedAt;
         try
@@ -293,6 +300,11 @@ public sealed class ApplyAllViewModel : ViewModelBase
             : $"Applicati {ok}, poi FERMATO a {stoppedAt}. I tweak applicati sono journaled e annullabili.";
         _main.TerminalLine = $"$ verdict apply-all · {ok} tweak · journaled";
         _main.Changes.Refresh();
+        _main.ShowToast(
+            stoppedAt is null
+                ? $"{ok} tweak scritti e verificati · annullabili da Modifiche"
+                : $"Applicati {ok}, poi fermato · niente a metà",
+            stoppedAt is null ? "Ok" : "Warn");
     }
 
     private void Close()
@@ -327,6 +339,15 @@ public sealed class ChangesViewModel : ViewModelBase
     /// <summary>Watchdog (Lab feature) lives as a section on this page. Set by MainViewModel since it
     /// needs the whole app (scan + execution), not just this page's pieces.</summary>
     public WatchdogViewModel? Watchdog { get; set; }
+
+    /// <summary>Set by MainViewModel so undo / revert-all can fire a toast.</summary>
+    public MainViewModel? Main { get; set; }
+
+    /// <summary>True if at least one session still has changes to undo (drives "Ripristina tutto").</summary>
+    public bool HasRevertableSessions => Sessions.Any(s => !s.AllUndone);
+
+    /// <summary>Undo EVERY journaled session in one go — "back to the starting point".</summary>
+    public RelayCommand RevertAllCommand => new(RevertAll, () => HasRevertableSessions);
 
     // ── Trust mode (Lab feature): the full "what Verdict could touch" manifest ──
     public bool ShowTrustMode => _settings.IsFeatureEnabled(WPEP.Execution.FeatureCatalog.TrustMode);
@@ -377,6 +398,23 @@ public sealed class ChangesViewModel : ViewModelBase
         foreach (var file in _exec.Sessions().Reverse())
             Sessions.Add(Describe(file));
         Raise(nameof(IsEmpty));
+        Raise(nameof(HasRevertableSessions));
+    }
+
+    private void RevertAll()
+    {
+        int total = 0, sessions = 0;
+        foreach (var s in Sessions.Where(s => !s.AllUndone).ToList())
+        {
+            try { total += _exec.Undo(s.File).Restored; sessions++; } catch { /* skip a bad session */ }
+        }
+        Refresh();
+        Status = total > 0
+            ? $"{total} modifiche ripristinate da {sessions} sessioni · sistema al punto di partenza."
+            : "Niente da ripristinare.";
+        Main?.ShowToast(
+            total > 0 ? $"{total} modifiche ripristinate · sistema al punto di partenza" : "Niente da ripristinare",
+            total > 0 ? "Ok" : "Info");
     }
 
     private static ChangeSession Describe(string file)
@@ -408,12 +446,14 @@ public sealed class ChangesViewModel : ViewModelBase
         {
             var outcome = _exec.Undo(session.File);
             Status = outcome.Restored > 0
-                ? $"Undone {outcome.Restored} change(s) from {session.Display}."
-                : $"{session.Display} was already undone.";
+                ? $"Annullate {outcome.Restored} modifiche da {session.Display}."
+                : $"{session.Display} era già annullato.";
             if (outcome.Skipped.Count > 0)
-                Status += $"\n{outcome.Skipped.Count} skipped (changed outside Verdict): "
+                Status += $"\n{outcome.Skipped.Count} saltate (cambiate fuori da Verdict): "
                     + string.Join("; ", outcome.Skipped);
             Refresh();
+            if (outcome.Restored > 0)
+                Main?.ShowToast("Annullato · valore precedente ripristinato", "Ok");
         }
         catch (Exception ex)
         {

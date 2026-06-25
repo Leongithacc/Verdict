@@ -4,7 +4,7 @@
         xmlns:local="clr-namespace:WPEP.App"
         Title="Verdict" Width="1180" Height="760" MinWidth="980" MinHeight="640"
         Background="{DynamicResource Bg}"
-        FontFamily="{StaticResource UiFont}">
+        FontFamily="{DynamicResource UiFont}">
 
   <Window.Resources>
     <local:TokenBrushConverter x:Key="TokenBrush" />
@@ -967,13 +967,18 @@
     <DataTemplate DataType="{x:Type local:ChangesViewModel}">
       <ScrollViewer VerticalScrollBarVisibility="Auto">
       <StackPanel Margin="32,24" MaxWidth="820" HorizontalAlignment="Left">
-        <TextBlock Style="{StaticResource H1}" Text="Changes" />
+        <DockPanel>
+          <Button DockPanel.Dock="Right" Style="{StaticResource GhostButton}" Content="Ripristina tutto"
+                  Command="{Binding RevertAllCommand}" VerticalAlignment="Top"
+                  Visibility="{Binding HasRevertableSessions, Converter={StaticResource BoolToVis}}" />
+          <TextBlock Style="{StaticResource H1}" Text="Modifiche" />
+        </DockPanel>
         <TextBlock Style="{StaticResource Muted}" Margin="0,4,0,16"
-                   Text="Every change Verdict applied, newest first. Each is journaled and reversible — undo restores the exact previous value." />
+                   Text="Ogni modifica che Verdict ha applicato, dalla più recente. Tutto è tracciato e reversibile — l'annulla ripristina il valore precedente esatto." />
         <Border Style="{StaticResource Card}" Padding="20"
                 Visibility="{Binding IsEmpty, Converter={StaticResource BoolToVis}}">
           <TextBlock Style="{StaticResource Muted}"
-                     Text="No changes applied yet. Verdict has written nothing to your system." />
+                     Text="Nessuna modifica applicata. Verdict non ha scritto niente nel tuo sistema." />
         </Border>
         <ItemsControl ItemsSource="{Binding Sessions}">
           <ItemsControl.ItemTemplate>
@@ -1425,14 +1430,14 @@
   <Grid>
     <DockPanel>
       <!-- Terminal line: identity (the CLI underneath) and guarantee (0 writes). -->
-      <Border DockPanel.Dock="Bottom" Background="{DynamicResource Surface}"
+      <Border DockPanel.Dock="Bottom" Background="{DynamicResource Ink}"
               BorderBrush="{DynamicResource Line}" BorderThickness="0,1,0,0" Padding="16,6">
         <TextBlock Style="{StaticResource Mono}" Foreground="{DynamicResource TextMuted}"
                    Text="{Binding TerminalLine}" />
       </Border>
 
       <!-- Sidebar -->
-      <Border DockPanel.Dock="Left" Width="208" Background="{DynamicResource Surface}"
+      <Border DockPanel.Dock="Left" Width="208" Background="{DynamicResource Ink}"
               BorderBrush="{DynamicResource Line}" BorderThickness="0,0,1,0">
         <DockPanel>
           <StackPanel DockPanel.Dock="Top" Margin="20,24,20,16">
@@ -1564,5 +1569,22 @@
         </StackPanel>
       </Border>
     </Grid>
+
+    <!-- Toast: transient feedback (Apply/Verify/Revert), bottom-right, auto-dismiss ~2.8s. -->
+    <Border VerticalAlignment="Bottom" HorizontalAlignment="Right" Margin="0,0,24,52"
+            Background="{DynamicResource Surface2}" CornerRadius="10" Padding="14,11"
+            BorderThickness="1.5"
+            BorderBrush="{Binding ToastColor, Converter={StaticResource TokenBrush}}"
+            Visibility="{Binding ToastVisible, Converter={StaticResource BoolToVis}}">
+      <Border.Effect>
+        <DropShadowEffect BlurRadius="28" ShadowDepth="6" Opacity="0.5" Color="#000000" />
+      </Border.Effect>
+      <StackPanel Orientation="Horizontal">
+        <Ellipse Width="9" Height="9" VerticalAlignment="Center"
+                 Fill="{Binding ToastColor, Converter={StaticResource TokenBrush}}" />
+        <TextBlock Text="{Binding ToastMessage}" Margin="10,0,0,0" VerticalAlignment="Center"
+                   Foreground="{DynamicResource Text}" FontSize="13" />
+      </StackPanel>
+    </Border>
   </Grid>
 </Window>

@@ -18,6 +18,10 @@ public sealed class MainViewModel : ViewModelBase
     private ViewModelBase _currentPage;
     private string _terminalLine = "$ wpep · ready · 0 writes";
     private bool _showWelcome;
+    private string _toastMessage = "";
+    private string _toastColor = "Ok";
+    private bool _toastVisible;
+    private readonly System.Windows.Threading.DispatcherTimer _toastTimer;
 
     public AppSettings Settings { get; }
     public ExecutionService Execution { get; } = new();
@@ -41,10 +45,28 @@ public sealed class MainViewModel : ViewModelBase
     /// No scan happens until the user clicks "Scan my system".</summary>
     public bool ShowWelcome { get => _showWelcome; set => Set(ref _showWelcome, value); }
 
+    // ── Toast (design handoff): transient bottom-right feedback, auto-dismiss ~2.8s ──
+    public string ToastMessage { get => _toastMessage; set => Set(ref _toastMessage, value); }
+    public string ToastColor { get => _toastColor; set => Set(ref _toastColor, value); }
+    public bool ToastVisible { get => _toastVisible; set => Set(ref _toastVisible, value); }
+
+    /// <summary>Show a transient toast. <paramref name="color"/> is a token name (Ok/Info/Warn/Danger)
+    /// for the accent bar + icon. Restarts the auto-dismiss timer on each call.</summary>
+    public void ShowToast(string message, string color = "Ok")
+    {
+        ToastMessage = message;
+        ToastColor = color;
+        ToastVisible = true;
+        _toastTimer.Stop();
+        _toastTimer.Start();
+    }
+
     public RelayCommand StartFirstScanCommand { get; }
 
     public MainViewModel()
     {
+        _toastTimer = new System.Windows.Threading.DispatcherTimer { Interval = TimeSpan.FromSeconds(2.8) };
+        _toastTimer.Tick += (_, _) => { _toastTimer.Stop(); ToastVisible = false; };
         Settings = AppSettings.Load();
         Scan = new ScanViewModel(Settings);
         Verdict = new VerdictViewModel(this);
@@ -56,6 +78,7 @@ public sealed class MainViewModel : ViewModelBase
         Report = new ReportViewModel(this);
         Changes = new ChangesViewModel(Execution, Settings);
         Changes.Watchdog = new WatchdogViewModel(this);
+        Changes.Main = this;
         SettingsPage = new SettingsViewModel(Settings);
         Lab = new LabViewModel(Settings);
         // EXPO state lands with the hardware scan → refresh the Verdict Score when it does.
