@@ -81,6 +81,11 @@ switch (args[0])
         return RunNvidia();
     case "tools" when args.Length >= 2 && args[1] == "install-presentmon":
         return await InstallPresentMon();
+    case "version":
+        Console.WriteLine(WPEP.Core.AppVersion.Label);
+        return 0;
+    case "update-check":
+        return await RunUpdateCheck();
     default:
         Console.Error.WriteLine($"Comando sconosciuto: {args[0]}");
         PrintUsage();
@@ -1701,11 +1706,37 @@ static void PrintDiagReport(DpcIsrReport report)
 
 static string Truncate(string s, int max) => s.Length <= max ? s : s[..(max - 1)] + "…";
 
+static async Task<int> RunUpdateCheck()
+{
+    var info = await WPEP.Core.Update.UpdateChecker.CheckAsync(WPEP.Core.AppVersion.Current);
+    if (!info.Configured)
+    {
+        Console.WriteLine($"Aggiornamenti: non configurati (nessun host scelto). Versione attuale: v{info.CurrentVersion}.");
+        return 0;
+    }
+    if (info.Error is not null)
+    {
+        Console.WriteLine($"Aggiornamenti: {info.Error} (versione attuale: v{info.CurrentVersion}).");
+        return 0;
+    }
+    if (info.UpdateAvailable)
+    {
+        Console.WriteLine($"Aggiornamento disponibile: v{info.LatestVersion} (hai v{info.CurrentVersion}).");
+        if (info.DownloadUrl is not null)
+            Console.WriteLine($"Scarica: {info.DownloadUrl}");
+    }
+    else
+    {
+        Console.WriteLine($"Sei aggiornato (v{info.CurrentVersion}).");
+    }
+    return 0;
+}
+
 static void PrintUsage()
 {
     Console.WriteLine(
         """
-        WPEP — Windows Performance Engineering Platform (V1, read-only)
+        WPEP — Windows Performance Engineering Platform (motore di Verdict)
 
         Uso:
           wpep diag [--seconds N] [--json file.json]
@@ -1809,6 +1840,12 @@ static void PrintUsage()
           wpep museum       Placebo Museum: i miti sfatati con l'evidenza.
           wpep games        Giochi con un piano dedicato.
           wpep optimize <gioco>   Piano su misura: tweak di sistema + impostazioni in-game.
+
+        — Versione & aggiornamenti —
+          wpep version        Mostra la versione di Verdict.
+          wpep update-check   Controlla se c'è una versione più recente (sola lettura,
+                              consent-first: riporta soltanto, non scarica né installa).
+                              Finché non è configurato un host, dice "non configurato".
 
         diag e bench richiedono terminale elevato (vincolo ETW di Windows).
         Misura (diag/bench/compare/analyze/advise) è SEMPRE sola lettura.

@@ -817,6 +817,64 @@ public sealed class SettingsViewModel : ViewModelBase
         set { _settings.CompactLists = value; _settings.Save(); Raise(); }
     }
 
+    // ── Aggiornamenti: controllo consent-first. Riporta soltanto se c'è una versione
+    //    più recente + dove scaricarla; non scarica né installa MAI da solo. Finché non
+    //    è configurato un host (UpdateConfig vuoto) resta onesto e non tocca la rete. ──
+    private string _updateStatus = $"Sei sulla {AppInfo.VersionLabel}.";
+    public string UpdateStatus { get => _updateStatus; private set => Set(ref _updateStatus, value); }
+
+    private string? _updateUrl;
+    public bool HasUpdateDownload => _updateUrl is not null;
+
+    private bool _checkingUpdate;
+
+    public RelayCommand CheckUpdatesCommand => new(async () =>
+    {
+        if (_checkingUpdate)
+            return;
+        _checkingUpdate = true;
+        UpdateStatus = "Controllo aggiornamenti…";
+        _updateUrl = null;
+        Raise(nameof(HasUpdateDownload));
+        try
+        {
+            var info = await WPEP.Core.Update.UpdateChecker.CheckAsync(AppInfo.Version);
+            if (!info.Configured)
+                UpdateStatus = $"Sei sulla {AppInfo.VersionLabel}. Aggiornamenti non ancora configurati.";
+            else if (info.Error is not null)
+                UpdateStatus = $"Controllo non riuscito: {info.Error}";
+            else if (info.UpdateAvailable)
+            {
+                UpdateStatus = $"Disponibile v{info.LatestVersion} (hai v{info.CurrentVersion}).";
+                _updateUrl = info.DownloadUrl;
+            }
+            else
+                UpdateStatus = $"Sei aggiornato (v{info.CurrentVersion}).";
+        }
+        catch (Exception ex)
+        {
+            // Difensivo (async void): un errore inatteso dev'essere onesto, mai un crash.
+            UpdateStatus = $"Controllo non riuscito: {ex.Message}";
+        }
+        finally
+        {
+            Raise(nameof(HasUpdateDownload));
+            _checkingUpdate = false;
+        }
+    });
+
+    public RelayCommand OpenDownloadCommand => new(() =>
+    {
+        if (_updateUrl is null)
+            return;
+        try
+        {
+            System.Diagnostics.Process.Start(
+                new System.Diagnostics.ProcessStartInfo(_updateUrl) { UseShellExecute = true });
+        }
+        catch { /* best-effort: il browser apre la pagina di download */ }
+    });
+
     public string About =>
         "Verdict — l'unico ottimizzatore che ti dice quando smettere di ottimizzare.\n" +
         "(engine: WPEP)\n\n" +

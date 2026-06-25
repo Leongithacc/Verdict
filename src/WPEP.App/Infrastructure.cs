@@ -7,11 +7,13 @@ using WPEP.Execution;
 
 namespace WPEP.App;
 
-/// <summary>Product identity shown in the UI (sidebar + About).</summary>
+/// <summary>Product identity shown in the UI (sidebar + About). The version itself
+/// lives once in <see cref="WPEP.Core.AppVersion"/> so the GUI, tray, CLI and the
+/// update check never drift apart.</summary>
 public static class AppInfo
 {
-    public const string Version = "1.0";
-    public const string VersionLabel = "Verdict v1.0";
+    public const string Version = WPEP.Core.AppVersion.Current;
+    public const string VersionLabel = WPEP.Core.AppVersion.Label;
 }
 
 public abstract class ViewModelBase : INotifyPropertyChanged

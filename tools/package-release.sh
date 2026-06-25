@@ -4,7 +4,7 @@
 # Usage:  bash tools/package-release.sh   (run from the repo root)
 set -euo pipefail
 
-VER="1.0"   # keep in sync with WPEP.App/Infrastructure.cs AppInfo.Version
+VER="1.0"   # keep in sync with src/WPEP.Core/AppVersion.cs  (AppVersion.Current)
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 STAGE="$ROOT/dist/Verdict-$VER"
 APP="$ROOT/artifacts/app"
