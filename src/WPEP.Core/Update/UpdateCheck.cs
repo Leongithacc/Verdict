@@ -37,12 +37,13 @@ public interface IUpdateSource
 /// </summary>
 public static class UpdateConfig
 {
-    // ── Léon: quando crei la repo GitHub Releases, metti qui owner e nome repo. ──
-    //   Esempio:  GitHubOwner = "leon007bmx";  GitHubRepo = "verdict";
-    //   Finché restano vuoti, "Controlla aggiornamenti" resta onestamente
-    //   "non configurato" e non tocca la rete. Nessun'altra modifica al codice serve.
-    public const string GitHubOwner = "";
-    public const string GitHubRepo = "";
+    // ── Host configurato: GitHub Releases di Léon → github.com/leon007bmx/Verdict ──
+    //   L'app interroga  api.github.com/repos/{owner}/{repo}/releases/latest.
+    //   Finché non esiste una release pubblicata, il check risponde con grazia
+    //   "Nessuna release pubblicata ancora" (404) — nessun crash. Per cambiare host
+    //   in futuro basta cambiare queste due stringhe: zero codice da toccare.
+    public const string GitHubOwner = "leon007bmx";
+    public const string GitHubRepo = "Verdict";
 
     public static bool IsConfigured => GitHubOwner.Length > 0 && GitHubRepo.Length > 0;
 }
@@ -53,12 +54,22 @@ public static class UpdateChecker
     /// <summary>Checks the configured host. If none is set, returns
     /// <see cref="UpdateInfo.NotConfigured"/> WITHOUT any network call.</summary>
     public static Task<UpdateInfo> CheckAsync(string currentVersion, CancellationToken ct = default)
-    {
-        if (!UpdateConfig.IsConfigured)
-            return Task.FromResult(UpdateInfo.NotConfigured(currentVersion));
-        IUpdateSource source = new GitHubReleaseSource(UpdateConfig.GitHubOwner, UpdateConfig.GitHubRepo);
-        return source.CheckAsync(currentVersion, ct);
-    }
+        => CheckAsync(currentVersion, DefaultSource(), ct);
+
+    /// <summary>Testable core: a null <paramref name="source"/> means "no host
+    /// configured" → <see cref="UpdateInfo.NotConfigured"/>, no network. Decouples the
+    /// decision logic from the production <see cref="UpdateConfig"/> constants.</summary>
+    public static Task<UpdateInfo> CheckAsync(string currentVersion, IUpdateSource? source,
+        CancellationToken ct = default)
+        => source is null
+            ? Task.FromResult(UpdateInfo.NotConfigured(currentVersion))
+            : source.CheckAsync(currentVersion, ct);
+
+    /// <summary>The source built from <see cref="UpdateConfig"/>, or null if no host set.</summary>
+    public static IUpdateSource? DefaultSource()
+        => UpdateConfig.IsConfigured
+            ? new GitHubReleaseSource(UpdateConfig.GitHubOwner, UpdateConfig.GitHubRepo)
+            : null;
 
     /// <summary>
     /// Compares dotted numeric versions ("1.0", "1.2.3"), tolerating a leading 'v'

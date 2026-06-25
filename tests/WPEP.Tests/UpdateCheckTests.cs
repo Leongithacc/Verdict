@@ -19,16 +19,40 @@ public class UpdateCheckTests
         => Assert.Equal(expectedSign, Math.Sign(UpdateChecker.VersionCompare(a, b)));
 
     [Fact]
-    public async Task CheckAsync_is_not_configured_by_default_and_makes_no_network_call()
+    public async Task CheckAsync_with_no_source_is_not_configured_and_hits_no_network()
     {
-        // With UpdateConfig owner/repo empty, the façade must short-circuit honestly
-        // (no host chosen yet) rather than hit the network.
-        Assert.False(UpdateConfig.IsConfigured);
-        var info = await UpdateChecker.CheckAsync("1.0");
+        // A null source models "no host chosen" — must short-circuit honestly, no network.
+        var info = await UpdateChecker.CheckAsync("1.0", source: null);
         Assert.False(info.Configured);
         Assert.False(info.UpdateAvailable);
         Assert.Equal("1.0", info.CurrentVersion);
         Assert.Null(info.Error);
+    }
+
+    private sealed class FakeSource(UpdateInfo canned) : IUpdateSource
+    {
+        public Task<UpdateInfo> CheckAsync(string currentVersion, CancellationToken ct = default)
+            => Task.FromResult(canned);
+    }
+
+    [Fact]
+    public async Task CheckAsync_passes_through_a_configured_source()
+    {
+        var canned = new UpdateInfo(Configured: true, UpdateAvailable: true, "1.0", "1.3",
+            "https://x/Verdict-1.3.zip", "note", null);
+        var info = await UpdateChecker.CheckAsync("1.0", new FakeSource(canned));
+        Assert.True(info.Configured);
+        Assert.True(info.UpdateAvailable);
+        Assert.Equal("1.3", info.LatestVersion);
+        Assert.Equal("https://x/Verdict-1.3.zip", info.DownloadUrl);
+    }
+
+    [Fact]
+    public void Host_is_wired_to_a_release_source()
+    {
+        // The update host has been configured (GitHub Releases) → the default source exists.
+        Assert.True(UpdateConfig.IsConfigured);
+        Assert.NotNull(UpdateChecker.DefaultSource());
     }
 
     [Fact]
