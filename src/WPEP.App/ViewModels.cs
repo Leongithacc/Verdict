@@ -831,5 +831,5 @@ public sealed class SettingsViewModel : ViewModelBase
         "di mira dagli anti-cheat.\n\n" +
         "Portabile per design. Una cartella, niente installer, niente servizi. " +
         "Cancella la cartella e Verdict non è mai esistito.\n\n" +
-        "Licenza: MIT";
+        $"{AppInfo.VersionLabel} · Licenza: MIT";
 }

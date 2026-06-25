@@ -4,3 +4,4 @@ obj/
 *.etl
 TestResults/
 artifacts/
+dist/

@@ -1463,6 +1463,8 @@
             <TextBlock Style="{StaticResource Muted}" FontSize="11" TextWrapping="Wrap"
                        Text="L'unico ottimizzatore che ti dice quando smettere di ottimizzare." />
           </StackPanel>
+          <TextBlock DockPanel.Dock="Bottom" Style="{StaticResource Muted}" FontSize="10.5" Opacity="0.6"
+                     Margin="20,0,20,16" Text="{x:Static local:AppInfo.VersionLabel}" />
           <StackPanel>
             <RadioButton x:Name="NavVerdict" Style="{StaticResource NavButton}" Content="Verdict"
                          IsChecked="True" Checked="OnNavVerdict" />

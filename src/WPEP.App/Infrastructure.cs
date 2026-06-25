@@ -7,6 +7,13 @@ using WPEP.Execution;
 
 namespace WPEP.App;
 
+/// <summary>Product identity shown in the UI (sidebar + About).</summary>
+public static class AppInfo
+{
+    public const string Version = "1.0";
+    public const string VersionLabel = "Verdict v1.0";
+}
+
 public abstract class ViewModelBase : INotifyPropertyChanged
 {
     public event PropertyChangedEventHandler? PropertyChanged;
