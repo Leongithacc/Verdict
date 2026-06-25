@@ -3,14 +3,17 @@
 
   <!-- ============ TOKENS (DESIGN_DIRECTION: tutti i colori vivono qui) ============ -->
   <!-- Accent swappa coi preset; i SEMANTICI (Ok/Warn/Danger/badge) non cambiano mai. -->
-  <Color x:Key="C.Bg">#08080C</Color>
-  <Color x:Key="C.Surface">#14141B</Color>
-  <Color x:Key="C.Surface2">#1C1C26</Color>
-  <Color x:Key="C.Line">#272735</Color>
-  <Color x:Key="C.Accent">#8B5CF6</Color>
-  <Color x:Key="C.AccentDeep">#4A0080</Color>
+  <!-- Default = Villain (design handoff). Swapped at runtime by ThemePresets.Apply. -->
+  <Color x:Key="C.Bg">#08070C</Color>
+  <Color x:Key="C.Surface">#161019</Color>
+  <Color x:Key="C.Surface2">#1F1528</Color>
+  <Color x:Key="C.Line">#2C1F3C</Color>
+  <Color x:Key="C.Accent">#7C3AED</Color>
+  <Color x:Key="C.AccentDeep">#3A0A5C</Color>
   <Color x:Key="C.Text">#E6E6EC</Color>
   <Color x:Key="C.TextMuted">#8A8A96</Color>
+  <!-- Ink: darkens chrome (sidebar/footer) + bg vignette. Dark themes #000; light themes a warm grey. -->
+  <Color x:Key="C.Ink">#000000</Color>
   <Color x:Key="C.Ok">#34D399</Color>
   <Color x:Key="C.OkDim">#1F7A58</Color>
   <Color x:Key="C.Info">#60A5FA</Color>
@@ -32,25 +35,26 @@
   <SolidColorBrush x:Key="Warn" Color="{DynamicResource C.Warn}" />
   <SolidColorBrush x:Key="Danger" Color="{DynamicResource C.Danger}" />
   <SolidColorBrush x:Key="Neutral" Color="{DynamicResource C.Neutral}" />
+  <SolidColorBrush x:Key="Ink" Color="{DynamicResource C.Ink}" />
 
   <FontFamily x:Key="UiFont">Segoe UI Variable Display, Segoe UI</FontFamily>
   <FontFamily x:Key="MonoFont">Cascadia Code, Cascadia Mono, Consolas</FontFamily>
 
   <!-- ============ TYPE SCALE (11/12.5/14/16/20/26) ============ -->
   <Style x:Key="H1" TargetType="TextBlock">
-    <Setter Property="FontFamily" Value="{StaticResource UiFont}" />
+    <Setter Property="FontFamily" Value="{DynamicResource UiFont}" />
     <Setter Property="FontSize" Value="26" />
     <Setter Property="FontWeight" Value="SemiBold" />
     <Setter Property="Foreground" Value="{DynamicResource Text}" />
   </Style>
   <Style x:Key="H2" TargetType="TextBlock">
-    <Setter Property="FontFamily" Value="{StaticResource UiFont}" />
+    <Setter Property="FontFamily" Value="{DynamicResource UiFont}" />
     <Setter Property="FontSize" Value="16" />
     <Setter Property="FontWeight" Value="SemiBold" />
     <Setter Property="Foreground" Value="{DynamicResource Text}" />
   </Style>
   <Style x:Key="Body" TargetType="TextBlock">
-    <Setter Property="FontFamily" Value="{StaticResource UiFont}" />
+    <Setter Property="FontFamily" Value="{DynamicResource UiFont}" />
     <Setter Property="FontSize" Value="14" />
     <Setter Property="Foreground" Value="{DynamicResource Text}" />
     <Setter Property="TextWrapping" Value="Wrap" />
@@ -60,7 +64,7 @@
     <Setter Property="FontSize" Value="12.5" />
   </Style>
   <Style x:Key="Mono" TargetType="TextBlock">
-    <Setter Property="FontFamily" Value="{StaticResource MonoFont}" />
+    <Setter Property="FontFamily" Value="{DynamicResource MonoFont}" />
     <Setter Property="FontSize" Value="12.5" />
     <Setter Property="Foreground" Value="{DynamicResource Text}" />
   </Style>
@@ -75,7 +79,7 @@
   </Style>
 
   <Style x:Key="PrimaryButton" TargetType="Button">
-    <Setter Property="FontFamily" Value="{StaticResource UiFont}" />
+    <Setter Property="FontFamily" Value="{DynamicResource UiFont}" />
     <Setter Property="FontSize" Value="14" />
     <Setter Property="Foreground" Value="White" />
     <Setter Property="Background" Value="{DynamicResource Accent}" />
@@ -116,7 +120,7 @@
   </Style>
 
   <Style x:Key="NavButton" TargetType="RadioButton">
-    <Setter Property="FontFamily" Value="{StaticResource UiFont}" />
+    <Setter Property="FontFamily" Value="{DynamicResource UiFont}" />
     <Setter Property="FontSize" Value="14" />
     <Setter Property="Foreground" Value="{DynamicResource TextMuted}" />
     <Setter Property="Cursor" Value="Hand" />

@@ -1306,23 +1306,92 @@
           <TextBlock Style="{StaticResource H1}" Text="Settings" />
           <Border Style="{StaticResource Card}" Margin="0,16,0,8">
             <StackPanel>
-              <TextBlock Style="{StaticResource H2}" Text="Theme" />
-              <TextBlock Style="{StaticResource Muted}" Margin="0,2,0,8"
-                         Text="Whole palette per theme — background, surfaces and accent. Semantic colors (ok/warn/danger) never change." />
-              <ComboBox ItemsSource="{Binding Themes}" SelectedValuePath="Name"
-                        SelectedValue="{Binding SelectedTheme}" Width="240" HorizontalAlignment="Left"
-                        MaxDropDownHeight="420">
-                <ComboBox.ItemTemplate>
+              <TextBlock Style="{StaticResource H2}" Text="Tema" />
+              <TextBlock Style="{StaticResource Muted}" Margin="0,2,0,10"
+                         Text="10 sistemi completi: palette, tipografia e modalità chiara/scura cambiano insieme. I colori semantici (ok/avviso/pericolo) restano sempre leggibili." />
+              <ListBox ItemsSource="{Binding Themes}" SelectedValuePath="Name"
+                       SelectedValue="{Binding SelectedTheme}"
+                       Background="Transparent" BorderThickness="0"
+                       ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                       ScrollViewer.VerticalScrollBarVisibility="Disabled">
+                <ListBox.ItemsPanel>
+                  <ItemsPanelTemplate><WrapPanel /></ItemsPanelTemplate>
+                </ListBox.ItemsPanel>
+                <ListBox.ItemContainerStyle>
+                  <Style TargetType="ListBoxItem">
+                    <Setter Property="Margin" Value="0,0,12,12" />
+                    <Setter Property="Cursor" Value="Hand" />
+                    <Setter Property="Template">
+                      <Setter.Value>
+                        <ControlTemplate TargetType="ListBoxItem">
+                          <Border x:Name="cardWrap" CornerRadius="14" BorderThickness="2"
+                                  BorderBrush="Transparent" RenderTransformOrigin="0.5,0.5">
+                            <ContentPresenter />
+                          </Border>
+                          <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                              <Setter TargetName="cardWrap" Property="RenderTransform">
+                                <Setter.Value>
+                                  <TranslateTransform Y="-3" />
+                                </Setter.Value>
+                              </Setter>
+                            </Trigger>
+                            <Trigger Property="IsSelected" Value="True">
+                              <Setter TargetName="cardWrap" Property="BorderBrush" Value="{DynamicResource Accent}" />
+                              <Setter TargetName="cardWrap" Property="Effect">
+                                <Setter.Value>
+                                  <DropShadowEffect Color="{DynamicResource C.Accent}" BlurRadius="24" ShadowDepth="0" Opacity="0.55" />
+                                </Setter.Value>
+                              </Setter>
+                            </Trigger>
+                          </ControlTemplate.Triggers>
+                        </ControlTemplate>
+                      </Setter.Value>
+                    </Setter>
+                  </Style>
+                </ListBox.ItemContainerStyle>
+                <ListBox.ItemTemplate>
                   <DataTemplate>
-                    <!-- Clean: a small accent swatch + the name. Nothing else. -->
-                    <StackPanel Orientation="Horizontal" Margin="0,1">
-                      <Border Width="12" Height="12" CornerRadius="3" Background="{Binding Accent}"
-                              VerticalAlignment="Center" />
-                      <TextBlock Text="{Binding Name}" VerticalAlignment="Center" Margin="9,0,0,0" />
-                    </StackPanel>
+                    <Border Width="172" CornerRadius="12" Background="{Binding Surface}"
+                            BorderBrush="{Binding Line}" BorderThickness="1">
+                      <StackPanel>
+                        <!-- mini-mockup: the theme's own bg + surfaces + accent -->
+                        <Border Background="{Binding Bg}" Padding="12,11" Height="96" CornerRadius="11,11,0,0">
+                          <StackPanel>
+                            <StackPanel Orientation="Horizontal">
+                              <Ellipse Width="10" Height="10" Fill="{Binding Accent}" VerticalAlignment="Center" />
+                              <Border Height="6" Width="64" CornerRadius="3" Background="{Binding Text}"
+                                      Opacity="0.55" Margin="8,0,0,0" VerticalAlignment="Center" />
+                            </StackPanel>
+                            <Border Height="11" CornerRadius="4" Background="{Binding Surface}" Margin="0,9,0,0" />
+                            <Border Height="11" CornerRadius="4" Background="{Binding Surface2}" Margin="0,5,0,0" />
+                            <Border Height="15" Width="58" CornerRadius="5" Background="{Binding Accent}"
+                                    Margin="0,9,0,0" HorizontalAlignment="Left" />
+                          </StackPanel>
+                        </Border>
+                        <!-- meta: each card previews its own text colors -->
+                        <Border Background="{Binding Surface}" Padding="11,9" CornerRadius="0,0,11,11">
+                          <StackPanel>
+                            <StackPanel Orientation="Horizontal">
+                              <TextBlock Text="{Binding Name}" FontWeight="SemiBold"
+                                         Foreground="{Binding Text}" VerticalAlignment="Center" />
+                              <Border Background="{Binding Surface2}" CornerRadius="4" Padding="6,1"
+                                      Margin="8,0,0,0" VerticalAlignment="Center">
+                                <TextBlock Text="{Binding ModeLabel}" FontSize="10"
+                                           Foreground="{Binding Text}" Opacity="0.7" />
+                              </Border>
+                            </StackPanel>
+                            <TextBlock Text="{Binding Mood}" Foreground="{Binding Text}" Opacity="0.6"
+                                       FontSize="11" Margin="0,4,0,0" TextTrimming="CharacterEllipsis" />
+                            <TextBlock Text="{Binding FontLabel}" FontFamily="{DynamicResource MonoFont}"
+                                       Foreground="{Binding Text}" Opacity="0.5" FontSize="10.5" Margin="0,2,0,0" />
+                          </StackPanel>
+                        </Border>
+                      </StackPanel>
+                    </Border>
                   </DataTemplate>
-                </ComboBox.ItemTemplate>
-              </ComboBox>
+                </ListBox.ItemTemplate>
+              </ListBox>
             </StackPanel>
           </Border>
           <Border Style="{StaticResource Card}" Margin="0,0,0,8">

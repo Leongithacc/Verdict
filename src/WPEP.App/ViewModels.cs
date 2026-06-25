@@ -756,7 +756,7 @@ public sealed class SettingsViewModel : ViewModelBase
 
     public string SelectedTheme
     {
-        get => _settings.Theme;
+        get => ThemePresets.Normalize(_settings.Theme);
         set
         {
             _settings.Theme = value;

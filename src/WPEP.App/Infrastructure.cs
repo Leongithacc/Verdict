@@ -54,7 +54,7 @@ public sealed class RelayCommand<T>(Action<T> execute, Func<T, bool>? canExecute
 /// nothing outside the app folder, delete folder = never existed).</summary>
 public sealed class AppSettings
 {
-    public string Theme { get; set; } = "Violet";
+    public string Theme { get; set; } = "Villain";
     public int DefaultBenchmarkRuns { get; set; } = 5;
     public double NoiseGateThresholdPercent { get; set; } = 10;
     public bool CompactLists { get; set; }
@@ -114,44 +114,64 @@ public sealed class AppSettings
     }
 }
 
-/// <summary>A full dark palette. Each theme changes the WHOLE look (background, surfaces,
-/// lines, accent) — not just the accent — so switching is clearly visible. Semantic colors
-/// (Ok/Warn/Danger) never change. All backgrounds stay near-black with light text.</summary>
+/// <summary>A FULL theme system (design handoff 2026-06): palette + text + a chrome-darkening
+/// <c>Ink</c> + light/dark <c>Mode</c> + a UI/mono font pair. Switching changes the WHOLE look,
+/// not just the accent. Semantic colors (Ok/Warn/Danger…) are re-tuned per mode so they stay
+/// readable on light surfaces too. Font keys are short labels resolved to real families (with
+/// graceful fallbacks) in <see cref="ThemePresets.Apply"/>.</summary>
 public sealed record ThemePreset(
-    string Accent, string AccentDeep, string Bg, string Surface, string Surface2, string Line);
+    string Accent, string AccentDeep, string Bg, string Surface, string Surface2, string Line,
+    string Text, string TextMuted, string Ink, string Mode, string UiFont, string MonoFont, string Mood);
 
-/// <summary>A theme as shown in the picker: name + ready-made preview brushes.</summary>
+/// <summary>A theme as shown in the picker card: a mini-mockup of the app (its own surfaces /
+/// accent / line / text) plus name, mode badge, mood line and the font pair.</summary>
 public sealed record ThemeOption(
-    string Name, System.Windows.Media.Brush Bg,
-    System.Windows.Media.Brush Surface, System.Windows.Media.Brush Accent);
+    string Name, string ModeLabel, string Mood, string FontLabel,
+    System.Windows.Media.Brush Bg, System.Windows.Media.Brush Surface,
+    System.Windows.Media.Brush Surface2, System.Windows.Media.Brush Accent,
+    System.Windows.Media.Brush Line, System.Windows.Media.Brush Text);
 
 public static class ThemePresets
 {
+    public const string Default = "Villain";
+
+    // 10 distinct systems (design handoff). Columns:
+    // accent · deep · bg · surface · surface2 · line · text · textMuted · ink · mode · UI · mono · mood
     public static readonly IReadOnlyDictionary<string, ThemePreset> All =
         new Dictionary<string, ThemePreset>
         {
-            // name          accent      deep        bg          surface     surface2    line
-            ["Violet"]   = new("#8B5CF6", "#4A0080", "#0A0A0F", "#15151C", "#1C1C25", "#262633"),
-            ["Villain"]  = new("#7C3AED", "#3A0A5C", "#08070C", "#161019", "#1F1528", "#2C1F3C"),
-            ["Stealth"]  = new("#90A4C0", "#3A4250", "#0A0B0D", "#15171C", "#1D2027", "#2A2F3A"),
-            ["Crimson"]  = new("#E0525F", "#6E1F2A", "#0C0809", "#1A1315", "#241A1D", "#34262A"),
-            ["Emerald"]  = new("#34D399", "#0F5C44", "#070C0A", "#121A16", "#19241E", "#26332C"),
-            ["Midnight"] = new("#5B8DEF", "#1E3A6E", "#070A10", "#11151F", "#181F2C", "#252E42"),
-            ["Inferno"]  = new("#F97316", "#7C2D12", "#0C0907", "#1A1410", "#241B14", "#34281C"),
-            ["Toxic"]    = new("#A3E635", "#3F6212", "#090C07", "#161A12", "#1F2618", "#2D3422"),
-            ["Ice"]      = new("#38BDF8", "#0E4F6E", "#070C0F", "#111A1F", "#18242B", "#25353E"),
-            ["Gold"]     = new("#F5C542", "#7A5C12", "#0C0A06", "#1A1710", "#241F14", "#342A1C"),
-            ["Mono"]     = new("#C7CBD4", "#3A3D45", "#090909", "#151515", "#1E1E1E", "#2C2C2C"),
-            ["Sakura"]   = new("#F472B6", "#831843", "#0C080A", "#1A1216", "#241921", "#33252C"),
-            ["Cyber"]    = new("#22D3EE", "#155E75", "#060B0D", "#0F1A1E", "#16252B", "#22353D"),
-            ["Royal"]    = new("#818CF8", "#312E81", "#08080F", "#131320", "#1B1B2E", "#28283F"),
-            ["Blood"]    = new("#DC2626", "#7F1D1D", "#0A0606", "#170F0F", "#1F1414", "#2E1D1D"),
-            ["Forest"]   = new("#4ADE80", "#14532D", "#070C08", "#111A13", "#18241A", "#243328"),
-            ["Vapor"]    = new("#C084FC", "#6B21A8", "#0A080F", "#16111F", "#1F182B", "#2D2440"),
+            ["Villain"]  = new("#7C3AED", "#3A0A5C", "#08070C", "#161019", "#1F1528", "#2C1F3C", "#E6E6EC", "#8A8A96", "#000000", "dark", "Segoe", "JetBrains", "Viola profondo · villain"),
+            ["Stealth"]  = new("#7C93B5", "#2E3A4C", "#0A0B0E", "#15171C", "#1D2027", "#2A2F3A", "#DDE3EC", "#828B99", "#000000", "dark", "Sora", "JetBrains", "Acciaio notturno · ops"),
+            ["Daybreak"] = new("#5B54E6", "#C8C5F5", "#F4F5F8", "#FFFFFF", "#EDEEF3", "#DDDFE7", "#1A1C24", "#6A6E7C", "#C9CDD6", "light", "Manrope", "JetBrains", "Indaco chiaro · diurno"),
+            ["Terminal"] = new("#3DF07A", "#0C5C30", "#040805", "#0A1109", "#0F190D", "#1B2B18", "#CFF5D8", "#6F9579", "#000000", "dark", "Space Mono", "Space Mono", "Verde fosforo · CRT"),
+            ["Ember"]    = new("#F97316", "#7C2D12", "#0C0907", "#1A130D", "#241A11", "#34271B", "#F0E5DC", "#A08D7E", "#000000", "dark", "Space Grotesk", "JetBrains", "Brace calda · forgia"),
+            ["Glacier"]  = new("#38BDF8", "#0E4F6E", "#070C0F", "#101A20", "#16242C", "#23353F", "#DCEBF2", "#7B95A2", "#000000", "dark", "Sora", "JetBrains", "Ghiaccio cyan · artico"),
+            ["Sakura"]   = new("#F472B6", "#831843", "#0D0A0C", "#1A141A", "#241A23", "#33252F", "#F2E2EB", "#A38595", "#000000", "dark", "Manrope", "JetBrains", "Rosa notturno · fiore"),
+            ["Lux"]      = new("#E8B84B", "#6E5414", "#0A0905", "#16130B", "#201B10", "#312A19", "#F0EADB", "#9C9279", "#000000", "dark", "Space Grotesk", "Space Mono", "Oro caldo · lusso"),
+            ["Carbon"]   = new("#C7CBD4", "#3A3D45", "#08080A", "#141416", "#1D1D20", "#2C2C30", "#E4E5E8", "#86888F", "#000000", "dark", "Space Grotesk", "JetBrains", "Grafite neutro · carbonio"),
+            ["Linen"]    = new("#C2562F", "#E8C9B8", "#F6F2EC", "#FFFDFA", "#EFE9E0", "#E0D8CC", "#2A211A", "#7A6E60", "#D8CFC0", "light", "Sora", "JetBrains", "Terracotta · lino chiaro"),
         };
 
-    /// <summary>The themes as pickable options carrying their own preview swatches
-    /// (background stripe + accent), so the menu shows each theme's look inline.</summary>
+    /// <summary>The active theme name, falling back to the default for an unknown/legacy value
+    /// (older settings stored themes that no longer exist).</summary>
+    public static string Normalize(string? name) => name is { } n && All.ContainsKey(n) ? n : Default;
+
+    // Short font keys → real WPF families with graceful fallbacks (design fonts may not be installed).
+    private static string UiFamily(string key) => key switch
+    {
+        "Space Grotesk" => "Space Grotesk, Segoe UI Variable Display, Segoe UI",
+        "Sora" => "Sora, Segoe UI Variable Display, Segoe UI",
+        "Manrope" => "Manrope, Segoe UI Variable Display, Segoe UI",
+        "Space Mono" => "Space Mono, Cascadia Mono, Consolas",
+        _ => "Segoe UI Variable Display, Segoe UI",
+    };
+    private static string MonoFamily(string key) => key switch
+    {
+        "Space Mono" => "Space Mono, Cascadia Mono, Consolas",
+        _ => "JetBrains Mono, Cascadia Code, Cascadia Mono, Consolas",
+    };
+
+    /// <summary>The themes as pickable cards: each carries its own mini-mockup brushes + labels.</summary>
     public static IReadOnlyList<ThemeOption> Options()
     {
         static System.Windows.Media.SolidColorBrush B(string hex)
@@ -161,21 +181,25 @@ public static class ThemePresets
             br.Freeze();
             return br;
         }
-        return [.. All.Select(kv => new ThemeOption(
-            kv.Key, B(kv.Value.Bg), B(kv.Value.Surface2), B(kv.Value.Accent)))];
+        return [.. All.Select(kv =>
+        {
+            var v = kv.Value;
+            return new ThemeOption(
+                kv.Key, v.Mode == "light" ? "Chiaro" : "Scuro", v.Mood, $"{v.UiFont} · {v.MonoFont}",
+                B(v.Bg), B(v.Surface), B(v.Surface2), B(v.Accent), B(v.Line), B(v.Text));
+        })];
     }
 
     public static void Apply(string name)
     {
-        if (!All.TryGetValue(name, out var p))
-            p = All["Violet"];
+        var p = All[Normalize(name)];
         if (System.Windows.Application.Current is not { } app)
             return;
 
-        // REPLACE each brush resource with a fresh SolidColorBrush. The XAML brushes get
-        // frozen at load, so mutating their Color is a no-op; but every consumer references
-        // the brush via DynamicResource, so swapping the resource value refreshes the whole
-        // UI instantly. (Also keep the C.* color token in sync for completeness.)
+        // REPLACE each brush resource with a fresh SolidColorBrush. The XAML brushes get frozen at
+        // load, so mutating their Color is a no-op; but every consumer references the brush via
+        // DynamicResource, so swapping the resource value refreshes the whole UI instantly. (Also
+        // keep the C.* color token in sync.)
         System.Windows.Media.Color C(string hex) =>
             (System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString(hex);
 
@@ -192,5 +216,21 @@ public static class ThemePresets
         SetBrush("Surface", p.Surface);
         SetBrush("Surface2", p.Surface2);
         SetBrush("Line", p.Line);
+        SetBrush("Text", p.Text);
+        SetBrush("TextMuted", p.TextMuted);
+        SetBrush("Ink", p.Ink);
+
+        // Fonts swap with the theme (DynamicResource consumers in Theme.xaml).
+        app.Resources["UiFont"] = new System.Windows.Media.FontFamily(UiFamily(p.UiFont));
+        app.Resources["MonoFont"] = new System.Windows.Media.FontFamily(MonoFamily(p.MonoFont));
+
+        // Semantic colors are re-tuned for light mode so they stay readable on light surfaces.
+        bool light = p.Mode == "light";
+        SetBrush("Ok", light ? "#0E9F6E" : "#34D399");
+        SetBrush("OkDim", light ? "#0B7355" : "#1F7A58");
+        SetBrush("Info", light ? "#2563EB" : "#60A5FA");
+        SetBrush("Warn", light ? "#B45309" : "#FBBF24");
+        SetBrush("Danger", light ? "#DC2626" : "#F87171");
+        SetBrush("Neutral", "#6B7280");
     }
 }
