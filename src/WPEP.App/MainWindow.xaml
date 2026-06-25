@@ -1308,7 +1308,7 @@
     <DataTemplate DataType="{x:Type local:SettingsViewModel}">
       <ScrollViewer VerticalScrollBarVisibility="Auto">
         <StackPanel Margin="32,24" MaxWidth="640" HorizontalAlignment="Left">
-          <TextBlock Style="{StaticResource H1}" Text="Settings" />
+          <TextBlock Style="{StaticResource H1}" Text="Impostazioni" />
           <Border Style="{StaticResource Card}" Margin="0,16,0,8">
             <StackPanel>
               <TextBlock Style="{StaticResource H2}" Text="Tema" />
@@ -1401,24 +1401,24 @@
           </Border>
           <Border Style="{StaticResource Card}" Margin="0,0,0,8">
             <StackPanel>
-              <TextBlock Style="{StaticResource H2}" Text="Measurement" />
+              <TextBlock Style="{StaticResource H2}" Text="Misurazione" />
               <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
-                <TextBlock Style="{StaticResource Body}" Text="Default benchmark runs" Width="240"
+                <TextBlock Style="{StaticResource Body}" Text="Run di benchmark predefiniti" Width="240"
                            VerticalAlignment="Center" />
                 <TextBox Text="{Binding DefaultBenchmarkRuns, UpdateSourceTrigger=LostFocus}" Width="64" />
               </StackPanel>
               <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
-                <TextBlock Style="{StaticResource Body}" Text="Noise gate threshold (%)" Width="240"
+                <TextBlock Style="{StaticResource Body}" Text="Soglia noise-gate (%)" Width="240"
                            VerticalAlignment="Center" />
                 <TextBox Text="{Binding NoiseGateThresholdPercent, UpdateSourceTrigger=LostFocus}" Width="64" />
               </StackPanel>
-              <CheckBox Content="Compact lists" IsChecked="{Binding CompactLists}" Margin="0,12,0,0"
+              <CheckBox Content="Liste compatte" IsChecked="{Binding CompactLists}" Margin="0,12,0,0"
                         Foreground="{DynamicResource Text}" />
             </StackPanel>
           </Border>
           <Border Style="{StaticResource Card}">
             <StackPanel>
-              <TextBlock Style="{StaticResource H2}" Text="About" />
+              <TextBlock Style="{StaticResource H2}" Text="Informazioni" />
               <TextBlock Style="{StaticResource Body}" Text="{Binding About}" Margin="0,8,0,0" />
             </StackPanel>
           </Border>
@@ -1451,21 +1451,21 @@
                          IsChecked="True" Checked="OnNavVerdict" />
             <RadioButton x:Name="NavScan" Style="{StaticResource NavButton}" Content="Scan"
                          Checked="OnNavScan" />
-            <RadioButton x:Name="NavMeasure" Style="{StaticResource NavButton}" Content="Measure"
+            <RadioButton x:Name="NavMeasure" Style="{StaticResource NavButton}" Content="Misura"
                          Checked="OnNavMeasure" />
-            <RadioButton x:Name="NavDiagnostics" Style="{StaticResource NavButton}" Content="Diagnostics"
+            <RadioButton x:Name="NavDiagnostics" Style="{StaticResource NavButton}" Content="Diagnostica"
                          Checked="OnNavDiagnostics" />
             <RadioButton x:Name="NavKb" Style="{StaticResource NavButton}" Content="Knowledge Base"
                          Checked="OnNavKb" />
             <RadioButton x:Name="NavReport" Style="{StaticResource NavButton}" Content="Report"
                          Checked="OnNavReport" />
-            <RadioButton x:Name="NavChanges" Style="{StaticResource NavButton}" Content="Changes"
+            <RadioButton x:Name="NavChanges" Style="{StaticResource NavButton}" Content="Modifiche"
                          Checked="OnNavChanges" />
             <RadioButton x:Name="NavProfiles" Style="{StaticResource NavButton}" Content="Profili"
                          Checked="OnNavProfiles" />
             <RadioButton x:Name="NavLab" Style="{StaticResource NavButton}" Content="Lab"
                          Checked="OnNavLab" />
-            <RadioButton x:Name="NavSettings" Style="{StaticResource NavButton}" Content="Settings"
+            <RadioButton x:Name="NavSettings" Style="{StaticResource NavButton}" Content="Impostazioni"
                          Checked="OnNavSettings" />
           </StackPanel>
         </DockPanel>
@@ -1573,12 +1573,33 @@
     <!-- Toast: transient feedback (Apply/Verify/Revert), bottom-right, auto-dismiss ~2.8s. -->
     <Border VerticalAlignment="Bottom" HorizontalAlignment="Right" Margin="0,0,24,52"
             Background="{DynamicResource Surface2}" CornerRadius="10" Padding="14,11"
-            BorderThickness="1.5"
+            BorderThickness="1.5" RenderTransformOrigin="0.5,1"
             BorderBrush="{Binding ToastColor, Converter={StaticResource TokenBrush}}"
             Visibility="{Binding ToastVisible, Converter={StaticResource BoolToVis}}">
+      <Border.RenderTransform>
+        <TranslateTransform Y="0" />
+      </Border.RenderTransform>
       <Border.Effect>
         <DropShadowEffect BlurRadius="28" ShadowDepth="6" Opacity="0.5" Color="#000000" />
       </Border.Effect>
+      <Border.Style>
+        <Style TargetType="Border">
+          <Style.Triggers>
+            <!-- toastIn: slide up + fade in (~0.28s) when a toast appears -->
+            <DataTrigger Binding="{Binding ToastVisible}" Value="True">
+              <DataTrigger.EnterActions>
+                <BeginStoryboard>
+                  <Storyboard>
+                    <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(TranslateTransform.Y)"
+                                     From="18" To="0" Duration="0:0:0.28" />
+                    <DoubleAnimation Storyboard.TargetProperty="Opacity" From="0" To="1" Duration="0:0:0.28" />
+                  </Storyboard>
+                </BeginStoryboard>
+              </DataTrigger.EnterActions>
+            </DataTrigger>
+          </Style.Triggers>
+        </Style>
+      </Border.Style>
       <StackPanel Orientation="Horizontal">
         <Ellipse Width="9" Height="9" VerticalAlignment="Center"
                  Fill="{Binding ToastColor, Converter={StaticResource TokenBrush}}" />

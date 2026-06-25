@@ -808,17 +808,18 @@ public sealed class SettingsViewModel : ViewModelBase
     }
 
     public string About =>
-        "Verdict — the only optimizer that tells you when to stop optimizing.\n" +
-        "(engine codename: WPEP)\n\n" +
-        "What WPEP will never do:\n" +
-        "  · Write to your system\n" +
-        "  · Claim to measure end-to-end input latency\n" +
-        "  · Show you an improvement that isn't statistically real\n\n" +
-        "Verdict never touches your game. No code injection, no process hooks, no game memory " +
-        "access, no overlay. Frame data comes from Windows' own event tracing (ETW) — the same " +
-        "passive channel used by Intel PresentMon. We cannot offer formal guarantees on behalf " +
-        "of anti-cheat vendors, but WPEP belongs to no category anti-cheat systems target.\n\n" +
-        "Portable by design. One folder, no installer, no services, no registry writes. " +
-        "Delete the folder and Verdict was never here.\n\n" +
-        "License: MIT · V1 read-only";
+        "Verdict — l'unico ottimizzatore che ti dice quando smettere di ottimizzare.\n" +
+        "(engine: WPEP)\n\n" +
+        "Come lavora Verdict:\n" +
+        "  · Scrive SOLO ciò che ti mostra, dopo un'anteprima (dry-run) e il tuo consenso\n" +
+        "  · Ogni modifica è tracciata e REVERSIBILE (annulla singolo + Ripristina tutto)\n" +
+        "  · Rilegge dopo aver scritto per VERIFICARE che il valore sia davvero cambiato\n" +
+        "  · Non promette FPS finti: misura il prima/dopo con rigore statistico\n\n" +
+        "Verdict non tocca MAI il tuo gioco. Niente code injection, hook di processo, accesso alla " +
+        "memoria del gioco o overlay. I dati sui frame arrivano dall'event tracing di Windows (ETW) — " +
+        "lo stesso canale passivo usato da Intel PresentMon. Non appartiene a nessuna categoria presa " +
+        "di mira dagli anti-cheat.\n\n" +
+        "Portabile per design. Una cartella, niente installer, niente servizi. " +
+        "Cancella la cartella e Verdict non è mai esistito.\n\n" +
+        "Licenza: MIT";
 }
