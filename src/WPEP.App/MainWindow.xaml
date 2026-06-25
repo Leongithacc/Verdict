@@ -30,6 +30,23 @@
             </StackPanel>
           </DockPanel>
 
+          <!-- First-run onboarding banner (TIER 1): one-time welcome with the real scan results. -->
+          <Border CornerRadius="10" Padding="16,13" Margin="0,18,0,0"
+                  Background="{DynamicResource Surface2}" BorderBrush="{DynamicResource Accent}"
+                  BorderThickness="1"
+                  Visibility="{Binding ShowFirstRunHint, Converter={StaticResource BoolToVis}}">
+            <DockPanel>
+              <Button DockPanel.Dock="Right" Style="{StaticResource GhostButton}" Content="Ho capito"
+                      Command="{Binding DismissFirstRunCommand}" VerticalAlignment="Center" Margin="14,0,0,0" />
+              <StackPanel>
+                <TextBlock Text="Primo avvio" FontWeight="SemiBold" FontSize="13"
+                           Foreground="{DynamicResource Accent}" />
+                <TextBlock Text="{Binding FirstRunHintText}" Style="{StaticResource Muted}"
+                           TextWrapping="Wrap" Margin="0,3,0,0" />
+              </StackPanel>
+            </DockPanel>
+          </Border>
+
           <!-- Verdict Score (Lab feature, default-ON): the honest 0–100 number. -->
           <Border Style="{StaticResource Card}" Margin="0,24,0,0" Padding="20,18"
                   Visibility="{Binding ShowScore, Converter={StaticResource BoolToVis}}">

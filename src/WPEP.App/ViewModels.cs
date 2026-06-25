@@ -92,6 +92,7 @@ public sealed class MainViewModel : ViewModelBase
         {
             ShowWelcome = false;
             Settings.Save(); // creates the settings file: next launch is not first-run
+            Verdict.ShowFirstRunHint = true; // one-time onboarding banner after this first scan
             _ = Verdict.ScanAsync();
         });
 
@@ -175,10 +176,19 @@ public sealed class VerdictViewModel(MainViewModel main) : ViewModelBase
     public string Header { get => _header; set => Set(ref _header, value); }
     public string SubHeader { get => _subHeader; set => Set(ref _subHeader, value); }
     public bool IsScanning { get => _isScanning; set => Set(ref _isScanning, value); }
-    public int WorthDoing { get => _worthDoing; set => Set(ref _worthDoing, value); }
-    public int AlreadyOptimal { get => _alreadyOptimal; set => Set(ref _alreadyOptimal, value); }
+    public int WorthDoing { get => _worthDoing; set { Set(ref _worthDoing, value); Raise(nameof(FirstRunHintText)); } }
+    public int AlreadyOptimal { get => _alreadyOptimal; set { Set(ref _alreadyOptimal, value); Raise(nameof(FirstRunHintText)); } }
     public int PlaceboAvoided { get => _placeboAvoided; set => Set(ref _placeboAvoided, value); }
     public ObservableCollection<VerdictGroup> Groups { get; } = [];
+
+    // ── First-run onboarding hint (TIER 1): a one-time welcome banner after the first scan ──
+    private bool _showFirstRunHint;
+    public bool ShowFirstRunHint { get => _showFirstRunHint; set => Set(ref _showFirstRunHint, value); }
+    public string FirstRunHintText =>
+        $"Benvenuto in Verdict! Ho scansionato il tuo PC: {WorthDoing} tweak consigliati con un click" +
+        (AlreadyOptimal > 0 ? $", {AlreadyOptimal} già a posto" : "") +
+        ". Quelli da attivare li trovi qui sotto in «Da attivare ora — un click». Ogni modifica è reversibile dalla pagina Modifiche.";
+    public RelayCommand DismissFirstRunCommand => new(() => ShowFirstRunHint = false);
 
     public int ApplicableRecommendedCount => _applicableRecommended.Count;
     public bool HasApplicableRecommended => _applicableRecommended.Count > 0;
