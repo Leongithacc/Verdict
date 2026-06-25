@@ -98,7 +98,7 @@ public sealed class MainViewModel : ViewModelBase
         if (Settings.IsFirstRun)
         {
             ShowWelcome = true;
-            Verdict.SetIdle("Welcome — no scan has run yet.");
+            Verdict.SetIdle("Benvenuto — nessuna scansione ancora eseguita.");
         }
         else
         {
@@ -431,8 +431,8 @@ public sealed record StutterRow(string ColorKey, string Component, string Plain,
 public sealed class DiagnosticsViewModel(MainViewModel main) : ViewModelBase
 {
     private string _status = EtwDpcIsrCollector.IsElevated()
-        ? "Ready. Capture reads kernel events for 15 seconds — generate load while it runs."
-        : "Diagnostics needs administrator to read kernel events. Everything else works without it.\nRelaunch WPEP as administrator to use this page.";
+        ? "Pronto. La cattura legge gli eventi del kernel per 15 secondi — genera carico mentre gira."
+        : "La diagnostica serve l'amministratore per leggere gli eventi del kernel. Tutto il resto funziona senza.\nRiavvia Verdict come amministratore per usare questa pagina.";
     private string _verdict = "";
     private bool _isRunning;
     private int _seconds = 15;
@@ -488,7 +488,7 @@ public sealed class DiagnosticsViewModel(MainViewModel main) : ViewModelBase
     {
         IsRunning = true;
         int seconds = Seconds;
-        Status = $"Capturing DPC/ISR for {seconds} seconds…";
+        Status = $"Cattura DPC/ISR per {seconds} secondi…";
         Rows.Clear();
         StutterFindings.Clear();
         StutterHeadline = "";
@@ -525,17 +525,17 @@ public sealed class DiagnosticsViewModel(MainViewModel main) : ViewModelBase
 
             var worst = report.Drivers.FirstOrDefault();
             VerdictLine = worst is null || worst.MaxUs < 500
-                ? "No DPC offender found. Your driver stack is healthy — stutter, if any, is coming from the game itself."
-                : $"{worst.Driver}: max DPC {worst.MaxUs:F0}µs during capture. This is worth investigating.";
-            Status = $"Done — {report.TotalEvents:N0} events analyzed.";
+                ? "Nessun driver colpevole di DPC. Lo stack driver è sano — lo stutter, se c'è, arriva dal gioco stesso."
+                : $"{worst.Driver}: DPC max {worst.MaxUs:F0}µs durante la cattura. Vale la pena indagare.";
+            Status = $"Fatto — {report.TotalEvents:N0} eventi analizzati.";
             main.TerminalLine = $"$ wpep diag · {report.CaptureDurationSeconds:F0}s · 0 writes";
         }
         catch (Exception ex)
         {
             // F6: the usual cause of a kernel-session failure is another tracer.
-            Status = $"Capture failed: {ex.Message}\n" +
-                     "If this persists: another kernel trace session may be running " +
-                     "(often LatencyMon, WPR or another capture tool). Close it and retry.";
+            Status = $"Cattura fallita: {ex.Message}\n" +
+                     "Se persiste: potrebbe esserci un'altra sessione di kernel trace attiva " +
+                     "(spesso LatencyMon, WPR o un altro tool di cattura). Chiudila e riprova.";
         }
         finally
         {
@@ -556,11 +556,11 @@ public sealed class KbItemViewModel(TweakEntry entry)
     public string Category => Entry.Category;
     public KbBadge Badge => Entry.EvidenceLevel switch
     {
-        EvidenceLevel.EvidenceStrong => new("Strong evidence", "Ok"),
-        EvidenceLevel.Plausible => new("Plausible", "Info"),
-        EvidenceLevel.Controversial => new("Controversial", "Warn"),
+        EvidenceLevel.EvidenceStrong => new("Evidenza forte", "Ok"),
+        EvidenceLevel.Plausible => new("Plausibile", "Info"),
+        EvidenceLevel.Controversial => new("Controverso", "Warn"),
         EvidenceLevel.Placebo => new("Placebo", "Neutral"),
-        EvidenceLevel.Risky => new("Risky", "Danger"),
+        EvidenceLevel.Risky => new("Rischioso", "Danger"),
         _ => new("?", "Neutral"),
     };
 }
@@ -602,12 +602,12 @@ public sealed class KbViewModel : ViewModelBase
     // Action-first: "Applicabili" (solo one-click) è il default — Verdict mostra ciò che FA.
     // "Tutti" e i livelli di evidenza restano per chi vuole esplorare, ma non sono il primo impatto.
     public IReadOnlyList<string> Filters { get; } =
-        ["Applicabili", "Tutti", "Strong evidence", "Plausible", "Controversial", "Placebo", "Risky"];
+        ["Applicabili", "Tutti", "Evidenza forte", "Plausibile", "Controverso", "Placebo", "Rischioso"];
 
     public ObservableCollection<KbItemViewModel> Entries { get; } = [];
     public string Footer => _loadError.Length > 0
-        ? $"Knowledge base failed to load: {_loadError}"
-        : "Every entry cites a primary source. No source, no recommendation.";
+        ? $"Caricamento della Knowledge Base fallito: {_loadError}"
+        : "Ogni voce cita una fonte primaria. Niente fonte, niente consiglio.";
 
     public string Filter
     {
@@ -647,7 +647,7 @@ public sealed class KbViewModel : ViewModelBase
 
 public sealed class ReportViewModel(MainViewModel main) : ViewModelBase
 {
-    private string _status = "Generates the shareable dark-theme HTML report: snapshot, every advisor verdict (placebos included), and measurements when available.";
+    private string _status = "Genera il report HTML condivisibile (tema scuro): snapshot, ogni verdetto dell'advisor (placebo inclusi) e le misure quando disponibili.";
     private string? _lastPath;
     private bool _busy;
 
@@ -663,7 +663,7 @@ public sealed class ReportViewModel(MainViewModel main) : ViewModelBase
     private async Task GenerateAsync()
     {
         IsBusy = true;
-        Status = "Generating…";
+        Status = "Generazione in corso…";
         try
         {
             var path = await Task.Run(() =>
@@ -683,12 +683,12 @@ public sealed class ReportViewModel(MainViewModel main) : ViewModelBase
                 return file;
             });
             LastPath = path;
-            Status = $"Report written: {path}";
-            main.TerminalLine = "$ wpep report · 0 writes (outside the app folder)";
+            Status = $"Report scritto: {path}";
+            main.TerminalLine = "$ wpep report · 0 scritture (fuori dalla cartella dell'app)";
         }
         catch (Exception ex)
         {
-            Status = $"Report failed: {ex.Message}";
+            Status = $"Report fallito: {ex.Message}";
         }
         finally
         {

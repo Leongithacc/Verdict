@@ -19,7 +19,7 @@
         <StackPanel Margin="32,24">
           <DockPanel>
             <Button DockPanel.Dock="Right" Style="{StaticResource GhostButton}"
-                    Content="Rescan" Command="{Binding RescanCommand}" VerticalAlignment="Top" />
+                    Content="Riscansiona" Command="{Binding RescanCommand}" VerticalAlignment="Top" />
             <Button DockPanel.Dock="Right" Style="{StaticResource PrimaryButton}"
                     Content="{Binding ApplyAllLabel}" Command="{Binding ApplyAllCommand}"
                     VerticalAlignment="Top" Margin="0,0,8,0"
@@ -213,7 +213,7 @@
                                       Padding="10,4" FontSize="12" Margin="6,0,0,0"
                                       Command="{Binding OpenSettingsCommand}"
                                       Visibility="{Binding CanOpenSettings, Converter={StaticResource BoolToVis}}" />
-                              <Button Style="{StaticResource PrimaryButton}" Content="Apply"
+                              <Button Style="{StaticResource PrimaryButton}" Content="Applica"
                                       Padding="12,4" FontSize="12" Margin="6,0,0,0"
                                       Command="{Binding ApplyCommand}"
                                       Visibility="{Binding CanApply, Converter={StaticResource BoolToVis}}" />
@@ -235,9 +235,9 @@
     <DataTemplate DataType="{x:Type local:MeasureWizardViewModel}">
       <ScrollViewer VerticalScrollBarVisibility="Auto">
         <StackPanel Margin="32,24" MaxWidth="820" HorizontalAlignment="Left">
-          <TextBlock Style="{StaticResource H1}" Text="Measure" />
+          <TextBlock Style="{StaticResource H1}" Text="Misura" />
           <TextBlock Style="{StaticResource Muted}" Margin="0,4,0,16"
-                     Text="Baseline → ONE change → post → verdict. The method is the product." />
+                     Text="Baseline → UNA modifica → post → verdetto. Il metodo è il prodotto." />
 
           <!-- Ghost Tweak (Lab feature): the blind A/B on yourself. -->
           <Border Style="{StaticResource Card}" Margin="0,0,0,16" Padding="18,14"
@@ -400,16 +400,16 @@
           <Border Style="{StaticResource Card}" Margin="0,0,0,12"
                   Visibility="{Binding IsStepPick, Converter={StaticResource BoolToVis}}">
             <StackPanel IsEnabled="{Binding CanMeasure}">
-              <TextBlock Style="{StaticResource H2}" Text="1 · Pick your game &amp; scenario" />
+              <TextBlock Style="{StaticResource H2}" Text="1 · Scegli gioco e scenario" />
               <TextBlock Style="{StaticResource Muted}" Margin="0,4,0,12"
-                         Text="You CAN measure live matches — but they're usually too noisy for a verdict. A repeatable scenario means the same in-game situation each run (same Creative map and route, same benchmark), not replaying an old capture. We'll measure either way and tell you honestly what the data can support." />
+                         Text="PUOI misurare le partite live — ma di solito sono troppo rumorose per un verdetto. Uno scenario ripetibile è la stessa situazione di gioco a ogni run (stessa mappa e percorso, stesso benchmark), non il replay di una cattura vecchia. Misuriamo comunque e ti diciamo onestamente cosa i dati possono sostenere." />
               <DockPanel>
-                <Button DockPanel.Dock="Right" Style="{StaticResource GhostButton}" Content="Refresh"
+                <Button DockPanel.Dock="Right" Style="{StaticResource GhostButton}" Content="Aggiorna"
                         Command="{Binding RefreshProcessesCommand}" Margin="8,0,0,0" />
                 <ComboBox ItemsSource="{Binding Processes}" SelectedItem="{Binding Target}"
                           DisplayMemberPath="Display" />
               </DockPanel>
-              <TextBlock Style="{StaticResource H2}" FontSize="13" Text="Scenario protocol" Margin="0,16,0,4" />
+              <TextBlock Style="{StaticResource H2}" FontSize="13" Text="Protocollo scenario" Margin="0,16,0,4" />
               <ComboBox ItemsSource="{Binding Scenarios}" SelectedItem="{Binding Scenario}"
                         DisplayMemberPath="Name" />
               <Border Background="{DynamicResource Surface2}" CornerRadius="6" Padding="12" Margin="0,8,0,0">
@@ -417,14 +417,14 @@
                            Text="{Binding Scenario.Instructions}" TextWrapping="Wrap" />
               </Border>
               <StackPanel Orientation="Horizontal" Margin="0,12,0,0">
-                <TextBlock Style="{StaticResource Body}" Text="Seconds per run" Width="160" VerticalAlignment="Center" />
+                <TextBlock Style="{StaticResource Body}" Text="Secondi per run" Width="160" VerticalAlignment="Center" />
                 <TextBox Text="{Binding Seconds, UpdateSourceTrigger=LostFocus}" Width="64" />
                 <TextBlock Style="{StaticResource Muted}" Margin="16,0,0,0" VerticalAlignment="Center">
-                  <Run Text="Runs per group: " /><Run Text="{Binding Runs, Mode=OneWay}" />
-                  <Run Text=" (Settings)" />
+                  <Run Text="Run per gruppo: " /><Run Text="{Binding Runs, Mode=OneWay}" />
+                  <Run Text=" (Impostazioni)" />
                 </TextBlock>
               </StackPanel>
-              <Button Style="{StaticResource PrimaryButton}" Content="Start baseline"
+              <Button Style="{StaticResource PrimaryButton}" Content="Avvia baseline"
                       Command="{Binding StartBaselineCommand}" Margin="0,16,0,0" HorizontalAlignment="Left" />
             </StackPanel>
           </Border>
@@ -433,10 +433,10 @@
           <Border Style="{StaticResource Card}" Margin="0,0,0,12"
                   Visibility="{Binding IsStepApplyChange, Converter={StaticResource BoolToVis}}">
             <StackPanel>
-              <TextBlock Style="{StaticResource H2}" Text="3 · Apply ONE change" />
+              <TextBlock Style="{StaticResource H2}" Text="3 · Applica UNA modifica" />
               <TextBlock Style="{StaticResource Body}" Margin="0,8,0,0"
-                         Text="One change at a time, or you won't know what did what. Apply it now (by hand — WPEP never writes), then come back." />
-              <Button Style="{StaticResource PrimaryButton}" Content="I applied ONE change — run post"
+                         Text="Una modifica alla volta, o non saprai cosa ha fatto cosa. Applicala ora (a mano, o con un tweak di Verdict), poi torna qui." />
+              <Button Style="{StaticResource PrimaryButton}" Content="Ho applicato UNA modifica — misura post"
                       Command="{Binding StartPostCommand}" Margin="0,16,0,0" HorizontalAlignment="Left" />
             </StackPanel>
           </Border>
@@ -448,7 +448,7 @@
               <TextBlock Style="{StaticResource H2}" Text="5 · Verdict" />
               <TextBlock Style="{StaticResource Mono}" Margin="0,12,0,0" TextWrapping="Wrap"
                          Text="{Binding VerdictText}" />
-              <Button Style="{StaticResource GhostButton}" Content="Start over"
+              <Button Style="{StaticResource GhostButton}" Content="Ricomincia"
                       Command="{Binding RestartCommand}" Margin="0,16,0,0" HorizontalAlignment="Left" />
             </StackPanel>
           </Border>
@@ -474,7 +474,7 @@
       <StackPanel Margin="32,24">
         <TextBlock Style="{StaticResource H1}" Text="Diagnostics" />
         <TextBlock Style="{StaticResource Muted}" Margin="0,4,0,16"
-                   Text="Kernel DPC/ISR latency per driver — finds the actual stutter culprit, or tells you there is none." />
+                   Text="Latenza DPC/ISR del kernel per driver — trova il vero colpevole dello stutter, o ti dice che non c'è." />
         <TextBlock Style="{StaticResource Body}" Text="{Binding Status}" Margin="0,0,0,12" />
         <StackPanel Orientation="Horizontal">
           <Button Style="{StaticResource PrimaryButton}" Content="Capture"
@@ -663,7 +663,7 @@
                 <TextBlock Style="{StaticResource Body}" Text="{Binding Entry.Description}" />
                 <TextBlock Style="{StaticResource H2}" Text="Expected impact" Margin="0,16,0,4" FontSize="13" />
                 <TextBlock Style="{StaticResource Body}" Text="{Binding Entry.ExpectedImpact}" />
-                <TextBlock Style="{StaticResource H2}" Text="How to (manual)" Margin="0,16,0,4" FontSize="13" />
+                <TextBlock Style="{StaticResource H2}" Text="Come fare (manuale)" Margin="0,16,0,4" FontSize="13" />
                 <TextBlock Style="{StaticResource Body}" Text="{Binding Entry.ManualSteps}" />
                 <TextBlock Style="{StaticResource H2}" Text="Rollback" Margin="0,16,0,4" FontSize="13" />
                 <TextBlock Style="{StaticResource Body}" Text="{Binding Entry.Rollback}" />
@@ -763,7 +763,7 @@
             <Button DockPanel.Dock="Right" Style="{StaticResource PrimaryButton}" Content="Esporta PNG"
                     Click="OnExportBuildSheet" VerticalAlignment="Top" Margin="0,0,8,0" />
             <StackPanel>
-              <TextBlock Style="{StaticResource H1}" Text="Scan" />
+              <TextBlock Style="{StaticResource H1}" Text="Scansione" />
               <TextBlock Style="{StaticResource Muted}"
                          Text="Inventario hardware completo (WMI, nessun driver) — esportabile come immagine." />
             </StackPanel>
@@ -956,7 +956,7 @@
                 </ItemsControl>
               </StackPanel>
 
-              <TextBlock Text="Verdict — scan" FontSize="10" Opacity="0.4"
+              <TextBlock Text="Verdict — scansione" FontSize="10" Opacity="0.4"
                          Foreground="{DynamicResource TextMuted}" Margin="0,14,0,0" HorizontalAlignment="Right" />
             </StackPanel>
           </Border>
@@ -985,7 +985,7 @@
             <DataTemplate>
               <Border Style="{StaticResource Card}" Margin="0,0,0,8" Padding="16,12">
                 <DockPanel>
-                  <Button DockPanel.Dock="Right" Style="{StaticResource GhostButton}" Content="Undo"
+                  <Button DockPanel.Dock="Right" Style="{StaticResource GhostButton}" Content="Annulla"
                           Command="{Binding DataContext.UndoCommand,
                                     RelativeSource={RelativeSource AncestorType=ItemsControl}}"
                           CommandParameter="{Binding}" VerticalAlignment="Top"
@@ -1449,7 +1449,7 @@
           <StackPanel>
             <RadioButton x:Name="NavVerdict" Style="{StaticResource NavButton}" Content="Verdict"
                          IsChecked="True" Checked="OnNavVerdict" />
-            <RadioButton x:Name="NavScan" Style="{StaticResource NavButton}" Content="Scan"
+            <RadioButton x:Name="NavScan" Style="{StaticResource NavButton}" Content="Scansione"
                          Checked="OnNavScan" />
             <RadioButton x:Name="NavMeasure" Style="{StaticResource NavButton}" Content="Misura"
                          Checked="OnNavMeasure" />
@@ -1485,9 +1485,9 @@
                      Text="Verdict misura, diagnostica e consiglia. Non modifica nulla finché non sei tu a decidere." />
           <TextBlock Style="{StaticResource Muted}" Margin="0,8,0,0"
                      Text="L'unico ottimizzatore che ti dice quando smettere di ottimizzare." />
-          <TextBlock Style="{StaticResource Muted}" Margin="0,16,0,0" Text="What WPEP will never do:" />
+          <TextBlock Style="{StaticResource Muted}" Margin="0,16,0,0" Text="Le regole di Verdict:" />
           <TextBlock Style="{StaticResource Body}" Margin="0,4,0,0"
-                     Text="· Write to your system&#x0a;· Claim to measure end-to-end input latency&#x0a;· Show you an improvement that isn't statistically real" />
+                     Text="· Scrive SOLO ciò che ti mostra, dopo la tua conferma&#x0a;· Ogni modifica è reversibile — l'annulli quando vuoi&#x0a;· Niente FPS finti: ti dice anche quando un tweak NON serve" />
           <Button Style="{StaticResource PrimaryButton}" Content="Scansiona il PC" Margin="0,24,0,0"
                   HorizontalAlignment="Left" Command="{Binding StartFirstScanCommand}" />
           <TextBlock Style="{StaticResource Muted}" FontSize="11" Margin="0,8,0,0"
@@ -1516,7 +1516,7 @@
                   Visibility="{Binding IsRisky, Converter={StaticResource BoolToVis}}">
             <StackPanel>
               <TextBlock Style="{StaticResource Body}" Foreground="{DynamicResource Danger}"
-                         Text="Risk — read before applying:" />
+                         Text="Rischio — leggi prima di applicare:" />
               <TextBlock Style="{StaticResource Body}" Text="{Binding RiskText}" Margin="0,4,0,0" />
             </StackPanel>
           </Border>
@@ -1530,7 +1530,7 @@
             <Button Style="{StaticResource PrimaryButton}" Content="Riavvia come amministratore"
                     Command="{Binding RelaunchAsAdminCommand}" Margin="0,0,8,0"
                     Visibility="{Binding AdminBlocked, Converter={StaticResource BoolToVis}}" />
-            <Button Style="{StaticResource GhostButton}" Content="Close"
+            <Button Style="{StaticResource GhostButton}" Content="Chiudi"
                     Command="{Binding CancelCommand}" Margin="8,0,0,0" />
           </StackPanel>
         </StackPanel>
@@ -1563,7 +1563,7 @@
             <Button Style="{StaticResource PrimaryButton}" Content="Riavvia come amministratore"
                     Command="{Binding RelaunchAsAdminCommand}" Margin="8,0,0,0"
                     Visibility="{Binding AdminBlocked, Converter={StaticResource BoolToVis}}" />
-            <Button Style="{StaticResource GhostButton}" Content="Close"
+            <Button Style="{StaticResource GhostButton}" Content="Chiudi"
                     Command="{Binding CancelCommand}" Margin="8,0,0,0" />
           </StackPanel>
         </StackPanel>

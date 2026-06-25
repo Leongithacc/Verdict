@@ -429,7 +429,7 @@ public sealed class ChangesViewModel : ViewModelBase
                 string tweak = session.Entries[0].TweakId;
                 var lines = session.Entries.Select(e =>
                     $"  {e.Path}: {(e.ExistedBefore ? e.ValueBefore : "<not set>")} → {e.ValueAfter}" +
-                    (e.Undone ? "  [undone]" : e.Verified ? "  [applied]" : "  [failed]"));
+                    (e.Undone ? "  [annullato]" : e.Verified ? "  [applicato]" : "  [fallito]"));
                 bool allUndone = session.Entries.All(e => e.Undone);
                 string when = session.StartedAtUtc.ToLocalTime().ToString("yyyy-MM-dd HH:mm");
                 return new ChangeSession(file, $"{tweak} · {when}",
@@ -457,7 +457,7 @@ public sealed class ChangesViewModel : ViewModelBase
         }
         catch (Exception ex)
         {
-            Status = $"Undo failed: {ex.Message}";
+            Status = $"Annulla fallito: {ex.Message}";
         }
     });
 }

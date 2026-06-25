@@ -24,36 +24,36 @@ public sealed record ScenarioPreset(string Name, string Instructions)
 {
     public static readonly IReadOnlyList<ScenarioPreset> All =
     [
-        new("Fortnite — YOUR OWN island, AFK (no unlock needed)",
-            "Creative → CREATE → open your own island (yours is never blocked by " +
-            "parental content ratings). Walk to a fixed spot, frame the same view, then " +
-            "stand completely still — hands off mouse and keyboard for the whole capture. " +
-            "Same spot, same view, every run."),
-        new("Fortnite — benchmark map, automated",
-            "Creative map code 4135-2210-3629 (\"BENCHMARK\" by DweEroz). If parental " +
-            "content ratings block it, try: 5492-6089-6665 (fps test, fixed camera) · " +
-            "5608-7013-5653 · 0240-9716-3198 — or use the own-island AFK preset, which " +
-            "needs no unlock. Private session, press the map's launch button, then DON'T " +
-            "touch anything: the camera sequence is automated. One warm-up pass before " +
-            "run 1, restart the sequence for every run."),
-        new("CS2 — workshop benchmark map",
-            "Steam Workshop → search \"FPS Benchmark\" (uLLeticaL) → Subscribe. In CS2: " +
-            "Play → Workshop Maps → FPS Benchmark → press the start button in the map: " +
-            "the fly-through is fully automated. One warm-up pass, then one capture per pass."),
-        new("HITMAN World of Assassination — integrated benchmark",
-            "Launcher → Options/Benchmark (Dartmoor or Dubai scene): fully automated and " +
-            "extremely repeatable. One warm-up pass, then start one capture per benchmark run."),
-        new("Fortnite — fixed route on foot",
-            "PRIVATE Creative island. Walk the same route at the same pace for the whole " +
-            "capture, same direction every run. More game-like than AFK but noisier: check " +
-            "that the baseline MDE stays under the gate before judging any tweak."),
-        new("Cyberpunk 2077 — integrated benchmark",
-            "Settings → Graphics → Benchmark, on a CLEAN install (no mods/CET — they alter " +
-            "frametimes). Run the benchmark once as warm-up, then start one capture per " +
-            "benchmark run."),
-        new("Custom / live match",
-            "Measure whatever you want — numbers always come out. Live matches usually " +
-            "exceed the noise gate though: expect data, not a verdict."),
+        new("Fortnite — LA TUA isola, AFK (nessuno sblocco)",
+            "Creativa → CREA → apri la TUA isola (la tua non è mai bloccata dai filtri " +
+            "contenuti). Cammina fino a un punto fisso, inquadra la stessa vista, poi " +
+            "resta completamente immobile — mani lontane da mouse e tastiera per tutta la cattura. " +
+            "Stesso punto, stessa vista, ogni run."),
+        new("Fortnite — mappa benchmark, automatica",
+            "Codice mappa Creativa 4135-2210-3629 (\"BENCHMARK\" di DweEroz). Se i filtri " +
+            "contenuti la bloccano, prova: 5492-6089-6665 (test fps, camera fissa) · " +
+            "5608-7013-5653 · 0240-9716-3198 — oppure usa il preset TUA-isola AFK, che " +
+            "non richiede sblocco. Sessione privata, premi il pulsante di avvio della mappa, poi NON " +
+            "toccare niente: la sequenza della camera è automatica. Un giro di warm-up prima " +
+            "della run 1, riavvia la sequenza a ogni run."),
+        new("CS2 — mappa benchmark del workshop",
+            "Steam Workshop → cerca \"FPS Benchmark\" (uLLeticaL) → Iscriviti. In CS2: " +
+            "Gioca → Mappe Workshop → FPS Benchmark → premi il pulsante di avvio nella mappa: " +
+            "il fly-through è completamente automatico. Un giro di warm-up, poi una cattura per giro."),
+        new("HITMAN World of Assassination — benchmark integrato",
+            "Launcher → Opzioni/Benchmark (scena Dartmoor o Dubai): completamente automatico ed " +
+            "estremamente ripetibile. Un giro di warm-up, poi avvia una cattura per ogni run del benchmark."),
+        new("Fortnite — percorso fisso a piedi",
+            "Isola Creativa PRIVATA. Cammina lo stesso percorso allo stesso ritmo per tutta " +
+            "la cattura, stessa direzione ogni run. Più simile al gioco vero dell'AFK ma più rumoroso: verifica " +
+            "che l'MDE della baseline resti sotto la soglia prima di giudicare un tweak."),
+        new("Cyberpunk 2077 — benchmark integrato",
+            "Impostazioni → Grafica → Benchmark, su un'installazione PULITA (niente mod/CET — alterano " +
+            "i frametime). Lancia il benchmark una volta come warm-up, poi avvia una cattura per ogni " +
+            "run del benchmark."),
+        new("Personalizzato / partita live",
+            "Misura quello che vuoi — i numeri escono sempre. Le partite live però di solito " +
+            "superano il noise gate: aspettati dati, non un verdetto."),
     ];
 }
 
@@ -118,9 +118,9 @@ public sealed class MeasureWizardViewModel(MainViewModel main, AppSettings setti
     public bool PresentMonAvailable => PresentMonLocator.Find() is not null;
     public string BlockerText =>
         !IsElevated
-            ? "Measuring needs administrator (PresentMon reads ETW). Relaunch WPEP as administrator to use the wizard. Everything else works without it."
+            ? "La misura richiede l'amministratore (PresentMon legge l'ETW). Riavvia Verdict come amministratore per usare il wizard. Tutto il resto funziona senza."
             : !PresentMonAvailable
-                ? "PresentMon is not installed yet. WPEP uses Intel PresentMon (open source, MIT) to capture frame data. Use 'wpep tools install-presentmon' or the button below (pinned 2.4.1, SHA256 verified)."
+                ? "PresentMon non è ancora installato. Verdict usa Intel PresentMon (open source, MIT) per catturare i dati sui frame. Usa 'wpep tools install-presentmon' o il pulsante qui sotto (versione 2.4.1, SHA256 verificato)."
                 : "";
     public bool CanMeasure => IsElevated && PresentMonAvailable;
 
@@ -156,7 +156,7 @@ public sealed class MeasureWizardViewModel(MainViewModel main, AppSettings setti
         }
         catch (System.ComponentModel.Win32Exception)
         {
-            Status = "Elevation cancelled. The wizard stays disabled without administrator.";
+            Status = "Elevazione annullata. Senza amministratore il wizard resta disattivato.";
         }
     }
 
@@ -211,8 +211,8 @@ public sealed class MeasureWizardViewModel(MainViewModel main, AppSettings setti
         // PORTABILITY §2: benchmark su batteria = invalido, bloccato come F10.
         if (SnapshotBuilder.IsOnBattery() == true)
         {
-            RunLog.Add("⚠ BLOCKED: this machine is running on battery. Power throttling makes " +
-                       "every measurement invalid. Plug in the charger and try again.");
+            RunLog.Add("⚠ BLOCCATO: questo PC è a batteria. Il power throttling rende " +
+                       "ogni misura invalida. Collega il caricatore e riprova.");
             return;
         }
 
@@ -222,11 +222,11 @@ public sealed class MeasureWizardViewModel(MainViewModel main, AppSettings setti
         {
             _sessionDir = Path.Combine(AppContext.BaseDirectory, "runs",
                 $"wizard-{DateTime.Now:yyyyMMdd-HHmmss}");
-            RunLog.Add($"PROTOCOL — {Scenario.Name}:");
+            RunLog.Add($"PROTOCOLLO — {Scenario.Name}:");
             RunLog.Add(Scenario.Instructions);
-            RunLog.Add("Warm up first: shader caches and temperatures need a few minutes of play before run 1.");
+            RunLog.Add("Prima scaldati: cache degli shader e temperature hanno bisogno di qualche minuto di gioco prima della run 1.");
         }
-        RunLog.Add("Switch to the game NOW — first capture starts in 8 seconds…");
+        RunLog.Add("Passa al gioco ORA — la prima cattura parte tra 8 secondi…");
 
         string label = baseline ? "baseline" : "post";
         var dir = Path.Combine(_sessionDir, label);
@@ -241,13 +241,13 @@ public sealed class MeasureWizardViewModel(MainViewModel main, AppSettings setti
                 double mde = Mde.Percent(runs.Select(r => r.Metrics.MedianFrameTimeMs).ToArray());
                 if (mde > settings.NoiseGateThresholdPercent)
                 {
-                    RunLog.Add($"⚠ This scenario is too noisy: it can only detect effects ≥{mde:F0}% " +
-                               $"(gate: {settings.NoiseGateThresholdPercent:F0}%). A verdict will NOT be " +
-                               "emitted. Consider restarting with a repeatable scenario.");
+                    RunLog.Add($"⚠ Questo scenario è troppo rumoroso: rileva solo effetti ≥{mde:F0}% " +
+                               $"(soglia: {settings.NoiseGateThresholdPercent:F0}%). NON verrà emesso un " +
+                               "verdetto. Valuta di ricominciare con uno scenario ripetibile.");
                 }
                 else
                 {
-                    RunLog.Add($"Scenario usable — minimum detectable effect ≈ {mde:F1}% on the median.");
+                    RunLog.Add($"Scenario utilizzabile — effetto minimo rilevabile ≈ {mde:F1}% sulla mediana.");
                 }
                 Step = WizardStep.ApplyChange;
             }
@@ -261,7 +261,7 @@ public sealed class MeasureWizardViewModel(MainViewModel main, AppSettings setti
         }
         catch (Exception ex)
         {
-            RunLog.Add($"Capture failed: {ex.Message}");
+            RunLog.Add($"Cattura fallita: {ex.Message}");
             Status = ex.Message;
         }
         finally
@@ -286,13 +286,13 @@ public sealed class MeasureWizardViewModel(MainViewModel main, AppSettings setti
         // don't block — the user may be measuring exactly that.
         if (snapshot.GpuThermalThrottling == true)
             App.Current.Dispatcher.Invoke(() => RunLog.Add(
-                "⚠ The GPU is thermal-throttling RIGHT NOW. No software tweak fixes this — " +
-                "check case airflow and fan curves. Runs captured while throttling are " +
-                "comparable only with other throttled runs."));
+                "⚠ La GPU sta facendo thermal-throttling PROPRIO ORA. Nessun tweak software lo risolve — " +
+                "controlla il flusso d'aria del case e le curve delle ventole. Le run catturate sotto throttling " +
+                "sono confrontabili solo con altre run sotto throttling."));
         else if (snapshot.GpuTempC is > 85)
             App.Current.Dispatcher.Invoke(() => RunLog.Add(
-                $"⚠ GPU at {snapshot.GpuTempC}°C before the run — close to throttling. " +
-                "Results may drift as heat builds across runs."));
+                $"⚠ GPU a {snapshot.GpuTempC}°C prima della run — vicina al throttling. " +
+                "I risultati possono andare alla deriva man mano che il calore sale tra le run."));
 
         Thread.Sleep(8000); // time to alt-tab back into the game
 
@@ -301,7 +301,7 @@ public sealed class MeasureWizardViewModel(MainViewModel main, AppSettings setti
         for (int i = 1; i <= Runs; i++)
         {
             App.Current.Dispatcher.Invoke(() =>
-                RunLog.Add($"{label} run {i}/{Runs} — capturing {Seconds}s…"));
+                RunLog.Add($"{label} run {i}/{Runs} — cattura {Seconds}s…"));
             try
             {
                 var result = runner.Capture(processName, Seconds);
@@ -321,17 +321,17 @@ public sealed class MeasureWizardViewModel(MainViewModel main, AppSettings setti
                 invalid++;
                 int runNumber = i;
                 App.Current.Dispatcher.Invoke(() => RunLog.Add(
-                    $"⚠ Run {runNumber} aborted — {ex.Message} " +
-                    $"{runs.Count} of {Runs} valid runs so far."));
+                    $"⚠ Run {runNumber} interrotta — {ex.Message} " +
+                    $"{runs.Count} di {Runs} run valide finora."));
                 if (invalid >= 2)
                     throw new InvalidOperationException(
-                        $"Two runs aborted in a row — is the game still running? " +
-                        $"Captured {runs.Count} valid runs.");
+                        $"Due run interrotte di fila — il gioco è ancora in esecuzione? " +
+                        $"Catturate {runs.Count} run valide.");
             }
         }
 
         if (runs.Count < 2)
-            throw new InvalidOperationException("Not enough valid runs to continue.");
+            throw new InvalidOperationException("Run valide insufficienti per continuare.");
 
         FlagOutliers(runs, label);
         return runs;
@@ -343,9 +343,9 @@ public sealed class MeasureWizardViewModel(MainViewModel main, AppSettings setti
         foreach (var outlier in OutlierDetector.Find(runs))
         {
             App.Current.Dispatcher.Invoke(() => RunLog.Add(
-                $"⚠ {label} run {outlier.RunNumber} looks like an outlier (median far from the rest: " +
-                "scene change, alt-tab or shader compilation?). Consider redoing the group " +
-                "with the protocol followed strictly."));
+                $"⚠ {label} run {outlier.RunNumber} sembra un outlier (mediana lontana dalle altre: " +
+                "cambio scena, alt-tab o compilazione shader?). Valuta di rifare il gruppo " +
+                "seguendo il protocollo alla lettera."));
         }
     }
 
@@ -358,7 +358,7 @@ public sealed class MeasureWizardViewModel(MainViewModel main, AppSettings setti
         var env = EnvironmentValidator.Validate(_baseline, _post);
         if (!env.Valid)
         {
-            VerdictText = $"No verdict. {env.BlockReason}";
+            VerdictText = $"Nessun verdetto. {env.BlockReason}";
             return;
         }
 
@@ -370,8 +370,8 @@ public sealed class MeasureWizardViewModel(MainViewModel main, AppSettings setti
         if (report.GateTriggered)
         {
             VerdictText =
-                $"No verdict. This scenario is too noisy to detect effects below {primary.MdePercent:F0}%. " +
-                "Switch to a repeatable scenario and try again.";
+                $"Nessun verdetto. Questo scenario è troppo rumoroso per rilevare effetti sotto il {primary.MdePercent:F0}%. " +
+                "Passa a uno scenario ripetibile e riprova.";
             return;
         }
 
@@ -381,18 +381,18 @@ public sealed class MeasureWizardViewModel(MainViewModel main, AppSettings setti
             lines.Add(m.Verdict switch
             {
                 Verdict.Improvement =>
-                    $"✓ {m.Metric}: improved by {Math.Abs(m.DeltaPercent):F1}% " +
-                    $"(CI {m.Ci.Lower:F2}–{m.Ci.Upper:F2} ms, p={m.PValue:F3}). This one's real.",
+                    $"✓ {m.Metric}: migliorato del {Math.Abs(m.DeltaPercent):F1}% " +
+                    $"(CI {m.Ci.Lower:F2}–{m.Ci.Upper:F2} ms, p={m.PValue:F3}). Questo è reale.",
                 Verdict.Regression =>
-                    $"✗ {m.Metric}: REGRESSED by {m.DeltaPercent:F1}% (p={m.PValue:F3}). Roll it back.",
+                    $"✗ {m.Metric}: PEGGIORATO del {m.DeltaPercent:F1}% (p={m.PValue:F3}). Annullalo.",
                 _ =>
-                    $"— {m.Metric}: no measurable effect (detection threshold {m.MdePercent:F1}%).",
+                    $"— {m.Metric}: nessun effetto misurabile (soglia di rilevamento {m.MdePercent:F1}%).",
             });
         }
         if (report.Metrics.All(m => m.Verdict == Verdict.NoMeasurableEffect))
-            lines.Add("\nNo measurable effect on this system. Roll it back unless you have another reason to keep it.");
+            lines.Add("\nNessun effetto misurabile su questo sistema. Annullalo, a meno che tu non abbia un altro motivo per tenerlo.");
         if (!report.Conclusive)
-            lines.Add($"\n⚠ Fewer than {ComparisonEngine.MinRunsForConclusion} runs per side: indicative, not conclusive.");
+            lines.Add($"\n⚠ Meno di {ComparisonEngine.MinRunsForConclusion} run per lato: indicativo, non conclusivo.");
         VerdictText = string.Join("\n", lines);
     }
 
