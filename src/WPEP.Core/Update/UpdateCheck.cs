@@ -37,12 +37,12 @@ public interface IUpdateSource
 /// </summary>
 public static class UpdateConfig
 {
-    // ── Host configurato: GitHub Releases di Léon → github.com/leon007bmx/Verdict ──
+    // ── Host configurato: GitHub Releases di Léon → github.com/Leongithacc/Verdict ──
     //   L'app interroga  api.github.com/repos/{owner}/{repo}/releases/latest.
     //   Finché non esiste una release pubblicata, il check risponde con grazia
     //   "Nessuna release pubblicata ancora" (404) — nessun crash. Per cambiare host
     //   in futuro basta cambiare queste due stringhe: zero codice da toccare.
-    public const string GitHubOwner = "leon007bmx";
+    public const string GitHubOwner = "Leongithacc";
     public const string GitHubRepo = "Verdict";
 
     public static bool IsConfigured => GitHubOwner.Length > 0 && GitHubRepo.Length > 0;

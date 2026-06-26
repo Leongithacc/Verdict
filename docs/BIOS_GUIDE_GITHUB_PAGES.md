@@ -8,7 +8,7 @@ italiano o inglese — raggiungibile dal telefono anche col PC nel BIOS (perché
 > Devi solo accendere GitHub Pages **una volta**.
 
 ## Setup (una volta sola, ~2 minuti)
-1. Assicurati che la repo **`leon007bmx/Verdict`** esista e sia **Public** (serve già per l'auto-update —
+1. Assicurati che la repo **`Leongithacc/Verdict`** esista e sia **Public** (serve già per l'auto-update —
    vedi `docs/RELEASE_GITHUB.md`).
 2. Carica il codice se non l'hai già fatto:
    ```bash
@@ -19,10 +19,10 @@ italiano o inglese — raggiungibile dal telefono anche col PC nel BIOS (perché
 4. Alla voce **Build and deployment → Source**, scegli **GitHub Actions**.
    (Non serve scegliere cartelle: il workflow `.github/workflows/pages.yml` pubblica `site/` da solo.)
 5. Fatto. Al primo push il workflow gira; dopo ~1 minuto il sito è online a:
-   **https://leon007bmx.github.io/Verdict/**
+   **https://leongithacc.github.io/Verdict/**
 
 ## Verifica
-- Apri sul telefono: `https://leon007bmx.github.io/Verdict/bios.html?t=xmp-expo-enable&v=asus`
+- Apri sul telefono: `https://leongithacc.github.io/Verdict/bios.html?t=xmp-expo-enable&v=asus`
   → deve mostrare i passi ASUS per attivare EXPO/XMP, con switch lingua IT/EN e selettore marca.
 - Nell'app: i tweak manuali-BIOS mostrano il QR che punta a questo indirizzo, già con la TUA marca
   rilevata (ASUS) e la lingua.

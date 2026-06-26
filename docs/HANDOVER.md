@@ -60,11 +60,11 @@ Progetti (in `src/`):
 - **V7.0 Community evidence**: privacy-first/local-first. `EvidenceLedger` (registro anonimo locale,
   firma RigDna) + `ICommunityBackend` swappable (default LocalOnly = ZERO rete). Registra: toggle ON →
   "applied"; Ghost reveal → esito misurato. CLI `wpep evidence`/`community`, card GUI "Community e prove".
-- **V8 Auto-update**: `UpdateCheck` host-agnostico → GitHub Releases (host = `leon007bmx/Verdict`). CLI
+- **V8 Auto-update**: `UpdateCheck` host-agnostico → GitHub Releases (host = `Leongithacc/Verdict`). CLI
   `wpep version`/`update-check`, card Impostazioni (consent-first). Check live = graceful 404 finché non c'è release.
 
 ## 4. Cosa MANCA (tutto bloccato su azioni/decisioni di Léon)
-1. **Pubblicare su GitHub** (repo `leon007bmx/Verdict` PUBLIC) → accende auto-update + sync vacanza.
+1. **Pubblicare su GitHub** (repo `Leongithacc/Verdict` PUBLIC) → accende auto-update + sync vacanza.
    Runbook: `docs/RELEASE_GITHUB.md`. Lo zip release: `bash tools/package-release.sh` → `dist/Verdict-1.0.zip`.
 2. **Accendere GitHub Pages** (Source: GitHub Actions) → il QR BIOS diventa live. Runbook: `docs/BIOS_GUIDE_GITHUB_PAGES.md`.
 3. **V7 remoto** ("ha aiutato il 73% dei rig simili") → serve DECISIONE: server + privacy + opt-in.
@@ -83,7 +83,7 @@ Progetti (in `src/`):
 ## 6. Decisioni tecniche già prese (non rimetterle in discussione senza motivo)
 - **UNSIGNED** (no certificato): self-signed non toglie l'avviso, cert a pagamento solo per distribuzione
   pubblica. Resta lo zip portatile + `Installa.cmd`.
-- **Host update = GitHub Releases** `leon007bmx/Verdict` (consts in `UpdateConfig`).
+- **Host update = GitHub Releases** `Leongithacc/Verdict` (consts in `UpdateConfig`).
 - **Co-pilota = Ollama locale** di default (privacy), cloud opzionale dietro interfaccia.
 - **V7 = local-first**, niente rete finché non c'è un backend configurato + opt-in.
 - **Toggle immediati** (non staged) + conferma solo sui rischiosi; OFF = undo del journal reale.

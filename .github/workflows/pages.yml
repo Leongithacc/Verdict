@@ -1,7 +1,7 @@
 name: Deploy BIOS guide to GitHub Pages
 
 # Pubblica la cartella site/ (le guide BIOS lette dal telefono via QR) su GitHub Pages.
-# URL risultante: https://leon007bmx.github.io/Verdict/
+# URL risultante: https://leongithacc.github.io/Verdict/
 
 on:
   push:

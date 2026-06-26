@@ -8,7 +8,7 @@ namespace WPEP.Core.Bios;
 /// </summary>
 public static class BiosGuide
 {
-    public const string SiteBaseUrl = "https://leon007bmx.github.io/Verdict";
+    public const string SiteBaseUrl = "https://leongithacc.github.io/Verdict";
 
     // Tweak ids that have a VERIFIED per-vendor BIOS guide page. Must match the keys in
     // site/bios.html AND the ids in the Knowledge Base.

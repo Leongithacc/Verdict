@@ -4,7 +4,7 @@
 # Idempotente dove possibile: se repo/release esistono già, non rifa.
 set -euo pipefail
 
-OWNER="leon007bmx"
+OWNER="Leongithacc"
 REPO="Verdict"
 VER="1.0"
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"

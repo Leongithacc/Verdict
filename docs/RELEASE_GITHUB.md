@@ -1,6 +1,6 @@
 # Pubblicare Verdict su GitHub Releases (per attivare l'auto-update)
 
-L'app è **già cablata** sull'host `github.com/leon007bmx/Verdict`
+L'app è **già cablata** sull'host `github.com/Leongithacc/Verdict`
 (`src/WPEP.Core/Update/UpdateCheck.cs` → `UpdateConfig`). Manca solo creare la repo
 e pubblicare la release: poi `Controlla aggiornamenti` (in Impostazioni) e
 `wpep update-check` diventano attivi **senza toccare altro codice**.
@@ -12,7 +12,7 @@ e pubblicare la release: poi `Controlla aggiornamenti` (in Impostazioni) e
 
 ## 1. Crea la repo (1 minuto)
 - Vai su **github.com/new**
-- **Owner:** `leon007bmx` · **Repository name:** `Verdict`
+- **Owner:** `Leongithacc` · **Repository name:** `Verdict`
 - **Public** ⚠️ *importante:* l'app legge le release **senza login**. Una repo **privata**
   darebbe 404 e l'update non funzionerebbe. (Public = solo le release sono visibili;
   non sei obbligato a caricarci il codice sorgente.)
@@ -24,7 +24,7 @@ Serve **solo** se vuoi anche il sorgente online. Per il *solo* auto-update **NON
 basta la repo + la release con lo zip. Se lo vuoi:
 ```bash
 cd /c/Users/leon0/Projects/WPEP
-git remote add origin https://github.com/leon007bmx/Verdict.git
+git remote add origin https://github.com/Leongithacc/Verdict.git
 git push -u origin main      # (o 'master' se il tuo branch si chiama così)
 ```
 
