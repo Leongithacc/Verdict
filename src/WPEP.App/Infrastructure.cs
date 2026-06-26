@@ -68,6 +68,10 @@ public sealed class AppSettings
     public double NoiseGateThresholdPercent { get; set; } = 10;
     public bool CompactLists { get; set; }
 
+    /// <summary>Modello Ollama per il co-pilota (V6). Vuoto = default (qwen2.5). Persistito così
+    /// l'utente può puntare al modello che ha DAVVERO installato (es. "qwen2.5vl:32b").</summary>
+    public string CoPilotModel { get; set; } = "";
+
     /// <summary>Risk Slider (Lab feature): how far the user wants to go. Default Balanced =
     /// the normal recommended set. Persisted so the choice sticks across launches.</summary>
     public RiskTolerance RiskTolerance { get; set; } = RiskTolerance.Balanced;

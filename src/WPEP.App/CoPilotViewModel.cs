@@ -12,9 +12,22 @@ namespace WPEP.App;
 public sealed class CoPilotViewModel : ViewModelBase
 {
     private readonly MainViewModel _main;
-    private readonly CoPilotService _service = new(new OllamaBrain());
 
     public CoPilotViewModel(MainViewModel main) => _main = main;
+
+    /// <summary>Modello Ollama, persistito in Impostazioni. Vuoto = default (qwen2.5).
+    /// Léon ha "qwen2.5vl:32b": lo imposta qui e la GUI usa quello.</summary>
+    public string Model
+    {
+        get => _main.Settings.CoPilotModel;
+        set { _main.Settings.CoPilotModel = value?.Trim() ?? ""; _main.Settings.Save(); Raise(); }
+    }
+
+    private CoPilotService BuildService()
+    {
+        var model = string.IsNullOrWhiteSpace(Model) ? null : Model;
+        return new CoPilotService(new OllamaBrain(model));
+    }
 
     private string _question = "";
     public string Question
@@ -65,14 +78,15 @@ public sealed class CoPilotViewModel : ViewModelBase
                 Status = "Fai prima una scansione (pagina Verdict) così posso vedere il tuo PC.";
                 return;
             }
-            if (!await _service.IsAvailableAsync())
+            var service = BuildService();
+            if (!await service.IsAvailableAsync())
             {
-                Status = $"{_service.BrainName} non raggiungibile. Avvia Ollama (\"ollama serve\") e installa "
+                Status = $"{service.BrainName} non raggiungibile. Avvia Ollama (\"ollama serve\") e installa "
                        + "un modello, poi riprova. (Resta tutto locale.)";
                 return;
             }
 
-            var reply = await _service.AskAsync(_question, catalog);
+            var reply = await service.AskAsync(_question, catalog);
             if (reply.Error is not null)
             {
                 Status = reply.Error;
