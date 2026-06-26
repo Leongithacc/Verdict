@@ -1002,6 +1002,32 @@ public sealed class SettingsViewModel : ViewModelBase
         catch { /* best-effort: il browser apre la pagina di download */ }
     });
 
+    // ── V7 community evidence: stato + le TUE prove (sempre locali, anonime) ──
+    public string CommunityStatus
+    {
+        get
+        {
+            var svc = new WPEP.Execution.CommunityService();
+            return svc.CommunityActive
+                ? $"Community attiva: {svc.BackendName}."
+                : "Community non ancora attiva — i tuoi esiti restano SOLO sul tuo PC, anonimi e in locale. "
+                  + "Il confronto coi rig simili si accenderà solo con un server opt-in.";
+        }
+    }
+
+    public string EvidenceSummary
+    {
+        get
+        {
+            var all = WPEP.Execution.EvidenceLedger.Load();
+            if (all.Count == 0)
+                return "Nessuna prova ancora. Applica o misura un tweak (anche col Ghost Tweak) e Verdict registra qui com'è andato.";
+            int tweaks = all.Select(r => r.TweakId).Distinct().Count();
+            int measured = all.Count(r => r.Outcome is "helped" or "no-effect" or "hurt");
+            return $"{all.Count} prove su {tweaks} tweak ({measured} misurate). Tutto sul tuo PC, in forma anonima (firma RigDna).";
+        }
+    }
+
     public string About =>
         "Verdict — l'unico ottimizzatore che ti dice quando smettere di ottimizzare.\n" +
         "(engine: WPEP)\n\n" +
