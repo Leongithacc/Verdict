@@ -1322,6 +1322,61 @@
       </ScrollViewer>
     </DataTemplate>
 
+    <DataTemplate DataType="{x:Type local:CoPilotViewModel}">
+      <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <StackPanel Margin="32,24" MaxWidth="720" HorizontalAlignment="Left">
+          <TextBlock Style="{StaticResource H1}" Text="Co-pilota" />
+          <TextBlock Style="{StaticResource Muted}" Margin="0,4,0,0" TextWrapping="Wrap"
+                     Text="Chiedi in parole tue. L'AI interpreta e cita SOLO tweak verificati di Verdict — non inventa, e non applica nulla da sola. Gira sul tuo Ollama locale: i dati restano sul PC." />
+
+          <Border Style="{StaticResource Card}" Margin="0,16,0,0">
+            <StackPanel>
+              <TextBox Text="{Binding Question, UpdateSourceTrigger=PropertyChanged}"
+                       MinHeight="44" TextWrapping="Wrap" AcceptsReturn="False"
+                       VerticalContentAlignment="Center" Foreground="{DynamicResource Text}" />
+              <StackPanel Orientation="Horizontal" Margin="0,12,0,0">
+                <Button Style="{StaticResource PrimaryButton}" Content="Chiedi"
+                        Command="{Binding AskCommand}" IsEnabled="{Binding CanAsk}" />
+              </StackPanel>
+            </StackPanel>
+          </Border>
+
+          <TextBlock Style="{StaticResource Muted}" Margin="2,12,0,0" TextWrapping="Wrap"
+                     Text="{Binding Status}" />
+
+          <Border Style="{StaticResource Card}" Margin="0,12,0,0"
+                  Visibility="{Binding HasAnswer, Converter={StaticResource BoolToVis}}">
+            <TextBlock Style="{StaticResource Body}" Text="{Binding Answer}" TextWrapping="Wrap" />
+          </Border>
+
+          <ItemsControl ItemsSource="{Binding Suggestions}" Margin="0,4,0,0">
+            <ItemsControl.ItemTemplate>
+              <DataTemplate>
+                <Border Style="{StaticResource Card}" Margin="0,8,0,0">
+                  <DockPanel>
+                    <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
+                      <Button Style="{StaticResource GhostButton}" Content="Come fare"
+                              Command="{Binding HowToCommand}" />
+                      <Button Style="{StaticResource PrimaryButton}" Content="Applica" Margin="8,0,0,0"
+                              Command="{Binding ApplyCommand}"
+                              Visibility="{Binding CanApply, Converter={StaticResource BoolToVis}}" />
+                    </StackPanel>
+                    <StackPanel>
+                      <TextBlock Style="{StaticResource H2}" Text="{Binding Name}" />
+                      <TextBlock Style="{StaticResource Muted}" FontSize="11" TextWrapping="Wrap"
+                                 Text="{Binding Impact}" Margin="0,2,0,0" />
+                      <TextBlock Style="{StaticResource Muted}" FontSize="11"
+                                 Text="{Binding State}" Margin="0,2,0,0" />
+                    </StackPanel>
+                  </DockPanel>
+                </Border>
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+        </StackPanel>
+      </ScrollViewer>
+    </DataTemplate>
+
     <DataTemplate DataType="{x:Type local:SettingsViewModel}">
       <ScrollViewer VerticalScrollBarVisibility="Auto">
         <StackPanel Margin="32,24" MaxWidth="640" HorizontalAlignment="Left">
@@ -1500,6 +1555,8 @@
                          Checked="OnNavProfiles" />
             <RadioButton x:Name="NavLab" Style="{StaticResource NavButton}" Content="Lab"
                          Checked="OnNavLab" />
+            <RadioButton x:Name="NavCoPilot" Style="{StaticResource NavButton}" Content="Co-pilota"
+                         Checked="OnNavCoPilot" />
             <RadioButton x:Name="NavSettings" Style="{StaticResource NavButton}" Content="Impostazioni"
                          Checked="OnNavSettings" />
           </StackPanel>

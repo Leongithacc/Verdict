@@ -30,6 +30,7 @@ public partial class MainWindow : Window
                 KbViewModel => NavKb,
                 ReportViewModel => NavReport,
                 ChangesViewModel => NavChanges,
+                CoPilotViewModel => NavCoPilot,
                 SettingsViewModel => NavSettings,
                 _ => null,
             };
@@ -134,5 +135,6 @@ public partial class MainWindow : Window
         _vm.CurrentPage = _vm.Profiles;
     }
     private void OnNavLab(object s, RoutedEventArgs e) => _vm.CurrentPage = _vm.Lab;
+    private void OnNavCoPilot(object s, RoutedEventArgs e) => _vm.CurrentPage = _vm.CoPilot;
     private void OnNavSettings(object s, RoutedEventArgs e) => _vm.CurrentPage = _vm.SettingsPage;
 }

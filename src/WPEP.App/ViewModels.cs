@@ -35,6 +35,7 @@ public sealed class MainViewModel : ViewModelBase
     public SettingsViewModel SettingsPage { get; }
     public LabViewModel Lab { get; }
     public ProfilesViewModel Profiles { get; }
+    public CoPilotViewModel CoPilot { get; }
     public ApplyDialogViewModel ApplyDialog { get; }
     public ApplyAllViewModel ApplyAll { get; }
 
@@ -86,6 +87,7 @@ public sealed class MainViewModel : ViewModelBase
         ApplyDialog = new ApplyDialogViewModel(this, Execution);
         ApplyAll = new ApplyAllViewModel(this, Execution);
         Profiles = new ProfilesViewModel(this);
+        CoPilot = new CoPilotViewModel(this);
         _currentPage = Verdict;
 
         StartFirstScanCommand = new(() =>
@@ -172,6 +174,12 @@ public sealed class VerdictViewModel(MainViewModel main) : ViewModelBase
     private int _worthDoing, _alreadyOptimal, _placeboAvoided;
     // The recommended tweaks that can be applied programmatically — fuels "Apply all".
     private readonly List<TweakEntry> _applicableRecommended = [];
+
+    private IReadOnlyList<Recommendation> _allRecommendations = [];
+    /// <summary>Tutti i Recommendation dell'ultimo scan (sistema + per-gioco), col loro stato
+    /// live: il co-pilota (V6) li usa come grounding, così l'AI cita solo tweak reali e sa
+    /// cosa è già attivo per questo PC.</summary>
+    public IReadOnlyList<Recommendation> AllRecommendations => _allRecommendations;
 
     public string Header { get => _header; set => Set(ref _header, value); }
     public string SubHeader { get => _subHeader; set => Set(ref _subHeader, value); }
@@ -310,6 +318,7 @@ public sealed class VerdictViewModel(MainViewModel main) : ViewModelBase
     private void Apply(SystemSnapshot snapshot, IReadOnlyList<Recommendation> allRecommendations)
     {
         _snapshotCache = snapshot; // reused by the Optimize-for-game filter
+        _allRecommendations = allRecommendations; // grounding del co-pilota (V6)
         // Game-specific entries live in their own section and never count toward
         // the system verdict header (R7_COPY_AND_KB3 open question, resolved).
         var recommendations = allRecommendations.Where(r => r.Entry.Game is null).ToArray();

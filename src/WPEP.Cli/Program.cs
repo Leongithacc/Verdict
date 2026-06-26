@@ -86,6 +86,8 @@ switch (args[0])
         return 0;
     case "update-check":
         return await RunUpdateCheck();
+    case "copilot":
+        return await RunCopilot(args.Skip(1).ToArray());
     default:
         Console.Error.WriteLine($"Comando sconosciuto: {args[0]}");
         PrintUsage();
@@ -1706,6 +1708,54 @@ static void PrintDiagReport(DpcIsrReport report)
 
 static string Truncate(string s, int max) => s.Length <= max ? s : s[..(max - 1)] + "…";
 
+static async Task<int> RunCopilot(string[] args)
+{
+    // Domanda = argomenti non-flag uniti; --model opzionale per scegliere il modello Ollama.
+    string? model = null;
+    var qparts = new List<string>();
+    for (int i = 0; i < args.Length; i++)
+    {
+        if (args[i] == "--model" && i + 1 < args.Length) { model = args[++i]; continue; }
+        qparts.Add(args[i]);
+    }
+    var question = string.Join(' ', qparts).Trim();
+    if (question.Length == 0)
+    {
+        Console.Error.WriteLine("Uso: wpep copilot \"la tua domanda\" [--model <nome>]");
+        return 2;
+    }
+
+    IReadOnlyList<WPEP.KnowledgeBase.TweakEntry> entries;
+    try { entries = WPEP.KnowledgeBase.KnowledgeBaseLoader.Load(); }
+    catch (Exception ex) { Console.Error.WriteLine($"Caricamento KB fallito: {ex.Message}"); return 1; }
+
+    var snapshot = WPEP.SystemAnalyzer.SnapshotBuilder.Build(DateTimeOffset.UtcNow);
+    var catalog = WPEP.Advisor.AdvisorEngine.Advise(snapshot, entries, LiveDetector(entries));
+
+    var brain = new WPEP.Advisor.CoPilot.OllamaBrain(model);
+    Console.WriteLine($"Co-pilota: {brain.Name}");
+    if (!await brain.IsAvailableAsync())
+    {
+        Console.WriteLine("Ollama non raggiungibile su localhost:11434. Avvialo (ollama serve) e assicurati");
+        Console.WriteLine($"che il modello sia installato:  ollama pull {model ?? WPEP.Advisor.CoPilot.CoPilotConfig.DefaultModel}");
+        return 0;
+    }
+
+    Console.WriteLine("Sto pensando…\n");
+    var reply = await new WPEP.Advisor.CoPilot.CoPilotService(brain).AskAsync(question, catalog);
+    if (reply.Error is not null) { Console.WriteLine(reply.Error); return 0; }
+
+    Console.WriteLine(reply.Answer);
+    if (reply.Suggestions.Count > 0)
+    {
+        Console.WriteLine("\nTweak citati (verificati nel catalogo Verdict):");
+        foreach (var s in reply.Suggestions)
+            Console.WriteLine($"  · [{s.TweakId}] {s.Name} — {ClassificationLabel(s.Classification)}");
+        Console.WriteLine("\nApplicali con:  wpep apply <id>   (dry-run; aggiungi --yes per scrivere)");
+    }
+    return 0;
+}
+
 static async Task<int> RunUpdateCheck()
 {
     var info = await WPEP.Core.Update.UpdateChecker.CheckAsync(WPEP.Core.AppVersion.Current);
@@ -1840,6 +1890,13 @@ static void PrintUsage()
           wpep museum       Placebo Museum: i miti sfatati con l'evidenza.
           wpep games        Giochi con un piano dedicato.
           wpep optimize <gioco>   Piano su misura: tweak di sistema + impostazioni in-game.
+
+        — AI co-pilot (V6, sola lettura) —
+          wpep copilot "<domanda>" [--model <nome>]
+              Chiedi in linguaggio naturale ("rendi Valorant più fluido"): il co-pilota
+              interpreta e propone SOLO tweak del catalogo verificato di Verdict (gli id
+              inventati vengono scartati), spiegando con onestà. Non applica nulla.
+              Cervello: Ollama locale (gratis+privato) — serve `ollama serve` attivo.
 
         — Versione & aggiornamenti —
           wpep version        Mostra la versione di Verdict.
