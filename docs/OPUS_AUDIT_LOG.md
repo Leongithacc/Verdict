@@ -1041,3 +1041,24 @@ rischio dell'INTERO prodotto (non solo il codice nuovo). Cerco bug VERI, non li 
   impossibile con dati reali (frametime>0 sempre). Lasciato com'è.
 - **Conclusione**: il core costruito con calma regge; i difetti stavano solo nelle aggiunte rapide.
   Niente da committare (nessun fix finto). Build/suite invariati (316/316).
+
+### 69. REVISIONE COMPLETA post-V6.5/V7 (2026-06-26)
+Richiesta di Léon ("riguarda un po tutto, e continua"). Giro di revisione dell'INTERO progetto
+dopo la valanga di codice di oggi (toggle, QR BIOS, co-pilota, V7). Cerco problemi VERI.
+- **2 reperti veri CORRETTI** (commit e9996e9):
+  · About DISONESTO: prometteva "anteprima dry-run prima di scrivere" che gli interruttori immediati
+    NON fanno. Riscritto onesto (flip=consenso, verifica, reversibile; il batch mostra l'anteprima).
+    Per un'app che si vanta di onestà era il bug più grave.
+  · Commento ExecutionEngine stale ("service: TODO", 3 metodi) → corretto ai 6 reali.
+- **Allineamento CanApply↔engine PERFETTO**: ApplyPolicy.CanApply abilita esattamente i 6 metodi che
+  BuildPlan supporta (registry/powercfg/powercfg-value/bcdedit/nvidia-drs/dxuser). Nessun toggle può
+  fallire per "metodo non supportato"; gui-only/service → CanApply=false (niente interruttore). KB: 0 voci service.
+- **Verificato pulito**: 0 DynamicResource/StaticResource danglanti (dopo Switch + nuove card), 0 binding
+  orfani, KB valida (122 voci, 0 dup), versione coerente (AppVersion=package script), git pulito,
+  0 TODO/FIXME/inglese-residuo reali.
+- **Difetto-hunt sul codice di oggi**: toggle re-entrancy OK (IsBusy disabilita + SetOn senza ricorsione),
+  RecordEvidence I/O sincrono ma pattern del codebase (innocuo), VerdictItem per voci manuali OK
+  (NeedsAdmin cortocircuitato da IsApplicable). Nessun bug nuovo.
+- **NOTATO**: ApplyDialog singolo (dry-run) = 0 chiamanti dopo i toggle → codice morto inerte.
+  Flaggato per pulizia separata (chip), non rimosso ora (churn>valore in revisione).
+- Build 0/0, suite 339/339.
