@@ -1032,8 +1032,9 @@ public sealed class SettingsViewModel : ViewModelBase
         "Verdict — l'unico ottimizzatore che ti dice quando smettere di ottimizzare.\n" +
         "(engine: WPEP)\n\n" +
         "Come lavora Verdict:\n" +
-        "  · Scrive SOLO ciò che ti mostra, dopo un'anteprima (dry-run) e il tuo consenso\n" +
-        "  · Ogni modifica è tracciata e REVERSIBILE (annulla singolo + Ripristina tutto)\n" +
+        "  · Accendi un interruttore e Verdict scrive SOLO quel tweak (i rischiosi chiedono conferma); " +
+        "\"Accendi i consigliati\" mostra prima l'anteprima di tutto\n" +
+        "  · Ogni modifica è tracciata e REVERSIBILE: spegni l'interruttore, o usa Ripristina tutto\n" +
         "  · Rilegge dopo aver scritto per VERIFICARE che il valore sia davvero cambiato\n" +
         "  · Non promette FPS finti: misura il prima/dopo con rigore statistico\n\n" +
         "Verdict non tocca MAI il tuo gioco. Niente code injection, hook di processo, accesso alla " +

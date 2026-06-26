@@ -54,7 +54,8 @@ public sealed record DriftItem(string TweakId, string Path, string Expected, str
 /// The V2 execution engine, EXECUTION_ENGINE_V2 principles enforced in code:
 /// only KB apply specs, dry-run plan with live before-values, journal-before-write,
 /// verify-after-write, stop on any incoherence, per-entry undo in reverse order.
-/// Supports registry, powercfg and bcdedit methods (service: TODO).
+/// Supports registry, powercfg, powercfg-value, bcdedit, nvidia-drs and dxuser methods —
+/// the exact set ApplyPolicy.CanApply whitelists. gui-only/service stay manual by design.
 /// </summary>
 public sealed class ExecutionEngine(
     IRegistryAccess registry, string journalDirectory,
