@@ -121,3 +121,27 @@ Sostituire con un set di icone coerente (vector path / icon font leggero, no emo
 5. **Italiano**, voce diretta. Traduci le stringhe inglesi rimaste (Settings/Changes/badge evidenza/Diagnostics).
 6. **Niente dipendenze pesanti** nuove senza motivo (anti-cheat/peso). Icone preferibilmente vettoriali in-XAML.
 7. Il **tray** (`WPEP.Tray`, WinForms) è fuori scopo: non va ridisegnato qui.
+
+---
+
+## AGGIORNAMENTO 2026-06-26 — NUOVA UI A INTERRUTTORI (richiesta di Léon)
+
+**Cosa cambia:** la lista tweak della pagina **Verdict** (e le proposte del **Co-pilota**) NON usa più
+coppie di bottoni "Come fare / Applica". Ora ogni tweak è un **INTERRUTTORE ON/OFF** (stile bxtool ma
+più bello e onesto). Léon vuole che TU (Claude Design) renda questi interruttori **super belli, premium,
+dettagliati** — è il punto estetico che ha esplicitamente delegato a te.
+
+**Stati da rendere bellissimi** (la logica esiste già, tu fai SOLO il visivo):
+- **OFF** (consigliato, non ancora attivo) — interruttore spento, invitante.
+- **ON** (applicato da Verdict) — interruttore acceso color accento (viola/rosa Villain), micro-stato
+  "applicato · annullabile".
+- **ON già-attivo** (Windows ce l'aveva già) — acceso ma con sfumatura diversa (es. verde) + nota.
+- **Disabilitato — serve admin** — spento con lucchetto, CTA "riavvia come admin".
+- **Manuale/BIOS/placebo** — interruttore disabilitato + info + (fase 2) un **QR code** che apre la
+  guida BIOS sul telefono. Rendi bello anche il blocco QR e il badge "placebo/manuale".
+- **Busy/in-corso** — micro-animazione durante apply/verify ("sentito").
+- In cima: bottone **"Accendi i consigliati"** (master). Rendilo un bell'elemento hero.
+
+**Vincoli invariati:** solo visivo (XAML/Theme), niente logica; build 0/0 + suite verde; la palette
+Villain (#4A0080, nero/carbonio) c'è già nei token. Gli interruttori sono `ToggleButton`/Button
+templati: dai loro uno stile `x:Key` riutilizzabile in `Themes/Theme.xaml`.

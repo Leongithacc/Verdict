@@ -123,35 +123,125 @@ public sealed class MainViewModel : ViewModelBase
 
 // ============================== VERDICT ==============================
 
-public sealed class VerdictItem
+/// <summary>A tweak row, now an ON/OFF TOGGLE (V6.5). ON applies immediately (write→verify→journal),
+/// OFF undoes the REAL journaled apply (restores the captured "before" — never a guessed value).
+/// Risky tweaks ask a confirm first. Manual/gui-only tweaks aren't toggleable: they keep the info
+/// affordances (and, phase 2, a QR to the on-phone guide).</summary>
+public sealed class VerdictItem : ViewModelBase
 {
     private readonly TweakEntry _entry;
     private readonly MainViewModel _main;
+    private bool _isOn;
+    private bool _busy;
+    private string _status;
+    private string? _lastJournal;
 
-    public VerdictItem(TweakEntry entry, string stateNote, MainViewModel main)
+    public VerdictItem(TweakEntry entry, string stateNote, MainViewModel main, bool isOn)
     {
         _entry = entry;
         _main = main;
         StateNote = stateNote;
+        _isOn = isOn;
+        _status = NeedsAdminBlocked ? "serve admin — riavvia Verdict come amministratore"
+                                    : isOn ? "attivo" : stateNote;
         HowToCommand = new(() => main.ShowKbEntry(entry.Id));
-        ApplyCommand = new(() => main.ApplyDialog.Open(entry));
         OpenSettingsCommand = new(() => ExecutionService.OpenSettings(_entry.Apply!.SettingsUri!));
     }
 
     public string Id => _entry.Id;
     public string Name => _entry.Name;
     public string StateNote { get; }
-    public bool CanApply => _main.Execution.CanApply(_entry);
-    // Show "Open settings" only for gui-only tweaks (applicable ones get Apply).
-    public bool CanOpenSettings => !CanApply && _entry.Apply?.SettingsUri is not null;
 
-    /// <summary>At-a-glance capability badge so the user instantly sees what Verdict can do for this
-    /// tweak: apply it itself, jump to the right Windows page, or only explain the manual steps.</summary>
-    public string KindLabel => CanApply ? "1-CLICK" : CanOpenSettings ? "IMPOSTAZIONI" : "MANUALE";
-    public string KindColor => CanApply ? "Ok" : CanOpenSettings ? "Info" : "Neutral";
+    public bool IsApplicable => _main.Execution.CanApply(_entry);
+    public bool IsManual => !IsApplicable;
+    public bool CanOpenSettings => !IsApplicable && _entry.Apply?.SettingsUri is not null;
+    public bool IsRisky => _entry.Risk == RiskLevel.High;
+    public bool NeedsAdminBlocked =>
+        IsApplicable && _main.Execution.NeedsAdmin(_entry) && !ExecutionService.IsElevated;
+
+    /// <summary>The switch is live only for applicable, non-busy, non-admin-blocked tweaks.</summary>
+    public bool ToggleEnabled => IsApplicable && !_busy && !NeedsAdminBlocked;
+
+    public string KindLabel => IsApplicable ? "1-CLICK" : CanOpenSettings ? "IMPOSTAZIONI" : "MANUALE";
+    public string KindColor => IsApplicable ? "Ok" : CanOpenSettings ? "Info" : "Neutral";
+
+    public string StatusLine { get => _status; private set => Set(ref _status, value); }
+
+    public bool IsBusy
+    {
+        get => _busy;
+        private set { Set(ref _busy, value); Raise(nameof(ToggleEnabled)); }
+    }
+
+    /// <summary>Two-way bound to the switch. The setter kicks off apply/revert; the visual is
+    /// corrected via <see cref="SetOn"/> on success/failure (no setter recursion).</summary>
+    public bool IsOn
+    {
+        get => _isOn;
+        set { if (value != _isOn && ToggleEnabled) _ = HandleToggleAsync(value); }
+    }
+
+    private void SetOn(bool v) { _isOn = v; Raise(nameof(IsOn)); }
+
+    private async Task HandleToggleAsync(bool wantOn)
+    {
+        IsBusy = true;
+        try
+        {
+            if (wantOn)
+            {
+                if (IsRisky)
+                {
+                    var ok = System.Windows.MessageBox.Show(
+                        $"\"{Name}\" è un tweak a rischio più alto.\n\n{_entry.RiskNotes}\n\n" +
+                        "Applicare comunque? Resta annullabile.",
+                        "Verdict — conferma", System.Windows.MessageBoxButton.YesNo,
+                        System.Windows.MessageBoxImage.Warning);
+                    if (ok != System.Windows.MessageBoxResult.Yes) { SetOn(false); return; }
+                }
+                StatusLine = "Applico…";
+                var plan = _main.Execution.BuildPlan(_entry);
+                var file = await Task.Run(() => _main.Execution.ApplyToggle(plan));
+                _lastJournal = file;
+                SetOn(true);
+                StatusLine = "attivo · annullabile";
+                _main.Changes.Refresh();
+                _main.ShowToast($"{Name} · attivato (annullabile da Modifiche)", "Ok");
+            }
+            else
+            {
+                var session = _lastJournal ?? _main.Execution.LatestActiveSessionFor(Id);
+                if (session is null)
+                {
+                    // Already-active before Verdict touched it: there's no journaled "before", so
+                    // there's no SAFE off value. We never guess — we say so honestly.
+                    SetOn(true);
+                    StatusLine = "era già attivo (di fabbrica): nessun valore 'spento' verificato";
+                    _main.ShowToast($"{Name}: era già attivo, non lo spengo alla cieca", "Warn");
+                    return;
+                }
+                StatusLine = "Disattivo…";
+                await Task.Run(() => _main.Execution.Undo(session));
+                _lastJournal = null;
+                SetOn(false);
+                StatusLine = StateNote;
+                _main.Changes.Refresh();
+                _main.ShowToast($"{Name} · disattivato (ripristinato)", "Ok");
+            }
+        }
+        catch (Exception ex)
+        {
+            SetOn(!wantOn);
+            StatusLine = $"non riuscito: {ex.Message}";
+            _main.ShowToast($"{Name} · operazione fermata", "Danger");
+        }
+        finally
+        {
+            IsBusy = false;
+        }
+    }
 
     public RelayCommand HowToCommand { get; }
-    public RelayCommand ApplyCommand { get; }
     public RelayCommand OpenSettingsCommand { get; }
 }
 
@@ -200,7 +290,7 @@ public sealed class VerdictViewModel(MainViewModel main) : ViewModelBase
 
     public int ApplicableRecommendedCount => _applicableRecommended.Count;
     public bool HasApplicableRecommended => _applicableRecommended.Count > 0;
-    public string ApplyAllLabel => $"Applica tutti i consigliati ({_applicableRecommended.Count})";
+    public string ApplyAllLabel => $"Accendi i consigliati ({_applicableRecommended.Count})";
 
     // ── Verdict Score (Lab feature, default-ON) ──────────────────────────────
     // The honest 0–100 number. Gated by the feature flag so the user can hide it.
@@ -333,7 +423,7 @@ public sealed class VerdictViewModel(MainViewModel main) : ViewModelBase
         void AddGroup(string label, string color, IEnumerable<Recommendation> items)
         {
             var g = new VerdictGroup(label, color);
-            foreach (var r in items) g.Items.Add(new VerdictItem(r.Entry, r.StateNote, main));
+            foreach (var r in items) g.Items.Add(new VerdictItem(r.Entry, r.StateNote, main, r.Classification == Classification.AlreadyActive));
             if (g.Items.Count > 0) Groups.Add(g);
         }
 
@@ -354,7 +444,7 @@ public sealed class VerdictViewModel(MainViewModel main) : ViewModelBase
                 continue;
             var group = new VerdictGroup($"Game-specific — {gameGroup.Key}", "Accent");
             foreach (var r in gameGroup.OrderBy(r => r.Entry.EvidenceLevel))
-                group.Items.Add(new VerdictItem(r.Entry, r.StateNote, main));
+                group.Items.Add(new VerdictItem(r.Entry, r.StateNote, main, r.Classification == Classification.AlreadyActive));
             Groups.Add(group);
         }
 

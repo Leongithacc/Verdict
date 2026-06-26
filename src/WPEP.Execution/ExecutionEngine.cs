@@ -152,7 +152,7 @@ public sealed class ExecutionEngine(
 
     /// <param name="createRestorePoint">false quando il restore-point è già stato creato UNA volta
     /// per l'intero batch (ExecuteAll) — evita N checkpoint (e N×12s) per "Applica tutti".</param>
-    private string Execute(ExecutionPlan plan, bool createRestorePoint)
+    public string Execute(ExecutionPlan plan, bool createRestorePoint)
     {
         var session = new JournalSession
         {
@@ -401,6 +401,22 @@ public sealed class ExecutionEngine(
         System.IO.Directory.Exists(journalDirectory)
             ? [.. System.IO.Directory.EnumerateFiles(journalDirectory, "session-*.json").Order()]
             : [];
+
+    /// <summary>The newest journal session for a tweak that still has un-undone entries, or null.
+    /// Powers the OFF flip of a toggle: turning a tweak off = undoing its real journaled apply
+    /// (restores the captured "before"), which is always safe — never a guessed value.</summary>
+    public string? LatestActiveSessionFor(string tweakId)
+    {
+        foreach (var file in ListSessions(journalDirectory).Reverse()) // newest first
+        {
+            JournalSession? s;
+            try { s = JsonSerializer.Deserialize<JournalSession>(System.IO.File.ReadAllText(file)); }
+            catch { continue; }
+            if (s is not null && s.Entries.Any(e => e.TweakId == tweakId && !e.Undone))
+                return file;
+        }
+        return null;
+    }
 
     /// <summary>Performs one write and returns the re-read value for verification.</summary>
     private string ApplyOne(string method, string path, string kind, string after)

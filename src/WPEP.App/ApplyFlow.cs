@@ -23,6 +23,22 @@ public sealed class ExecutionService
         _engine.ExecuteAll(plans);
     public UndoOutcome Undo(string journalFile) => _engine.Undo(journalFile);
     public IReadOnlyList<DriftItem> DetectDrift() => _engine.DetectDrift();
+
+    // ── Toggle support (V6.5) ──
+    private bool _restorePointMade;
+    /// <summary>Apply for a single toggle flip. Creates ONE System Restore checkpoint on the first
+    /// flip of the app session (not 12s on every flip) — the per-tweak journal is the precise,
+    /// always-available undo. Returns the journal file.</summary>
+    public string ApplyToggle(ExecutionPlan plan)
+    {
+        bool makeRp = !_restorePointMade;
+        var file = _engine.Execute(plan, createRestorePoint: makeRp);
+        if (makeRp) _restorePointMade = true;
+        return file;
+    }
+    /// <summary>Newest still-active journal session for a tweak, or null. Lets a toggle's OFF flip
+    /// undo the REAL applied value (never a guess), even after an app restart.</summary>
+    public string? LatestActiveSessionFor(string tweakId) => _engine.LatestActiveSessionFor(tweakId);
     public IReadOnlyList<string> Sessions() =>
         ExecutionEngine.ListSessions(ExecutionEngine.DefaultJournalDirectory);
 

@@ -131,6 +131,10 @@ public sealed class CoPilotSuggestionVM
         Impact = s.Impact;
         State = StateLabel(s.Classification);
         CanApply = entry is not null && main.Execution.CanApply(entry);
+        // Reuse the exact same ON/OFF toggle as the Verdict list when applicable.
+        Toggle = CanApply
+            ? new VerdictItem(entry!, Impact, main, s.Classification == Classification.AlreadyActive)
+            : null;
     }
 
     public string Id { get; }
@@ -139,7 +143,9 @@ public sealed class CoPilotSuggestionVM
     public string State { get; }
     public bool CanApply { get; }
 
-    public RelayCommand ApplyCommand => new(() => { if (_entry is not null) _main.ApplyDialog.Open(_entry); });
+    /// <summary>The ON/OFF toggle (same as the Verdict list) when this suggestion is applicable; else null.</summary>
+    public VerdictItem? Toggle { get; }
+
     public RelayCommand HowToCommand => new(() => _main.ShowKbEntry(Id));
 
     private static string StateLabel(Classification c) => c switch

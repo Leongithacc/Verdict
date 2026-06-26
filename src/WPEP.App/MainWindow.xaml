@@ -221,19 +221,21 @@
                                          Foreground="{DynamicResource TextMuted}" Text="{Binding Id}" />
                             </StackPanel>
                             <TextBlock Grid.Column="1" Style="{StaticResource Muted}"
-                                       Text="{Binding StateNote}" VerticalAlignment="Center" Margin="16,0,0,0" />
+                                       Text="{Binding StatusLine}" VerticalAlignment="Center" Margin="16,0,0,0"
+                                       TextWrapping="Wrap" />
                             <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
                               <Button Style="{StaticResource GhostButton}" Content="Come fare"
                                       Padding="10,4" FontSize="12" Margin="8,0,0,0"
-                                      Command="{Binding HowToCommand}" />
+                                      Command="{Binding HowToCommand}"
+                                      Visibility="{Binding IsManual, Converter={StaticResource BoolToVis}}" />
                               <Button Style="{StaticResource GhostButton}" Content="Apri impostazioni"
                                       Padding="10,4" FontSize="12" Margin="6,0,0,0"
                                       Command="{Binding OpenSettingsCommand}"
                                       Visibility="{Binding CanOpenSettings, Converter={StaticResource BoolToVis}}" />
-                              <Button Style="{StaticResource PrimaryButton}" Content="Applica"
-                                      Padding="12,4" FontSize="12" Margin="6,0,0,0"
-                                      Command="{Binding ApplyCommand}"
-                                      Visibility="{Binding CanApply, Converter={StaticResource BoolToVis}}" />
+                              <ToggleButton Style="{StaticResource Switch}" Margin="10,0,2,0"
+                                            IsChecked="{Binding IsOn, Mode=TwoWay}"
+                                            IsEnabled="{Binding ToggleEnabled}"
+                                            ToolTip="{Binding StatusLine}" />
                             </StackPanel>
                           </Grid>
                         </DataTemplate>
@@ -1367,9 +1369,11 @@
                     <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
                       <Button Style="{StaticResource GhostButton}" Content="Come fare"
                               Command="{Binding HowToCommand}" />
-                      <Button Style="{StaticResource PrimaryButton}" Content="Applica" Margin="8,0,0,0"
-                              Command="{Binding ApplyCommand}"
-                              Visibility="{Binding CanApply, Converter={StaticResource BoolToVis}}" />
+                      <ToggleButton Style="{StaticResource Switch}" Margin="10,0,2,0"
+                                    IsChecked="{Binding Toggle.IsOn, Mode=TwoWay}"
+                                    IsEnabled="{Binding Toggle.ToggleEnabled, FallbackValue=False}"
+                                    ToolTip="{Binding Toggle.StatusLine}"
+                                    Visibility="{Binding CanApply, Converter={StaticResource BoolToVis}}" />
                     </StackPanel>
                     <StackPanel>
                       <TextBlock Style="{StaticResource H2}" Text="{Binding Name}" />
