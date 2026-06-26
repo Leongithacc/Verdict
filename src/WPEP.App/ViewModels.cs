@@ -36,7 +36,6 @@ public sealed class MainViewModel : ViewModelBase
     public LabViewModel Lab { get; }
     public ProfilesViewModel Profiles { get; }
     public CoPilotViewModel CoPilot { get; }
-    public ApplyDialogViewModel ApplyDialog { get; }
     public ApplyAllViewModel ApplyAll { get; }
 
     public ViewModelBase CurrentPage { get => _currentPage; set => Set(ref _currentPage, value); }
@@ -84,7 +83,6 @@ public sealed class MainViewModel : ViewModelBase
         Lab = new LabViewModel(Settings);
         // EXPO state lands with the hardware scan → refresh the Verdict Score when it does.
         Scan.ScanCompleted += () => Verdict.RecomputeScore();
-        ApplyDialog = new ApplyDialogViewModel(this, Execution);
         ApplyAll = new ApplyAllViewModel(this, Execution);
         Profiles = new ProfilesViewModel(this);
         CoPilot = new CoPilotViewModel(this);
