@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Verdict — Guida BIOS</title>
+<style>
+  :root{--bg:#0B0A12;--card:#15131F;--line:#262232;--text:#ECEAF2;--muted:#8A8696;--accent:#DB4A86;--warn:#F0A33C}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--text);font:16px/1.6 system-ui,-apple-system,Segoe UI,Roboto,sans-serif;padding:18px;max-width:680px;margin:0 auto}
+  h1{font-size:20px;font-weight:600;margin:.2em 0}
+  .sub{color:var(--muted);font-size:13px;margin-bottom:16px}
+  .row{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0}
+  button{background:var(--card);color:var(--text);border:1px solid var(--line);border-radius:10px;padding:9px 14px;font:inherit;font-size:14px;cursor:pointer}
+  button.on{background:var(--accent);border-color:var(--accent);color:#fff}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px 18px;margin:14px 0}
+  ol{margin:.4em 0;padding-left:1.3em}
+  li{margin:.45em 0}
+  .warn{border-color:#5A3F1C;background:#1c160c}
+  .warn b{color:var(--warn)}
+  .note{color:var(--muted);font-size:13px;margin-top:10px}
+  code{background:#211d2e;border:1px solid var(--line);border-radius:5px;padding:1px 6px;font-size:13px}
+  .vk{color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:1px;margin-top:18px}
+</style>
+</head>
+<body>
+  <h1 id="title">Guida BIOS</h1>
+  <div class="sub" id="sub"></div>
+
+  <div class="vk">Marca scheda madre</div>
+  <div class="row" id="vendors"></div>
+
+  <div class="row" id="langs">
+    <button data-lang="it" class="on">Italiano</button>
+    <button data-lang="en">English</button>
+  </div>
+
+  <div id="content"></div>
+
+<script>
+const T = {
+  "xmp-expo-enable": {
+    title:{it:"Attiva XMP / EXPO (profilo RAM)", en:"Enable XMP / EXPO (RAM profile)"},
+    sub:{it:"Porta la RAM alla velocità per cui l'hai pagata. Effetto reale, costo zero.",
+         en:"Run your RAM at its rated speed. Real gain, zero cost."},
+    enter:{asus:"Canc",msi:"Canc",gigabyte:"Canc",asrock:"F2 o Canc"},
+    steps:{
+      asus:{it:["Riavvia e premi <code>Canc</code> per entrare nel BIOS.","Premi <code>F7</code> per la modalità Advanced.","Vai su <b>Ai Tweaker</b> → <b>Ai Overclock Tuner</b>.","Imposta <b>XMP I/II</b> (Intel) oppure <b>EXPO I/II</b> (AMD).","<code>F10</code> → Salva ed esci."],
+            en:["Reboot and press <code>Del</code> to enter the BIOS.","Press <code>F7</code> for Advanced Mode.","Go to <b>Ai Tweaker</b> → <b>Ai Overclock Tuner</b>.","Set <b>XMP I/II</b> (Intel) or <b>EXPO I/II</b> (AMD).","<code>F10</code> → Save & Exit."]},
+      msi:{it:["Premi <code>Canc</code> all'avvio.","Entra nell'ambiente <b>OC</b> (o Advanced).","Trova <b>Extreme Memory Profile (XMP)</b> / <b>EXPO</b> → <b>Enabled</b> / <b>Profile 1</b>.","<code>F10</code> → Salva."],
+           en:["Press <code>Del</code> at boot.","Open the <b>OC</b> menu (or Advanced).","Find <b>Extreme Memory Profile (XMP)</b> / <b>EXPO</b> → <b>Enabled</b> / <b>Profile 1</b>.","<code>F10</code> → Save."]},
+      gigabyte:{it:["Premi <code>Canc</code> all'avvio.","Vai su <b>Tweaker</b>.","<b>Extreme Memory Profile (X.M.P.)</b> / <b>EXPO</b> → <b>Profile1</b>.","<code>F10</code> → Salva."],
+                en:["Press <code>Del</code> at boot.","Go to <b>Tweaker</b>.","<b>Extreme Memory Profile (X.M.P.)</b> / <b>EXPO</b> → <b>Profile1</b>.","<code>F10</code> → Save."]},
+      asrock:{it:["Premi <code>F2</code> o <code>Canc</code>.","Vai su <b>OC Tweaker</b>.","<b>DRAM Profile Setting</b> → <b>XMP 2.0 Profile 1</b> / <b>EXPO</b>.","<code>F10</code> → Salva."],
+              en:["Press <code>F2</code> or <code>Del</code>.","Go to <b>OC Tweaker</b>.","<b>DRAM Profile Setting</b> → <b>XMP 2.0 Profile 1</b> / <b>EXPO</b>.","<code>F10</code> → Save."]}
+    },
+    note:{it:"Dopo il riavvio verifica con <code>wpep analyze</code> che la velocità RAM corrisponda a quella dichiarata.",
+          en:"After reboot, run <code>wpep analyze</code> to confirm the RAM speed matches the rated value."}
+  },
+
+  "resizable-bar-enable": {
+    title:{it:"Resizable BAR / Smart Access Memory", en:"Resizable BAR / Smart Access Memory"},
+    sub:{it:"Serve attivare due voci nel BIOS (il driver poi decide dove usarla).",
+         en:"You enable two BIOS options; the driver decides where to use it."},
+    steps:{
+      asus:{it:["BIOS (<code>Canc</code>) → <code>F7</code> Advanced.","<b>Advanced</b> → <b>PCI Subsystem Settings</b>.","<b>Above 4G Decoding</b> = Enabled e <b>Re-Size BAR Support</b> = Enabled.","Assicurati che il CSM sia OFF: <b>Boot</b> → <b>CSM</b> → Disabled.","<code>F10</code> → Salva."],
+            en:["BIOS (<code>Del</code>) → <code>F7</code> Advanced.","<b>Advanced</b> → <b>PCI Subsystem Settings</b>.","<b>Above 4G Decoding</b> = Enabled and <b>Re-Size BAR Support</b> = Enabled.","Make sure CSM is OFF: <b>Boot</b> → <b>CSM</b> → Disabled.","<code>F10</code> → Save."]},
+      msi:{it:["BIOS → <b>Settings</b> → <b>Advanced</b> → <b>PCI Subsystem Settings</b>.","<b>Above 4G memory</b> = Enabled, <b>Re-Size BAR Support</b> = Enabled.","CSM OFF: <b>Settings</b> → <b>Advanced</b> → <b>Windows OS Configuration</b>.","<code>F10</code> → Salva."],
+           en:["BIOS → <b>Settings</b> → <b>Advanced</b> → <b>PCI Subsystem Settings</b>.","<b>Above 4G memory</b> = Enabled, <b>Re-Size BAR Support</b> = Enabled.","CSM OFF: <b>Settings</b> → <b>Advanced</b> → <b>Windows OS Configuration</b>.","<code>F10</code> → Save."]},
+      gigabyte:{it:["BIOS → <b>Settings</b> → <b>IO Ports</b>.","<b>Above 4G Decoding</b> = Enabled, <b>Re-Size BAR Support</b> = Enabled.","CSM OFF: <b>Boot</b> → <b>CSM Support</b> = Disabled.","<code>F10</code> → Salva."],
+                en:["BIOS → <b>Settings</b> → <b>IO Ports</b>.","<b>Above 4G Decoding</b> = Enabled, <b>Re-Size BAR Support</b> = Enabled.","CSM OFF: <b>Boot</b> → <b>CSM Support</b> = Disabled.","<code>F10</code> → Save."]},
+      asrock:{it:["BIOS → <b>Advanced</b> → <b>Chipset Configuration</b>.","<b>Above 4G Decoding</b> = Enabled, <b>Re-Size BAR Support</b> = Enabled.","CSM OFF: <b>Boot</b> → <b>CSM</b>.","<code>F10</code> → Salva."],
+              en:["BIOS → <b>Advanced</b> → <b>Chipset Configuration</b>.","<b>Above 4G Decoding</b> = Enabled, <b>Re-Size BAR Support</b> = Enabled.","CSM OFF: <b>Boot</b> → <b>CSM</b>.","<code>F10</code> → Save."]}
+    },
+    note:{it:"Verifica nel Pannello NVIDIA → Informazioni di sistema → <b>Resizable BAR: Sì</b>. Richiede Windows installato in UEFI/GPT.",
+          en:"Check NVIDIA Control Panel → System Information → <b>Resizable BAR: Yes</b>. Requires Windows installed in UEFI/GPT mode."}
+  },
+
+  "amd-ftpm-bios-update": {
+    title:{it:"Aggiornare il BIOS (stutter fTPM AMD)", en:"Update the BIOS (AMD fTPM stutter)"},
+    sub:{it:"Operazione delicata: leggi prima l'avviso.", en:"Delicate operation — read the warning first."},
+    warn:{it:"<b>⚠️ Attenzione.</b> Il flash del BIOS è rischioso: un'interruzione di corrente può <b>danneggiare la scheda</b>. Usa SOLO il file della TUA scheda madre esatta. Non spegnere né riavviare durante il processo. Dopo il flash, riconfigura XMP/EXPO.",
+          en:"<b>⚠️ Warning.</b> Flashing the BIOS is risky: a power loss can <b>brick the board</b>. Use ONLY the file for your EXACT motherboard. Do not power off or reboot during the process. Re-apply XMP/EXPO afterwards."},
+    steps:{
+      asus:{it:["Sul sito ASUS, apri la pagina della TUA scheda → <b>Supporto</b> → <b>Driver &amp; Utility</b> → <b>BIOS &amp; Firmware</b> → scarica l'ultimo BIOS.","Estrai il file su una chiavetta USB formattata <b>FAT32</b>.","BIOS → <code>F7</code> Advanced → <b>Tool</b> → <b>ASUS EZ Flash 3</b>.","Seleziona il file dalla chiavetta → conferma. Attendi senza spegnere."],
+            en:["On the ASUS site, open YOUR board page → <b>Support</b> → <b>Driver &amp; Utility</b> → <b>BIOS &amp; Firmware</b> → download the latest BIOS.","Extract the file to a <b>FAT32</b> USB stick.","BIOS → <code>F7</code> Advanced → <b>Tool</b> → <b>ASUS EZ Flash 3</b>.","Pick the file from the stick → confirm. Wait, do not power off."]},
+      msi:{it:["Sul sito MSI, pagina della scheda → <b>Support</b> → <b>BIOS</b> → scarica l'ultimo.","Estrai su chiavetta <b>FAT32</b>.","BIOS → <b>M-FLASH</b> → <b>Yes</b> (riavvia in modalità flash).","Seleziona il file → <b>Yes</b>. Non interrompere."],
+           en:["On the MSI site, board page → <b>Support</b> → <b>BIOS</b> → download latest.","Extract to a <b>FAT32</b> stick.","BIOS → <b>M-FLASH</b> → <b>Yes</b> (reboots into flash mode).","Select the file → <b>Yes</b>. Do not interrupt."]},
+      gigabyte:{it:["Sito Gigabyte, pagina scheda → <b>Support</b> → <b>BIOS</b> → scarica.","Estrai su chiavetta <b>FAT32</b>.","BIOS → <b>Q-Flash</b> → <b>Update BIOS</b>.","Seleziona il file → conferma. Non spegnere."],
+                en:["Gigabyte site, board page → <b>Support</b> → <b>BIOS</b> → download.","Extract to a <b>FAT32</b> stick.","BIOS → <b>Q-Flash</b> → <b>Update BIOS</b>.","Select the file → confirm. Do not power off."]},
+      asrock:{it:["Sito ASRock, pagina scheda → <b>Support</b> → <b>BIOS</b> → scarica.","Estrai su chiavetta <b>FAT32</b>.","BIOS → <b>Tool</b> → <b>Instant Flash</b>.","Seleziona il file → conferma. Non interrompere."],
+              en:["ASRock site, board page → <b>Support</b> → <b>BIOS</b> → download.","Extract to a <b>FAT32</b> stick.","BIOS → <b>Tool</b> → <b>Instant Flash</b>.","Select the file → confirm. Do not interrupt."]}
+    },
+    note:{it:"Quasi ogni BIOS dal 2023 in poi include già il fix (AGESA ≥ 1.2.0.7). Se sei già aggiornato, non serve fare nulla.",
+          en:"Almost every BIOS from 2023 onward already includes the fix (AGESA ≥ 1.2.0.7). If you're up to date, nothing to do."}
+  },
+
+  "pbo-curve-optimizer": {
+    title:{it:"PBO + Curve Optimizer (overclock Ryzen)", en:"PBO + Curve Optimizer (Ryzen overclock)"},
+    sub:{it:"Avanzato e a rischio stabilità. Solo se sai cosa fai.", en:"Advanced, stability-risk. Only if you know what you're doing."},
+    warn:{it:"<b>⚠️ Attenzione.</b> AMD dichiara che <b>PBO può invalidare la garanzia</b> della CPU. Un undervolt instabile causa crash subdoli (WHEA, freeze in gioco). Fai <b>stress test di ore</b> (OCCT / y-cruncher) e scendi di 5 alla volta. Misura il guadagno reale con <code>wpep bench</code>.",
+          en:"<b>⚠️ Warning.</b> AMD states <b>PBO can void the CPU warranty</b>. An unstable undervolt causes subtle crashes (WHEA, in-game freezes). Run <b>hours of stress tests</b> (OCCT / y-cruncher) and step down by 5 at a time. Measure the real gain with <code>wpep bench</code>."},
+    steps:{
+      asus:{it:["BIOS → <code>F7</code> Advanced → <b>Ai Tweaker</b>.","<b>Precision Boost Overdrive</b> → <b>Advanced</b>.","<b>Curve Optimizer</b> → <b>All Cores</b> → <b>Negative</b> → offset graduale (parti da <b>-10</b>).","<code>F10</code> → Salva, poi stress test."],
+            en:["BIOS → <code>F7</code> Advanced → <b>Ai Tweaker</b>.","<b>Precision Boost Overdrive</b> → <b>Advanced</b>.","<b>Curve Optimizer</b> → <b>All Cores</b> → <b>Negative</b> → gradual offset (start at <b>-10</b>).","<code>F10</code> → Save, then stress test."]},
+      msi:{it:["BIOS → <b>OC</b> → <b>Advanced CPU Configuration</b> / <b>AMD Overclocking</b>.","<b>Precision Boost Overdrive</b> → Advanced.","<b>Curve Optimizer</b> → All Cores → Negative → <b>-10</b> iniziale.","<code>F10</code> → Salva, poi stress test."],
+           en:["BIOS → <b>OC</b> → <b>Advanced CPU Configuration</b> / <b>AMD Overclocking</b>.","<b>Precision Boost Overdrive</b> → Advanced.","<b>Curve Optimizer</b> → All Cores → Negative → start <b>-10</b>.","<code>F10</code> → Save, then stress test."]},
+      gigabyte:{it:["BIOS → <b>Tweaker</b> → <b>Advanced CPU Settings</b> / <b>AMD Overclocking</b>.","<b>Precision Boost Overdrive</b> → <b>Curve Optimizer</b>.","All Cores → Negative → <b>-10</b> iniziale.","<code>F10</code> → Salva, poi stress test."],
+                en:["BIOS → <b>Tweaker</b> → <b>Advanced CPU Settings</b> / <b>AMD Overclocking</b>.","<b>Precision Boost Overdrive</b> → <b>Curve Optimizer</b>.","All Cores → Negative → start <b>-10</b>.","<code>F10</code> → Save, then stress test."]},
+      asrock:{it:["BIOS → <b>OC Tweaker</b> → <b>AMD Overclocking</b>.","<b>Precision Boost Overdrive</b> → <b>Curve Optimizer</b>.","All Cores → Negative → <b>-10</b> iniziale.","<code>F10</code> → Salva, poi stress test."],
+              en:["BIOS → <b>OC Tweaker</b> → <b>AMD Overclocking</b>.","<b>Precision Boost Overdrive</b> → <b>Curve Optimizer</b>.","All Cores → Negative → start <b>-10</b>.","<code>F10</code> → Save, then stress test."]}
+    },
+    note:{it:"Solo CPU AMD Ryzen. Sugli X3D il guadagno arriva soprattutto dal clock più alto a temperatura ridotta.",
+          en:"AMD Ryzen only. On X3D parts the gain comes mostly from higher clocks at lower temps."}
+  }
+};
+
+const VENDORS = [["asus","ASUS"],["msi","MSI"],["gigabyte","Gigabyte"],["asrock","ASRock"]];
+const qs = new URLSearchParams(location.search);
+let tweak = qs.get("t") || "xmp-expo-enable";
+let vendor = (qs.get("v")||"").toLowerCase();
+let lang = qs.get("lang")==="en" ? "en" : "it";
+if(!T[tweak]) tweak = "xmp-expo-enable";
+if(!VENDORS.some(v=>v[0]===vendor)) vendor = "asus";
+
+function render(){
+  const g = T[tweak];
+  document.documentElement.lang = lang;
+  document.getElementById("title").textContent = g.title[lang];
+  document.getElementById("sub").textContent = g.sub[lang];
+  document.getElementById("vendors").innerHTML = VENDORS.map(([k,name])=>
+    `<button data-v="${k}" class="${k===vendor?"on":""}">${name}</button>`).join("");
+  document.querySelectorAll("#langs button").forEach(b=>b.classList.toggle("on", b.dataset.lang===lang));
+  const steps = (g.steps[vendor]||g.steps.asus)[lang];
+  let html = "";
+  if(g.warn) html += `<div class="card warn">${g.warn[lang]}</div>`;
+  html += `<div class="card"><ol>${steps.map(s=>`<li>${s}</li>`).join("")}</ol>`;
+  if(g.note) html += `<div class="note">${g.note[lang]}</div>`;
+  html += `</div>`;
+  document.getElementById("content").innerHTML = html;
+}
+document.addEventListener("click", e=>{
+  const b = e.target.closest("button"); if(!b) return;
+  if(b.dataset.v){ vendor=b.dataset.v; render(); }
+  if(b.dataset.lang){ lang=b.dataset.lang; render(); }
+});
+render();
+</script>
+</body>
+</html>

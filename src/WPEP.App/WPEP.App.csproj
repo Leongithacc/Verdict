@@ -8,6 +8,11 @@
     <ApplicationManifest>app.manifest</ApplicationManifest>
   </PropertyGroup>
   <ItemGroup>
+    <!-- Pure-managed QR generator (MIT). Si impacchetta dentro l'app: nessuna dipendenza di runtime,
+         resta portatile. Genera il QR per le guide BIOS sul telefono. -->
+    <PackageReference Include="QRCoder" Version="1.6.0" />
+  </ItemGroup>
+  <ItemGroup>
     <ProjectReference Include="..\WPEP.Core\WPEP.Core.csproj" />
     <ProjectReference Include="..\WPEP.SystemAnalyzer\WPEP.SystemAnalyzer.csproj" />
     <ProjectReference Include="..\WPEP.KnowledgeBase\WPEP.KnowledgeBase.csproj" />

@@ -137,6 +137,27 @@ public static class HardwareScanner
         return ("sconosciuta", "");
     }
 
+    private static string? _boardMfr;
+    private static bool _boardRead;
+    /// <summary>Just the motherboard manufacturer (cached), to deep-link the right BIOS guide.
+    /// Null/empty if WMI can't tell — the guide page then shows a vendor picker.</summary>
+    public static string? BoardManufacturer()
+    {
+        if (_boardRead)
+            return _boardMfr;
+        _boardRead = true;
+        try
+        {
+            foreach (var o in Query("SELECT Manufacturer FROM Win32_BaseBoard"))
+            {
+                _boardMfr = Str(o["Manufacturer"]).Trim();
+                break;
+            }
+        }
+        catch { /* WMI hiccup → unknown vendor, page shows picker */ }
+        return _boardMfr;
+    }
+
     private static (string, string) ReadBios()
     {
         foreach (var o in Query("SELECT SMBIOSBIOSVersion, ReleaseDate FROM Win32_BIOS"))

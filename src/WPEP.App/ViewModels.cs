@@ -243,6 +243,20 @@ public sealed class VerdictItem : ViewModelBase
 
     public RelayCommand HowToCommand { get; }
     public RelayCommand OpenSettingsCommand { get; }
+
+    // ── BIOS guide (V6.5 fase 2): un QR PER QUESTO tweak → guida sul telefono ──
+    public bool HasBiosGuide => IsManual && WPEP.Core.Bios.BiosGuide.HasGuide(Id);
+    public string BiosGuideUrl => WPEP.Core.Bios.BiosGuide.Url(
+        Id, WPEP.Core.Bios.BiosGuide.VendorSlug(WPEP.SystemAnalyzer.HardwareScanner.BoardManufacturer()));
+
+    private System.Windows.Media.Imaging.BitmapImage? _qr;
+    public System.Windows.Media.Imaging.BitmapImage? QrImage =>
+        HasBiosGuide ? (_qr ??= QrCode.ForUrl(BiosGuideUrl)) : null;
+
+    private bool _biosOpen;
+    public bool IsBiosPopupOpen { get => _biosOpen; set => Set(ref _biosOpen, value); }
+    public RelayCommand ToggleBiosGuideCommand => new(() => IsBiosPopupOpen = !IsBiosPopupOpen);
+    public RelayCommand OpenBiosGuideCommand => new(() => ExecutionService.OpenSettings(BiosGuideUrl));
 }
 
 public sealed class VerdictGroup(string label, string badgeColorKey)
