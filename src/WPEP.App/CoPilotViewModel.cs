@@ -131,9 +131,11 @@ public sealed class CoPilotSuggestionVM
         Impact = s.Impact;
         State = StateLabel(s.Classification);
         CanApply = entry is not null && main.Execution.CanApply(entry);
-        // Reuse the exact same ON/OFF toggle as the Verdict list when applicable.
-        Toggle = CanApply
-            ? new VerdictItem(entry!, Impact, main, s.Classification == Classification.AlreadyActive)
+        // Reuse the exact same row VM as the Verdict list: it carries the ON/OFF toggle when
+        // applicable AND the per-tweak BIOS QR when it's a manual BIOS tweak. Built for any real
+        // entry (not only applicable ones) so a manual BIOS suggestion also gets its QR.
+        Toggle = entry is not null
+            ? new VerdictItem(entry, Impact, main, s.Classification == Classification.AlreadyActive)
             : null;
     }
 

@@ -1391,6 +1391,25 @@
                     <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
                       <Button Style="{StaticResource GhostButton}" Content="Come fare"
                               Command="{Binding HowToCommand}" />
+                      <Button x:Name="cpBiosBtn" Style="{StaticResource GhostButton}" Content="Istruzioni BIOS"
+                              Margin="6,0,0,0" Command="{Binding Toggle.ToggleBiosGuideCommand}"
+                              Visibility="{Binding Toggle.HasBiosGuide, FallbackValue=Collapsed, Converter={StaticResource BoolToVis}}" />
+                      <Popup IsOpen="{Binding Toggle.IsBiosPopupOpen, Mode=TwoWay}" StaysOpen="False"
+                             PlacementTarget="{Binding ElementName=cpBiosBtn}" Placement="Bottom" AllowsTransparency="True">
+                        <Border Background="{DynamicResource Surface}" BorderBrush="{DynamicResource Line}"
+                                BorderThickness="1" CornerRadius="12" Padding="16" Margin="8">
+                          <StackPanel Width="236">
+                            <TextBlock Style="{StaticResource H2}" Text="Istruzioni BIOS sul telefono" />
+                            <TextBlock Style="{StaticResource Muted}" FontSize="11" TextWrapping="Wrap" Margin="0,4,0,10"
+                                       Text="Inquadra il QR: si apre la guida passo-passo per la TUA scheda madre (IT/EN). Funziona anche col PC nel BIOS." />
+                            <Border Background="White" CornerRadius="8" Padding="8" HorizontalAlignment="Center">
+                              <Image Source="{Binding Toggle.QrImage}" Width="190" Height="190" />
+                            </Border>
+                            <Button Style="{StaticResource GhostButton}" Content="Apri il link nel browser" Margin="0,10,0,0"
+                                    Command="{Binding Toggle.OpenBiosGuideCommand}" />
+                          </StackPanel>
+                        </Border>
+                      </Popup>
                       <ToggleButton Style="{StaticResource Switch}" Margin="10,0,2,0"
                                     IsChecked="{Binding Toggle.IsOn, Mode=TwoWay}"
                                     IsEnabled="{Binding Toggle.ToggleEnabled, FallbackValue=False}"
