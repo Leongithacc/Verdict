@@ -1021,3 +1021,23 @@ Continuazione post-design, conflict-free col design (che lavora sulla COPIA Desk
   balloon su una REGRESSIONE nuova (de-dup per timestamp `_lastSentinelStamp`). Decoupled (il tray legge
   solo un JSON, nessuna dipendenza nuova). Test round-trip + missing. Suite **295/295**. Verificato e2e
   (sentinel scrive il file, tray lo consuma). CLI+Tray ripubblicati.
+
+### 68. DEFECT-HUNT su TUTTO il prodotto (2026-06-26)
+Richiesto da Léon ("difetto-hunt su tutto"). Passata adversarial sulle superfici a più alto
+rischio dell'INTERO prodotto (non solo il codice nuovo). Cerco bug VERI, non li invento.
+- **2 bug veri trovati e chiusi** — ma erano nel codice scritto in FRETTA (design+TIER1),
+  già fixati in `a6ad4ca`: `ApplyAllViewModel.Confirm` senza catch grazioso; `SelfTestCommand`
+  fire-and-forget bloccato su "in corso…" su errore.
+- **Codice MATURO = robusto** (zero bug nuovi). Verificato corretto, non timbrato:
+  · Tray `async void OnTick` → `CheckAsync` ha catch-all + finally (il guardiano non crasha).
+  · Process pipe (Registry/BcdEdit/powercfg) → drena stdout+stderr in PARALLELO + timeout/kill (no deadlock).
+  · `ExecuteAll`/`Undo` → stop-al-1°-errore con ogni apply journaled; undo drift-aware + Save incrementale (crash-safe).
+  · **PresentMon CSV** → `double.TryParse(..., InvariantCulture)`: il bug cultura it-IT "16.67"→1667 è BLINDATO.
+  · CSV parser → bounds-check su ogni colonna + TryParse (riga troncata = skip, non crash).
+  · Statistics → guardie empty-collection ovunque (throw chiari); `/median` dietro `!=0`.
+  · `HttpClient` = singleton statici; `RegistryKey` = tutti `using`; 46 `catch{}` tutti best-effort commentati.
+  · `.First()` (2 soli in tutto src) entrambi guardati a monte (DisplayScanner Count>=2; GhostTweak id∈candidates).
+- **Nota teorica (non bug)**: `Mde.cs` divide per la mediana dei frametime → NaN solo se mediana=0,
+  impossibile con dati reali (frametime>0 sempre). Lasciato com'è.
+- **Conclusione**: il core costruito con calma regge; i difetti stavano solo nelle aggiunte rapide.
+  Niente da committare (nessun fix finto). Build/suite invariati (316/316).
