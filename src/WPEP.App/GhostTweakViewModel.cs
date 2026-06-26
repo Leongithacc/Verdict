@@ -89,6 +89,15 @@ public sealed class GhostTweakViewModel : ViewModelBase
             try { _main.Execution.Undo(_journalFile); _main.Changes.Refresh(); } catch { /* leave journal for manual undo */ }
 
         var (outcome, delta) = MapMeasuredOutcome();
+        // V7 evidence: a measured Ghost verdict is the best, most honest data point — record it
+        // (anonimo, in locale). Inconclusive = nessun verdetto reale → niente da registrare.
+        if (outcome != GhostOutcome.Inconclusive)
+            _main.RecordEvidence(_hidden.Id, outcome switch
+            {
+                GhostOutcome.Helped => "helped",
+                GhostOutcome.Hurt => "hurt",
+                _ => "no-effect",
+            }, delta);
         var reveal = GhostTweak.Reveal(_hidden.Name, outcome, delta);
         RevealTitle = reveal.Title;
         RevealPlain = reveal.Plain;

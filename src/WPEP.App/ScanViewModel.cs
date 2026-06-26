@@ -24,6 +24,9 @@ public sealed class ScanViewModel : ViewModelBase
     private string _rigCode = "", _rigTier = "", _rigTierColor = "Accent";
     private System.Windows.Media.Brush _rigTint = System.Windows.Media.Brushes.Transparent;
     public bool ShowRigDna => _settings.IsFeatureEnabled(WPEP.Execution.FeatureCatalog.RigDna);
+    /// <summary>Anonymous rig identity (RigDna) of the last scan — the signature + tier used by V7
+    /// evidence. Always computed (independent of the visual Rig DNA Lab toggle).</summary>
+    public RigDnaResult? Dna { get; private set; }
     public string RigCode { get => _rigCode; set => Set(ref _rigCode, value); }
     public string RigTier { get => _rigTier; set => Set(ref _rigTier, value); }
     public string RigTierColor { get => _rigTierColor; set => Set(ref _rigTierColor, value); }
@@ -90,6 +93,7 @@ public sealed class ScanViewModel : ViewModelBase
         try
         {
             var hw = await Task.Run(HardwareScanner.Scan);
+            Dna = RigDna.Compute(hw); // firma anonima sempre disponibile (V7 evidence), oltre al Lab visivo
             ExpoEnabled = hw.ExpoEnabled;
             Motherboard = hw.Motherboard;
             Bios = hw.Bios + (hw.BiosDate.Length > 0 ? $"  ({hw.BiosDate})" : "");
@@ -122,12 +126,11 @@ public sealed class ScanViewModel : ViewModelBase
             RigTraits.Clear();
             if (ShowRigDna)
             {
-                var dna = RigDna.Compute(hw);
-                RigCode = dna.Code;
-                RigTier = dna.Tier;
-                RigTierColor = dna.TierColor;
-                RigTint = TintFromHue(dna.Hue);
-                foreach (var tr in dna.Traits) RigTraits.Add(tr);
+                RigCode = Dna.Code;
+                RigTier = Dna.Tier;
+                RigTierColor = Dna.TierColor;
+                RigTint = TintFromHue(Dna.Hue);
+                foreach (var tr in Dna.Traits) RigTraits.Add(tr);
             }
 
             // Time Machine (Lab feature): diff key system facts against the last saved snapshot.

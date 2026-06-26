@@ -88,6 +88,10 @@ switch (args[0])
         return await RunUpdateCheck();
     case "copilot":
         return await RunCopilot(args.Skip(1).ToArray());
+    case "evidence":
+        return RunEvidence();
+    case "community":
+        return RunCommunity();
     default:
         Console.Error.WriteLine($"Comando sconosciuto: {args[0]}");
         PrintUsage();
@@ -1708,6 +1712,39 @@ static void PrintDiagReport(DpcIsrReport report)
 
 static string Truncate(string s, int max) => s.Length <= max ? s : s[..(max - 1)] + "…";
 
+static int RunEvidence()
+{
+    var all = WPEP.Execution.EvidenceLedger.Load();
+    if (all.Count == 0)
+    {
+        Console.WriteLine("Nessuna prova registrata ancora. Applica/misura qualche tweak (anche col Ghost Tweak):");
+        Console.WriteLine("Verdict salva l'esito qui in locale e in forma anonima (firma rig RigDna, zero dati personali).");
+        return 0;
+    }
+    Console.WriteLine($"Le tue prove ({all.Count} record · {WPEP.Execution.EvidenceLedger.FilePath}):\n");
+    foreach (var g in all.GroupBy(r => r.TweakId).OrderBy(x => x.Key))
+    {
+        var s = WPEP.Execution.EvidenceLedger.Aggregate(g);
+        int applied = g.Count(r => r.Outcome == "applied");
+        Console.WriteLine(s.SampleSize > 0
+            ? $"  {g.Key}: {s.HelpedPercent}% aiutato · {s.NoEffectPercent}% nessun effetto · {s.HurtPercent}% peggiorato ({s.SampleSize} misure)"
+            : $"  {g.Key}: applicato {applied}× (nessuna misura ancora)");
+    }
+    return 0;
+}
+
+static int RunCommunity()
+{
+    var svc = new WPEP.Execution.CommunityService();
+    Console.WriteLine($"Community: {svc.BackendName}.");
+    if (!svc.CommunityActive)
+    {
+        Console.WriteLine("Non ancora attiva: i tuoi esiti restano SOLO sul tuo PC, anonimi e in locale.");
+        Console.WriteLine("Quando ci sarà un server opt-in, potrai confrontare i tuoi tweak coi rig simili.");
+    }
+    return 0;
+}
+
 static async Task<int> RunCopilot(string[] args)
 {
     // Domanda = argomenti non-flag uniti; --model opzionale per scegliere il modello Ollama.
@@ -1890,6 +1927,12 @@ static void PrintUsage()
           wpep museum       Placebo Museum: i miti sfatati con l'evidenza.
           wpep games        Giochi con un piano dedicato.
           wpep optimize <gioco>   Piano su misura: tweak di sistema + impostazioni in-game.
+
+        — Community evidence (V7, privacy-first) —
+          wpep evidence       Le TUE prove: per ogni tweak, com'è andata su questo PC
+                              (applicato / aiutato / nessun effetto / peggiorato). Anonimo, in locale.
+          wpep community      Stato community. Di default LOCALE: nulla lascia il PC. Il confronto
+                              coi "rig simili" si accende solo con un server opt-in (decisione futura).
 
         — AI co-pilot (V6, sola lettura) —
           wpep copilot "<domanda>" [--model <nome>]

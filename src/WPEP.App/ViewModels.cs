@@ -110,6 +110,19 @@ public sealed class MainViewModel : ViewModelBase
         _ = Scan.ScanAsync(); // hardware inventory in the background
     }
 
+    /// <summary>V7 community evidence: local-first, consent-first. Records YOUR anonymized outcomes;
+    /// nothing leaves the PC unless a backend is configured and you opt in.</summary>
+    public WPEP.Execution.CommunityService Community { get; } = new();
+
+    /// <summary>Record an anonymized outcome for a tweak (best-effort; skipped if no rig signature yet).</summary>
+    public void RecordEvidence(string tweakId, string outcome, double? deltaPercent)
+    {
+        var dna = Scan.Dna;
+        if (dna is null)
+            return;
+        Community.Record(dna.Code, dna.Tier, tweakId, outcome, deltaPercent, DateTimeOffset.UtcNow.ToString("o"));
+    }
+
     /// <summary>Jump to a KB entry from anywhere (Verdict "How to" buttons).</summary>
     public void ShowKbEntry(string id)
     {
@@ -206,6 +219,7 @@ public sealed class VerdictItem : ViewModelBase
                 SetOn(true);
                 StatusLine = "attivo · annullabile";
                 _main.Changes.Refresh();
+                _main.RecordEvidence(Id, "applied", null); // V7: chi l'ha provato (anonimo, locale)
                 _main.ShowToast($"{Name} · attivato (annullabile da Modifiche)", "Ok");
             }
             else
