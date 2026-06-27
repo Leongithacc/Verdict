@@ -74,8 +74,6 @@ Progetti (in `src/`):
 5. **ClaudeBrain** (co-pilota cloud) opzionale, dietro `ICoPilotBrain` — solo se Léon vuole qualità cloud.
 
 ## 5. Bug noti / debito tecnico
-- **ApplyDialog singolo = codice morto**: dopo i toggle (V6.5) `ApplyDialogViewModel.Open` ha 0 chiamanti.
-  Inerte (non si apre mai), da rimuovere a parte (c'è un chip/task flaggato). NON è `ApplyAllViewModel` (quella è viva).
 - **Firma del modello Ollama**: default "qwen2.5"; Léon ha "qwen2.5vl:32b" → impostabile nella pagina Co-pilota.
 - **GitHub Pages non ancora acceso** → il QR mostra "Nessuna release/pagina" finché Léon non attiva Pages.
 - Nessun bug logico aperto: audit #68 (tutto il prodotto) + #69 (post-V6.5/V7) → codice maturo robusto.
