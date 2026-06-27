@@ -1747,18 +1747,29 @@ static int RunCommunity()
 
 static async Task<int> RunCopilot(string[] args)
 {
-    // Domanda = argomenti non-flag uniti; --model opzionale per scegliere il modello Ollama.
+    // Flag: --brain ollama|claude (default ollama), --model <nome> (Ollama o Claude in base a --brain),
+    // --api-key <key> per Claude (oppure env ANTHROPIC_API_KEY). La domanda = argomenti non-flag uniti.
     string? model = null;
+    string brainKind = "ollama";
+    string? apiKey = null;
     var qparts = new List<string>();
     for (int i = 0; i < args.Length; i++)
     {
         if (args[i] == "--model" && i + 1 < args.Length) { model = args[++i]; continue; }
+        if (args[i] == "--brain" && i + 1 < args.Length) { brainKind = args[++i].ToLowerInvariant(); continue; }
+        if (args[i] == "--api-key" && i + 1 < args.Length) { apiKey = args[++i]; continue; }
         qparts.Add(args[i]);
     }
     var question = string.Join(' ', qparts).Trim();
     if (question.Length == 0)
     {
-        Console.Error.WriteLine("Uso: wpep copilot \"la tua domanda\" [--model <nome>]");
+        Console.Error.WriteLine(
+            "Uso: wpep copilot \"la tua domanda\" [--brain ollama|claude] [--model <nome>] [--api-key <key>]");
+        return 2;
+    }
+    if (brainKind != "ollama" && brainKind != "claude")
+    {
+        Console.Error.WriteLine($"--brain sconosciuto: '{brainKind}'. Usa 'ollama' o 'claude'.");
         return 2;
     }
 
@@ -1769,12 +1780,34 @@ static async Task<int> RunCopilot(string[] args)
     var snapshot = WPEP.SystemAnalyzer.SnapshotBuilder.Build(DateTimeOffset.UtcNow);
     var catalog = WPEP.Advisor.AdvisorEngine.Advise(snapshot, entries, LiveDetector(entries));
 
-    var brain = new WPEP.Advisor.CoPilot.OllamaBrain(model);
+    WPEP.Advisor.CoPilot.ICoPilotBrain brain;
+    if (brainKind == "claude")
+    {
+        var key = apiKey ?? Environment.GetEnvironmentVariable("ANTHROPIC_API_KEY") ?? "";
+        if (key.Length == 0)
+        {
+            Console.Error.WriteLine("Per --brain claude serve la API key Anthropic: passa --api-key <key>");
+            Console.Error.WriteLine("oppure imposta la variabile d'ambiente ANTHROPIC_API_KEY.");
+            return 2;
+        }
+        brain = new WPEP.Advisor.CoPilot.ClaudeBrain(key, model);
+    }
+    else
+    {
+        brain = new WPEP.Advisor.CoPilot.OllamaBrain(model);
+    }
     Console.WriteLine($"Co-pilota: {brain.Name}");
     if (!await brain.IsAvailableAsync())
     {
-        Console.WriteLine("Ollama non raggiungibile su localhost:11434. Avvialo (ollama serve) e assicurati");
-        Console.WriteLine($"che il modello sia installato:  ollama pull {model ?? WPEP.Advisor.CoPilot.CoPilotConfig.DefaultModel}");
+        if (brainKind == "claude")
+        {
+            Console.WriteLine("Claude non raggiungibile. Verifica la API key e la connessione internet.");
+        }
+        else
+        {
+            Console.WriteLine("Ollama non raggiungibile su localhost:11434. Avvialo (ollama serve) e assicurati");
+            Console.WriteLine($"che il modello sia installato:  ollama pull {model ?? WPEP.Advisor.CoPilot.CoPilotConfig.DefaultModel}");
+        }
         return 0;
     }
 
@@ -1935,11 +1968,13 @@ static void PrintUsage()
                               coi "rig simili" si accende solo con un server opt-in (decisione futura).
 
         — AI co-pilot (V6, sola lettura) —
-          wpep copilot "<domanda>" [--model <nome>]
+          wpep copilot "<domanda>" [--brain ollama|claude] [--model <nome>] [--api-key <key>]
               Chiedi in linguaggio naturale ("rendi Valorant più fluido"): il co-pilota
               interpreta e propone SOLO tweak del catalogo verificato di Verdict (gli id
               inventati vengono scartati), spiegando con onestà. Non applica nulla.
-              Cervello: Ollama locale (gratis+privato) — serve `ollama serve` attivo.
+              Cervello di default: Ollama locale (gratis+privato) — serve `ollama serve`.
+              --brain claude usa Anthropic Claude (cloud, qualità superiore): la API key
+              arriva da --api-key o dalla variabile d'ambiente ANTHROPIC_API_KEY.
 
         — Versione & aggiornamenti —
           wpep version        Mostra la versione di Verdict.

@@ -72,6 +72,56 @@ public sealed class AppSettings
     /// l'utente può puntare al modello che ha DAVVERO installato (es. "qwen2.5vl:32b").</summary>
     public string CoPilotModel { get; set; } = "";
 
+    /// <summary>Quale cervello usa il co-pilota: "ollama" (locale, default, privato) o
+    /// "claude" (cloud Anthropic, opt-in: serve <see cref="ClaudeApiKey"/>). Persistito.</summary>
+    public string CoPilotBrain { get; set; } = "ollama";
+
+    /// <summary>Modello Claude per il co-pilota cloud. Vuoto = default (claude-sonnet-4-6).
+    /// Cambiabile a claude-opus-4-8, claude-haiku-4-5-20251001, ecc.</summary>
+    public string ClaudeModel { get; set; } = "";
+
+    /// <summary>Forma serializzata della API key Anthropic: cifrata DPAPI per l'utente Windows
+    /// corrente, poi base64. Mai esposta come property in chiaro al di fuori di
+    /// <see cref="ClaudeApiKey"/>. Spostare settings.json su un altro utente/PC ⇒ chiave illeggibile
+    /// (richiesto re-inserimento), che è il comportamento desiderato.</summary>
+    public string ClaudeApiKeyEncrypted { get; set; } = "";
+
+    /// <summary>API key Anthropic in chiaro per uso runtime. Getter/setter convertono trasparentemente
+    /// da/a <see cref="ClaudeApiKeyEncrypted"/> via DPAPI (CurrentUser). Mai serializzata.</summary>
+    [System.Text.Json.Serialization.JsonIgnore]
+    public string ClaudeApiKey
+    {
+        get
+        {
+            if (string.IsNullOrEmpty(ClaudeApiKeyEncrypted)) return "";
+            try
+            {
+                var bytes = Convert.FromBase64String(ClaudeApiKeyEncrypted);
+                var plain = System.Security.Cryptography.ProtectedData.Unprotect(
+                    bytes, null, System.Security.Cryptography.DataProtectionScope.CurrentUser);
+                return System.Text.Encoding.UTF8.GetString(plain);
+            }
+            catch
+            {
+                // Settings spostato da un altro utente / file corrotto: trattalo come "non configurata".
+                return "";
+            }
+        }
+        set
+        {
+            if (string.IsNullOrEmpty(value))
+            {
+                ClaudeApiKeyEncrypted = "";
+                return;
+            }
+            var bytes = System.Security.Cryptography.ProtectedData.Protect(
+                System.Text.Encoding.UTF8.GetBytes(value),
+                null,
+                System.Security.Cryptography.DataProtectionScope.CurrentUser);
+            ClaudeApiKeyEncrypted = Convert.ToBase64String(bytes);
+        }
+    }
+
     /// <summary>Risk Slider (Lab feature): how far the user wants to go. Default Balanced =
     /// the normal recommended set. Persisted so the choice sticks across launches.</summary>
     public RiskTolerance RiskTolerance { get; set; } = RiskTolerance.Balanced;

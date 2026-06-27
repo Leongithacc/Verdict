@@ -3,14 +3,24 @@ using System.Text.Json;
 
 namespace WPEP.Advisor.CoPilot;
 
-/// <summary>Default config for the co-pilot. Local Ollama = gratis + privato: i dati
-/// non escono dal PC. Cambiabile (modello/endpoint) da Impostazioni in futuro.</summary>
+/// <summary>Default config per i due cervelli del co-pilota.
+/// LOCALE (Ollama) = gratis + privato, default. CLOUD (Claude) = opzionale, qualità superiore
+/// ma manda la domanda + il catalogo a Anthropic. La scelta sta in <see cref="AppSettings"/>.</summary>
 public static class CoPilotConfig
 {
+    // ── Ollama (locale, default) ────────────────────────────────────────────
     public const string OllamaEndpoint = "http://localhost:11434";
     // Modello text di Ollama. Léon ha qwen sul PC; se questo non è "pullato" il co-pilota
     // lo dice con grazia (errore visibile, niente crash) e basta `ollama pull <modello>`.
     public const string DefaultModel = "qwen2.5";
+
+    // ── Anthropic / Claude (cloud, opt-in) ──────────────────────────────────
+    public const string AnthropicEndpoint = "https://api.anthropic.com";
+    // Versione API stabile (Messages). Da bumpare se Anthropic la avanza.
+    public const string AnthropicVersion = "2023-06-01";
+    // Default = Sonnet 4.6 (bilanciato qualità/costo per testo strutturato e breve).
+    // L'utente può puntare a Opus 4.8 (più costoso) o Haiku 4.5 (più economico) da settings.
+    public const string DefaultClaudeModel = "claude-sonnet-4-6";
 }
 
 /// <summary>Cervello locale via Ollama (http://localhost:11434). Nessun dato lascia il PC.

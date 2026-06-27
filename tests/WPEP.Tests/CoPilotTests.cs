@@ -99,4 +99,31 @@ public class CoPilotTests
         Assert.NotNull(reply.Error);
         Assert.Empty(reply.Suggestions);
     }
+
+    // ── ClaudeBrain smoke ────────────────────────────────────────────────
+    // Nessuna chiamata di rete: tutto deterministico off-line.
+
+    [Fact]
+    public void ClaudeBrain_default_model_is_sonnet_4_6()
+    {
+        var b = new ClaudeBrain("sk-test");
+        Assert.Contains("claude-sonnet-4-6", b.Name);
+        Assert.Contains("cloud", b.Name);
+    }
+
+    [Fact]
+    public void ClaudeBrain_explicit_model_wins_over_default()
+    {
+        var b = new ClaudeBrain("sk-test", "claude-opus-4-8");
+        Assert.Contains("claude-opus-4-8", b.Name);
+        Assert.DoesNotContain("sonnet", b.Name);
+    }
+
+    [Fact]
+    public async Task ClaudeBrain_unavailable_when_apikey_empty()
+    {
+        // Empty key ⇒ short-circuit a false senza toccare la rete.
+        Assert.False(await new ClaudeBrain("").IsAvailableAsync());
+        Assert.False(await new ClaudeBrain("   ").IsAvailableAsync());
+    }
 }

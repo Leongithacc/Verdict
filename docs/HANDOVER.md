@@ -51,7 +51,8 @@ Progetti (in `src/`):
   CS2/Apex/OW2/TheFinals/R6 + altri) · **V5** Automazione (Watchdog tray + Sentinel + Time Machine).
 - **V6 AI Co-pilot**: linguaggio naturale → cita SOLO tweak del catalogo (id inventati SCARTATI nel codice,
   non solo nel prompt). Read-only. Cervello = Ollama locale (default qwen2.5, configurabile in GUI).
-  `ICoPilotBrain` swappable → ClaudeBrain cloud futuro. CLI `wpep copilot "..."`, pagina GUI "Co-pilota".
+  `ICoPilotBrain` swappable: **OllamaBrain** (default) o **ClaudeBrain** (cloud Anthropic,
+  opt-in via API key cifrata DPAPI). CLI `wpep copilot "..." [--brain ollama|claude]`, pagina GUI "Co-pilota".
 - **V6.5 UI a INTERRUTTORI**: la lista Verdict + co-pilota usano toggle ON/OFF (no più "Come fare/Applica").
   Immediato + conferma sui rischiosi; OFF = undo del journal REALE (mai un valore indovinato); admin →
   disabilitato; manuali → toggle disabilitato + info. **QR guida BIOS** per i tweak manuali-BIOS
@@ -71,7 +72,9 @@ Progetti (in `src/`):
    L'interfaccia `ICommunityBackend` è pronta: basta un `RemoteBackend` dietro di essa.
 4. **2ª passata Claude Design** ("per esagerare") → estetica finale degli interruttori/QR/card. Istruzioni
    già in `docs/CLAUDE_DESIGN_BRIEF.md` (sezione "AGGIORNAMENTO 2026-06-26"). Léon NON l'ha ancora fatta (token).
-5. **ClaudeBrain** (co-pilota cloud) opzionale, dietro `ICoPilotBrain` — solo se Léon vuole qualità cloud.
+5. ~~**ClaudeBrain** (co-pilota cloud) opzionale, dietro `ICoPilotBrain` — solo se Léon vuole qualità cloud.~~
+   **Fatto 2026-06-27**: `WPEP.Advisor/CoPilot/ClaudeBrain.cs` + UI Co-pilota (radio Ollama/Claude +
+   PasswordBox API key) + CLI flag `--brain claude --api-key`. Default model `claude-sonnet-4-6`.
 
 ## 5. Bug noti / debito tecnico
 - **Firma del modello Ollama**: default "qwen2.5"; Léon ha "qwen2.5vl:32b" → impostabile nella pagina Co-pilota.

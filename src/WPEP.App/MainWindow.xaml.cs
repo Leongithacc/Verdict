@@ -137,4 +137,13 @@ public partial class MainWindow : Window
     private void OnNavLab(object s, RoutedEventArgs e) => _vm.CurrentPage = _vm.Lab;
     private void OnNavCoPilot(object s, RoutedEventArgs e) => _vm.CurrentPage = _vm.CoPilot;
     private void OnNavSettings(object s, RoutedEventArgs e) => _vm.CurrentPage = _vm.SettingsPage;
+
+    /// <summary>PasswordBox non bind-abile in MVVM puro: trasferiamo a mano al VM, che cifra
+    /// e salva subito (DPAPI). Sender è la PasswordBox dentro la DataTemplate del CoPilot.</summary>
+    private void OnClaudeApiKeyChanged(object sender, RoutedEventArgs e)
+    {
+        if (sender is System.Windows.Controls.PasswordBox pb
+            && pb.DataContext is CoPilotViewModel cp)
+            cp.SetClaudeApiKey(pb.Password);
+    }
 }

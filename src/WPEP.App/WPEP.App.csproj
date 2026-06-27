@@ -11,6 +11,9 @@
     <!-- Pure-managed QR generator (MIT). Si impacchetta dentro l'app: nessuna dipendenza di runtime,
          resta portatile. Genera il QR per le guide BIOS sul telefono. -->
     <PackageReference Include="QRCoder" Version="1.6.0" />
+    <!-- DPAPI (Windows) per cifrare at-rest l'API key di Anthropic in settings.json.
+         Microsoft-first-party, Windows-only — l'app è già net*-windows, niente costi di portabilità. -->
+    <PackageReference Include="System.Security.Cryptography.ProtectedData" Version="9.0.0" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\WPEP.Core\WPEP.Core.csproj" />

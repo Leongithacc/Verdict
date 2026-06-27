@@ -1351,9 +1351,20 @@
         <StackPanel Margin="32,24" MaxWidth="720" HorizontalAlignment="Left">
           <TextBlock Style="{StaticResource H1}" Text="Co-pilota" />
           <TextBlock Style="{StaticResource Muted}" Margin="0,4,0,0" TextWrapping="Wrap"
-                     Text="Chiedi in parole tue. L'AI interpreta e cita SOLO tweak verificati di Verdict — non inventa, e non applica nulla da sola. Gira sul tuo Ollama locale: i dati restano sul PC." />
+                     Text="Chiedi in parole tue. L'AI interpreta e cita SOLO tweak verificati di Verdict — non inventa, e non applica nulla da sola. Scegli il cervello: Ollama locale (privato) o Claude cloud (qualità superiore, manda la domanda a Anthropic)." />
 
-          <Border Style="{StaticResource Card}" Margin="0,16,0,0">
+          <StackPanel Orientation="Horizontal" Margin="0,12,0,0">
+            <TextBlock Text="Cervello:" Style="{StaticResource Muted}" FontSize="11"
+                       VerticalAlignment="Center" Margin="0,0,10,0" />
+            <RadioButton Content="Ollama (locale)" GroupName="copilotBrain"
+                         IsChecked="{Binding IsOllama, Mode=TwoWay}"
+                         VerticalAlignment="Center" Margin="0,0,14,0" />
+            <RadioButton Content="Claude (cloud)" GroupName="copilotBrain"
+                         IsChecked="{Binding IsClaude, Mode=TwoWay}"
+                         VerticalAlignment="Center" />
+          </StackPanel>
+
+          <Border Style="{StaticResource Card}" Margin="0,12,0,0">
             <StackPanel>
               <TextBox Text="{Binding Question, UpdateSourceTrigger=PropertyChanged}"
                        MinHeight="44" TextWrapping="Wrap" AcceptsReturn="False"
@@ -1362,7 +1373,9 @@
                   <KeyBinding Key="Enter" Command="{Binding AskCommand}" />
                 </TextBox.InputBindings>
               </TextBox>
-              <StackPanel Orientation="Horizontal" Margin="0,12,0,0">
+
+              <StackPanel Orientation="Horizontal" Margin="0,12,0,0"
+                          Visibility="{Binding IsOllama, Converter={StaticResource BoolToVis}}">
                 <Button Style="{StaticResource PrimaryButton}" Content="Chiedi"
                         Command="{Binding AskCommand}" IsEnabled="{Binding CanAsk}" />
                 <TextBlock Text="Modello Ollama:" Style="{StaticResource Muted}" FontSize="11"
@@ -1371,6 +1384,32 @@
                          VerticalAlignment="Center" VerticalContentAlignment="Center"
                          Foreground="{DynamicResource Text}"
                          ToolTip="Il modello che hai in Ollama (es. qwen2.5vl:32b). Vuoto = qwen2.5." />
+              </StackPanel>
+
+              <StackPanel Margin="0,12,0,0"
+                          Visibility="{Binding IsClaude, Converter={StaticResource BoolToVis}}">
+                <StackPanel Orientation="Horizontal">
+                  <Button Style="{StaticResource PrimaryButton}" Content="Chiedi"
+                          Command="{Binding AskCommand}" IsEnabled="{Binding CanAsk}" />
+                  <TextBlock Text="Modello Claude:" Style="{StaticResource Muted}" FontSize="11"
+                             VerticalAlignment="Center" Margin="16,0,6,0" />
+                  <TextBox Text="{Binding ClaudeModel, UpdateSourceTrigger=LostFocus}" Width="220"
+                           VerticalAlignment="Center" VerticalContentAlignment="Center"
+                           Foreground="{DynamicResource Text}"
+                           ToolTip="claude-sonnet-4-6 (default), claude-opus-4-8, claude-haiku-4-5-20251001…" />
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
+                  <TextBlock Text="API key Anthropic:" Style="{StaticResource Muted}" FontSize="11"
+                             VerticalAlignment="Center" Margin="0,0,6,0" />
+                  <PasswordBox x:Name="ClaudeApiKeyBox" Width="280"
+                               VerticalAlignment="Center" VerticalContentAlignment="Center"
+                               Foreground="{DynamicResource Text}"
+                               PasswordChanged="OnClaudeApiKeyChanged"
+                               ToolTip="Salvata cifrata DPAPI sul tuo PC. Vuoto = co-pilota non chiamabile." />
+                  <TextBlock Text="✓ configurata" Style="{StaticResource Muted}" FontSize="11"
+                             VerticalAlignment="Center" Margin="10,0,0,0"
+                             Visibility="{Binding HasClaudeApiKey, Converter={StaticResource BoolToVis}}" />
+                </StackPanel>
               </StackPanel>
             </StackPanel>
           </Border>
