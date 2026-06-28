@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Verdict — Community: tweak più provati</title>
+<style>
+  :root{--bg:#0B0A12;--card:#15131F;--line:#262232;--text:#ECEAF2;--muted:#8A8696;--accent:#DB4A86;--ok:#34D399;--warn:#FBBF24;--danger:#F87171}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--text);font:16px/1.6 system-ui,-apple-system,Segoe UI,Roboto,sans-serif;padding:22px;max-width:780px;margin:0 auto}
+  h1{font-size:22px;font-weight:600;margin:.2em 0}
+  .sub{color:var(--muted);font-size:14px;margin-bottom:18px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px 18px;margin:14px 0}
+  table{width:100%;border-collapse:collapse;font-size:14px}
+  th{text-align:left;color:var(--muted);font-weight:600;padding:8px 6px;border-bottom:1px solid var(--line)}
+  td{padding:8px 6px;border-bottom:1px solid var(--line)}
+  tr:last-child td{border-bottom:none}
+  .rank{color:var(--muted);font-variant-numeric:tabular-nums;width:32px}
+  .tid{font-family:Cascadia Code,Cascadia Mono,Consolas,monospace;font-size:13px}
+  .tier{display:inline-block;font-size:11px;padding:2px 8px;border-radius:8px;background:#332040;color:var(--muted)}
+  .pct{font-variant-numeric:tabular-nums;text-align:right;width:60px}
+  .helped{color:var(--ok)}
+  .hurt{color:var(--danger)}
+  .empty{color:var(--muted);font-style:italic;text-align:center;padding:30px 0}
+  .foot{color:var(--muted);font-size:12px;margin-top:22px;border-top:1px solid var(--line);padding-top:12px}
+  a{color:var(--accent);text-decoration:none}
+  a:hover{text-decoration:underline}
+  .err{color:var(--danger);font-size:13px;padding:14px;background:rgba(248,113,113,.08);border:1px solid #5A2727;border-radius:10px;margin:14px 0}
+</style>
+</head>
+<body>
+  <h1>Community — tweak più provati</h1>
+  <div class="sub">Esiti aggregati anonimi dai rig che hanno scelto di condividere (opt-in). Nessun dato personale: solo categoria del rig, id tweak e percentuale di esiti misurati helped / no-effect / hurt.</div>
+
+  <div class="card">
+    <table id="board">
+      <thead>
+        <tr>
+          <th class="rank">#</th>
+          <th>Tweak</th>
+          <th>Tier rig</th>
+          <th class="pct">Sample</th>
+          <th class="pct">Helped</th>
+          <th class="pct">Hurt</th>
+        </tr>
+      </thead>
+      <tbody id="rows">
+        <tr><td colspan="6" class="empty">Caricamento…</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="foot">
+    Aggiornato di notte (UTC 03:00). Soglia minima: 10 sample per riga (sotto, niente percentuale: rispetta la regola d'oro "niente FPS finti").
+    <br/>
+    <a href="index.html">Torna alle guide BIOS</a> ·
+    <a href="https://github.com/Leongithacc/Verdict" target="_blank">Verdict su GitHub</a>
+  </div>
+
+<script>
+  const ENDPOINT = "https://verdict-community.gz6jk62yk8.workers.dev";
+
+  async function load() {
+    const tbody = document.getElementById("rows");
+    try {
+      const resp = await fetch(ENDPOINT + "/v1/top-tweaks?limit=20");
+      if (!resp.ok) throw new Error("HTTP " + resp.status);
+      const data = await resp.json();
+      const top = Array.isArray(data.top) ? data.top : [];
+      if (top.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" class="empty">Nessun dato ancora — la community sta scaldando i motori. Torna tra qualche giorno.</td></tr>';
+        return;
+      }
+      tbody.innerHTML = top.map((r, i) => `
+        <tr>
+          <td class="rank">${i + 1}</td>
+          <td class="tid">${esc(r.tweak_id)}</td>
+          <td><span class="tier">${esc(r.rig_tier)}</span></td>
+          <td class="pct">${r.sample_size}</td>
+          <td class="pct helped">${r.helped_percent}%</td>
+          <td class="pct hurt">${r.hurt_percent}%</td>
+        </tr>
+      `).join("");
+    } catch (e) {
+      tbody.innerHTML = '';
+      const err = document.createElement("div");
+      err.className = "err";
+      err.textContent = "Impossibile caricare la leaderboard: " + (e && e.message || e);
+      document.querySelector(".card").appendChild(err);
+    }
+  }
+
+  function esc(s) {
+    return String(s).replace(/[&<>"']/g, c => ({
+      "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+    }[c]));
+  }
+
+  load();
+</script>
+</body>
+</html>
