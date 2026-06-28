@@ -68,8 +68,10 @@ Progetti (in `src/`):
 1. **Pubblicare su GitHub** (repo `Leongithacc/Verdict` PUBLIC) → accende auto-update + sync vacanza.
    Runbook: `docs/RELEASE_GITHUB.md`. Lo zip release: `bash tools/package-release.sh` → `dist/Verdict-1.0.zip`.
 2. **Accendere GitHub Pages** (Source: GitHub Actions) → il QR BIOS diventa live. Runbook: `docs/BIOS_GUIDE_GITHUB_PAGES.md`.
-3. **V7 remoto** ("ha aiutato il 73% dei rig simili") → serve DECISIONE: server + privacy + opt-in.
-   L'interfaccia `ICommunityBackend` è pronta: basta un `RemoteBackend` dietro di essa.
+3. **V7 remoto** ("ha aiutato il 73% dei rig simili") → ~~serve DECISIONE: server + privacy + opt-in.~~
+   **Design completo 2026-06-28** in `docs/V7_REMOTE_BACKEND_DESIGN.md` (stack: Cloudflare
+   Workers + D1, opt-in silent default OFF, schema/API/RemoteBackend.cs skeleton, runbook deploy).
+   Manca SOLO l'implementazione (~4h, vedi sez. 14 del doc).
 4. **2ª passata Claude Design** ("per esagerare") → estetica finale degli interruttori/QR/card. Istruzioni
    già in `docs/CLAUDE_DESIGN_BRIEF.md` (sezione "AGGIORNAMENTO 2026-06-26"). Léon NON l'ha ancora fatta (token).
 5. ~~**ClaudeBrain** (co-pilota cloud) opzionale, dietro `ICoPilotBrain` — solo se Léon vuole qualità cloud.~~
