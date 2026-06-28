@@ -91,7 +91,7 @@ switch (args[0])
     case "evidence":
         return RunEvidence();
     case "community":
-        return RunCommunity();
+        return RunCommunity(args.Skip(1).ToArray());
     default:
         Console.Error.WriteLine($"Comando sconosciuto: {args[0]}");
         PrintUsage();
@@ -1733,14 +1733,83 @@ static int RunEvidence()
     return 0;
 }
 
-static int RunCommunity()
+static int RunCommunity(string[] args)
 {
-    var svc = new WPEP.Execution.CommunityService();
-    Console.WriteLine($"Community: {svc.BackendName}.");
+    // Subcomandi: --enable / --disable / --status (default). Toccano il file settings.json
+    // della GUI direttamente, evitando dipendenza da WPEP.App lato CLI.
+    string action = "status";
+    foreach (var a in args)
+    {
+        if (a == "--enable") action = "enable";
+        else if (a == "--disable") action = "disable";
+        else if (a == "--status") action = "status";
+        else
+        {
+            Console.Error.WriteLine($"Flag sconosciuto: {a}. Usa --enable, --disable, --status.");
+            return 2;
+        }
+    }
+
+    var settingsPath = System.IO.Path.Combine(
+        Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+        "Verdict", "data", "settings.json");
+
+    System.Text.Json.Nodes.JsonObject settings;
+    try
+    {
+        var json = System.IO.File.Exists(settingsPath)
+            ? System.IO.File.ReadAllText(settingsPath)
+            : "{}";
+        settings = (System.Text.Json.Nodes.JsonNode.Parse(json) as System.Text.Json.Nodes.JsonObject)
+                   ?? new System.Text.Json.Nodes.JsonObject();
+    }
+    catch (Exception ex)
+    {
+        Console.Error.WriteLine($"Impossibile leggere settings.json ({settingsPath}): {ex.Message}");
+        return 1;
+    }
+
+    if (action is "enable" or "disable")
+    {
+        settings["CommunityShareEnabled"] = action == "enable";
+        try
+        {
+            System.IO.Directory.CreateDirectory(System.IO.Path.GetDirectoryName(settingsPath)!);
+            System.IO.File.WriteAllText(settingsPath, settings.ToJsonString(
+                new System.Text.Json.JsonSerializerOptions { WriteIndented = true }));
+        }
+        catch (Exception ex)
+        {
+            Console.Error.WriteLine($"Impossibile salvare settings.json: {ex.Message}");
+            return 1;
+        }
+        Console.WriteLine(action == "enable"
+            ? "✓ Opt-in community attivato. La GUI userà RemoteBackend al prossimo avvio."
+            : "✓ Opt-in community disattivato. La GUI tornerà a LocalOnly al prossimo avvio.");
+        Console.WriteLine();
+    }
+
+    // Status sempre stampato in coda.
+    bool enabled = settings["CommunityShareEnabled"] is System.Text.Json.Nodes.JsonValue v
+                   && v.TryGetValue<bool>(out var b) && b;
+    bool configured = WPEP.Execution.CommunityConfig.IsConfigured;
+    var endpoint = WPEP.Execution.CommunityConfig.Endpoint;
+
+    WPEP.Execution.ICommunityBackend backend = (enabled && configured)
+        ? new WPEP.Execution.RemoteBackend(endpoint)
+        : new WPEP.Execution.LocalOnlyBackend();
+    var svc = new WPEP.Execution.CommunityService(backend);
+
+    Console.WriteLine($"Backend attivo: {svc.BackendName}");
+    Console.WriteLine($"Opt-in utente: {(enabled ? "ON" : "OFF")}");
+    Console.WriteLine($"Endpoint configurato: {(configured ? endpoint : "(nessuno)")}");
     if (!svc.CommunityActive)
     {
-        Console.WriteLine("Non ancora attiva: i tuoi esiti restano SOLO sul tuo PC, anonimi e in locale.");
-        Console.WriteLine("Quando ci sarà un server opt-in, potrai confrontare i tuoi tweak coi rig simili.");
+        Console.WriteLine();
+        if (!configured)
+            Console.WriteLine("Nessun backend configurato (CommunityConfig.Endpoint vuoto).");
+        else if (!enabled)
+            Console.WriteLine("Per attivare: wpep community --enable");
     }
     return 0;
 }
@@ -1964,8 +2033,10 @@ static void PrintUsage()
         — Community evidence (V7, privacy-first) —
           wpep evidence       Le TUE prove: per ogni tweak, com'è andata su questo PC
                               (applicato / aiutato / nessun effetto / peggiorato). Anonimo, in locale.
-          wpep community      Stato community. Di default LOCALE: nulla lascia il PC. Il confronto
-                              coi "rig simili" si accende solo con un server opt-in (decisione futura).
+          wpep community [--enable|--disable|--status]
+                              Stato community + controllo opt-in da CLI. Di default LOCALE:
+                              nulla lascia il PC. --enable attiva l'invio anonimo al backend
+                              configurato (la GUI ricarica al riavvio). --disable lo spegne.
 
         — AI co-pilot (V6, sola lettura) —
           wpep copilot "<domanda>" [--brain ollama|claude] [--model <nome>] [--api-key <key>]
