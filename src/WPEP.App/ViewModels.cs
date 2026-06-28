@@ -79,8 +79,9 @@ public sealed class MainViewModel : ViewModelBase
         Changes = new ChangesViewModel(Execution, Settings);
         Changes.Watchdog = new WatchdogViewModel(this);
         Changes.Main = this;
-        SettingsPage = new SettingsViewModel(Settings);
+        SettingsPage = new SettingsViewModel(Settings) { Main = this };
         Lab = new LabViewModel(Settings);
+        BuildCommunity(); // imposta Community in base a Settings.CommunityShareEnabled
         // EXPO state lands with the hardware scan → refresh the Verdict Score when it does.
         Scan.ScanCompleted += () => Verdict.RecomputeScore();
         ApplyAll = new ApplyAllViewModel(this, Execution);
@@ -110,9 +111,23 @@ public sealed class MainViewModel : ViewModelBase
 
     /// <summary>V7 community evidence: local-first, consent-first. Records YOUR anonymized outcomes;
     /// nothing leaves the PC unless a backend is configured and you opt in.</summary>
-    public WPEP.Execution.CommunityService Community { get; } = new();
+    public WPEP.Execution.CommunityService Community { get; private set; } = new();
 
-    /// <summary>Record an anonymized outcome for a tweak (best-effort; skipped if no rig signature yet).</summary>
+    /// <summary>Ricostruisce <see cref="Community"/> in base alle Settings correnti: RemoteBackend
+    /// quando opt-in attivo E endpoint configurato, altrimenti LocalOnlyBackend. Chiamata dal
+    /// constructor e dal SettingsViewModel quando l'utente flippa il checkbox.</summary>
+    public void BuildCommunity()
+    {
+        WPEP.Execution.ICommunityBackend backend =
+            (Settings.CommunityShareEnabled && WPEP.Execution.CommunityConfig.IsConfigured)
+                ? new WPEP.Execution.RemoteBackend(WPEP.Execution.CommunityConfig.Endpoint)
+                : new WPEP.Execution.LocalOnlyBackend();
+        Community = new WPEP.Execution.CommunityService(backend);
+        Raise(nameof(Community));
+    }
+
+    /// <summary>Record an anonymized outcome for a tweak (best-effort; skipped if no rig signature yet).
+    /// CommunityService.Record fa sia append locale che (eventuale) submit al backend remoto.</summary>
     public void RecordEvidence(string tweakId, string outcome, double? deltaPercent)
     {
         var dna = Scan.Dna;
@@ -947,6 +962,9 @@ public sealed class ReportViewModel(MainViewModel main) : ViewModelBase
 public sealed class SettingsViewModel : ViewModelBase
 {
     private readonly AppSettings _settings;
+    /// <summary>Ref al MainViewModel per chiedere il rebuild del community backend quando
+    /// l'utente flippa <see cref="CommunityShareEnabled"/>. Stesso pattern di Changes.Main.</summary>
+    public MainViewModel? Main { get; set; }
 
     public SettingsViewModel(AppSettings settings)
     {
@@ -1049,11 +1067,27 @@ public sealed class SettingsViewModel : ViewModelBase
     {
         get
         {
-            var svc = new WPEP.Execution.CommunityService();
+            var svc = Main?.Community ?? new WPEP.Execution.CommunityService();
             return svc.CommunityActive
-                ? $"Community attiva: {svc.BackendName}."
-                : "Community non ancora attiva — i tuoi esiti restano SOLO sul tuo PC, anonimi e in locale. "
-                  + "Il confronto coi rig simili si accenderà solo con un server opt-in.";
+                ? $"Community attiva: {svc.BackendName}. I tuoi esiti vengono inviati anonimi al server."
+                : "Community non attiva — i tuoi esiti restano SOLO sul tuo PC, anonimi e in locale.";
+        }
+    }
+
+    /// <summary>V7 opt-in: spedire/ricevere stats dal backend pubblico. Default OFF.
+    /// Al cambio: persiste + chiede al MainViewModel di ri-istanziare CommunityService col
+    /// backend giusto (LocalOnlyBackend → RemoteBackend o viceversa).</summary>
+    public bool CommunityShareEnabled
+    {
+        get => _settings.CommunityShareEnabled;
+        set
+        {
+            if (_settings.CommunityShareEnabled == value) return;
+            _settings.CommunityShareEnabled = value;
+            _settings.Save();
+            Main?.BuildCommunity();
+            Raise();
+            Raise(nameof(CommunityStatus));
         }
     }
 

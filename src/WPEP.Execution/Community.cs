@@ -1,3 +1,5 @@
+using System.Net.Http;
+using System.Text;
 using System.Text.Json;
 
 namespace WPEP.Execution;
@@ -99,6 +101,72 @@ public sealed class LocalOnlyBackend : ICommunityBackend
         => Task.FromResult<CommunityStats?>(null);
 }
 
+/// <summary>Backend cloud V7 — Cloudflare Worker (vedi docs/V7_REMOTE_BACKEND_DESIGN.md).
+/// Invia gli EvidenceRecord anonimi al server e interroga le stats aggregate. Fallisce
+/// silenziosamente in caso di rete giù / endpoint giù: il community è SEMPRE best-effort,
+/// non blocca mai un apply (la spec è quella di EvidenceLedger).</summary>
+public sealed class RemoteBackend : ICommunityBackend
+{
+    private static readonly HttpClient Http = new() { Timeout = TimeSpan.FromSeconds(15) };
+    private readonly string _endpoint;
+
+    public RemoteBackend(string endpoint)
+    {
+        _endpoint = (endpoint ?? "").TrimEnd('/');
+    }
+
+    public string Name => _endpoint.Length == 0
+        ? "Cloud (non configurato)"
+        : $"Cloud ({new Uri(_endpoint).Host})";
+
+    public bool IsConfigured => _endpoint.Length > 0;
+
+    public async Task SubmitAsync(IReadOnlyList<EvidenceRecord> records, CancellationToken ct = default)
+    {
+        if (!IsConfigured || records.Count == 0) return;
+        var payload = JsonSerializer.Serialize(new { records });
+        using var content = new StringContent(payload, Encoding.UTF8, "application/json");
+        content.Headers.TryAddWithoutValidation("User-Agent", $"Verdict/{WPEP.Core.AppVersion.Current}");
+        try
+        {
+            using var resp = await Http.PostAsync($"{_endpoint}/v1/evidence", content, ct);
+            // 200/202 = OK; 429 = back off (riproveremo al prossimo apply); altro = ignora
+            // (l'evidence resta in evidence.json e potrà essere re-inviata in futuro).
+        }
+        catch
+        {
+            // Rete giù / DNS / timeout: best-effort. L'utente non vede nulla, l'apply continua.
+        }
+    }
+
+    public async Task<CommunityStats?> QueryAsync(string tweakId, string rigTier, CancellationToken ct = default)
+    {
+        if (!IsConfigured) return null;
+        try
+        {
+            var url = $"{_endpoint}/v1/stats?tweak_id={Uri.EscapeDataString(tweakId)}"
+                    + $"&rig_tier={Uri.EscapeDataString(rigTier)}";
+            using var resp = await Http.GetAsync(url, ct);
+            if (!resp.IsSuccessStatusCode) return null;
+            var body = await resp.Content.ReadAsStringAsync(ct);
+            using var doc = JsonDocument.Parse(body);
+            var root = doc.RootElement;
+            if (!root.TryGetProperty("sample_size", out var sizeEl)) return null;
+            var size = sizeEl.GetInt32();
+            if (size == 0) return null;
+            return new CommunityStats(
+                size,
+                root.GetProperty("helped_percent").GetInt32(),
+                root.GetProperty("no_effect_percent").GetInt32(),
+                root.GetProperty("hurt_percent").GetInt32());
+        }
+        catch
+        {
+            return null;
+        }
+    }
+}
+
 public static class CommunityConfig
 {
     // Backend pubblico V7: Cloudflare Worker + D1 (Leongithacc).
@@ -121,8 +189,14 @@ public sealed class CommunityService
 
     public void Record(string rigSignature, string rigTier, string tweakId,
         string outcome, double? deltaPercent, string capturedAtIso)
-        => EvidenceLedger.Append(new EvidenceRecord(
-            rigSignature, rigTier, tweakId, outcome, deltaPercent, capturedAtIso));
+    {
+        var record = new EvidenceRecord(
+            rigSignature, rigTier, tweakId, outcome, deltaPercent, capturedAtIso);
+        EvidenceLedger.Append(record);
+        // Fire-and-forget al backend (LocalOnly = no-op, Remote = best-effort POST).
+        // L'evidence resta in evidence.json a prescindere: niente perdita se il submit fallisce.
+        _ = _backend.SubmitAsync(new[] { record });
+    }
 
     /// <summary>Il TUO storico per un tweak (sempre disponibile, offline).</summary>
     public IReadOnlyList<EvidenceRecord> MyHistory(string tweakId)

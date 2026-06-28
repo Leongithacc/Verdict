@@ -76,6 +76,11 @@ public sealed class AppSettings
     /// "claude" (cloud Anthropic, opt-in: serve <see cref="ClaudeApiKey"/>). Persistito.</summary>
     public string CoPilotBrain { get; set; } = "ollama";
 
+    /// <summary>V7 community remoto: opt-in esplicito per inviare i tuoi esiti anonimi al
+    /// backend pubblico (Cloudflare Worker) E ricevere le stats community. Default OFF →
+    /// LocalOnlyBackend, niente rete. Vedi docs/V7_REMOTE_BACKEND_DESIGN.md.</summary>
+    public bool CommunityShareEnabled { get; set; }
+
     /// <summary>Modello Claude per il co-pilota cloud. Vuoto = default (claude-sonnet-4-6).
     /// Cambiabile a claude-opus-4-8, claude-haiku-4-5-20251001, ecc.</summary>
     public string ClaudeModel { get; set; } = "";

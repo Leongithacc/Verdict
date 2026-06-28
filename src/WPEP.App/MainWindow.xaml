@@ -1643,6 +1643,11 @@
                          TextWrapping="Wrap" />
               <TextBlock Style="{StaticResource Muted}" FontSize="11" Text="{Binding CommunityStatus}"
                          Margin="0,8,0,0" TextWrapping="Wrap" />
+              <CheckBox Margin="0,12,0,0" IsChecked="{Binding CommunityShareEnabled, Mode=TwoWay}"
+                        Content="Condividi i miei esiti anonimi con la community Verdict"
+                        Foreground="{DynamicResource Text}" />
+              <TextBlock Style="{StaticResource Muted}" FontSize="11" Margin="22,4,0,0" TextWrapping="Wrap"
+                         Text="Spedito: rig_signature (hash anonimo), tier, tweak id, esito, delta misurato. Niente IP, niente nome, niente modello esatto. Vedi docs/V7_REMOTE_BACKEND_DESIGN.md sez. 7." />
             </StackPanel>
           </Border>
           <Border Style="{StaticResource Card}">
