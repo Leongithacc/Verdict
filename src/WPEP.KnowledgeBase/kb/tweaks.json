@@ -3597,5 +3597,83 @@
       "undo": "manual-steps",
       "gui_only_reason": "BIOS setting — no safe programmatic path"
     }
+  },
+  {
+    "id": "intel-xtu-undervolt",
+    "name": "Undervolt CPU Intel (XTU / ThrottleStop)",
+    "category": "power",
+    "description": "L'undervolt CPU su Intel riduce il voltaggio mantenendo il clock: meno temps, meno thermal throttling, ventole più silenziose. Si fa con Intel XTU (Extreme Tuning Utility) o ThrottleStop. È l'equivalente del Curve Optimizer su Ryzen.",
+    "hardware_prerequisites": [
+      "desktop"
+    ],
+    "expected_impact": "Temps -5/-10°C tipici, sustained boost più alto a parità di TDP. Su CPU thermal-bound (laptop, mini-PC, case piccoli) può tradursi in 1-5 FPS in giochi CPU-bound.",
+    "evidence_level": "evidence_strong",
+    "sources": [
+      "https://www.intel.com/content/www/us/en/gaming/extreme-tuning-utility.html",
+      "https://www.intel.com/content/www/us/en/support/articles/000058922/processors.html"
+    ],
+    "risk": "medium",
+    "risk_notes": "Undervolt instabile causa crash subdoli (WHEA Logger errors, freeze in gioco). Stress test obbligatori (Cinebench R23 multi-core in loop 30+ min, OCCT). Scendi di -10mV alla volta. ATTENZIONE: dopo la mitigazione Plundervolt (CVE-2019-11157) molte CPU 10th gen+ ignorano l'undervolt firmware-side anche se XTU mostra il setting come applicato — verifica il Vcore reale con HWiNFO.",
+    "rollback": "Intel XTU → 'Restore Defaults'. ThrottleStop → deseleziona 'Unlock Adjustable Voltage' e azzera Offset Voltage.",
+    "manual_steps": "Scarica Intel XTU dal sito Intel ufficiale. Avvia → Advanced Tuning → Core / Cache Voltage Offset → applica step di -50mV. Cinebench R23 multi-core 30+ minuti: se crasha, alza di 10mV e ripeti. Verifica con HWiNFO che il Vcore reale stia effettivamente scendendo.",
+    "conflicts_with": [],
+    "measurable": true,
+    "apply": {
+      "method": "gui-only",
+      "operations": [],
+      "requires_reboot": false,
+      "undo": "manual-steps",
+      "gui_only_reason": "Vendor utility (XTU/ThrottleStop) — no safe programmatic path"
+    }
+  },
+  {
+    "id": "windows-update-active-hours-extend",
+    "name": "Estendi Active Hours Windows Update (max 18 ore)",
+    "category": "background",
+    "description": "Active Hours dice a Windows Update quando NON riavviare automaticamente. Default è 8-17. Estenderlo a 18 ore (es. 6:00-24:00) elimina i riavvii a sorpresa durante gaming serale o di notte.",
+    "hardware_prerequisites": [],
+    "expected_impact": "Zero riavvii a sorpresa nelle 18 ore configurate. Gli aggiornamenti restano in coda e si applicano al primo riavvio manuale.",
+    "evidence_level": "evidence_strong",
+    "sources": [
+      "https://support.microsoft.com/en-us/windows/change-active-hours-for-windows-update-fa913124-c8b0-72cf-67d2-9af4fce7b97e"
+    ],
+    "risk": "none",
+    "risk_notes": "Microsoft impone un cap di 18 ore (le restanti 6 sono riservate a riavvii forzati per patch critiche). Non lo aggira.",
+    "rollback": "Impostazioni → Windows Update → Opzioni avanzate → Active hours → Automatically (o Manually 8-17 standard).",
+    "manual_steps": "Impostazioni → Windows Update → Opzioni avanzate → Active hours = Manually. Start time = 06:00, End time = 00:00 (24:00). Salva.",
+    "conflicts_with": [],
+    "measurable": false,
+    "apply": {
+      "method": "gui-only",
+      "operations": [],
+      "requires_reboot": false,
+      "undo": "manual-steps",
+      "gui_only_reason": "Settings UI con possibile interferenza GPO in domini aziendali — niente registry diretto"
+    }
+  },
+  {
+    "id": "focus-assist-fullscreen-game",
+    "name": "Focus Assist automatico in giochi fullscreen",
+    "category": "background",
+    "description": "Focus Assist (Win10) / Do Not Disturb (Win11) silenzia notifiche e popup. La regola 'Quando uso un'app in fullscreen / Quando gioco' lo attiva da solo quando serve davvero — niente Discord ping che ruba il focus mentre stai per shootare.",
+    "hardware_prerequisites": [],
+    "expected_impact": "Zero notifiche di sistema durante gioco fullscreen. Quando esci, ricevi il riepilogo di cosa hai perso.",
+    "evidence_level": "evidence_strong",
+    "sources": [
+      "https://support.microsoft.com/en-us/windows/turn-do-not-disturb-on-or-off-in-windows-1f7ddc05-7adc-7c34-fa19-86c1a8c10a55"
+    ],
+    "risk": "none",
+    "risk_notes": "Solo notifiche di sistema. Audio di Discord/Spotify/Teams non viene toccato — quelli si silenziano dai client.",
+    "rollback": "Impostazioni → Sistema → Notifiche → Do not disturb → disattiva le regole 'When playing a game' / 'When using app in full-screen mode'.",
+    "manual_steps": "Win11: Impostazioni → Sistema → Notifiche → Do not disturb → Activate Do not disturb automatically → spunta 'When playing a game' E 'When using an app in full-screen mode'. Win10: Impostazioni → Sistema → Focus Assist → Automatic rules → 'When I'm playing a game' = On (Priority only).",
+    "conflicts_with": [],
+    "measurable": false,
+    "apply": {
+      "method": "gui-only",
+      "operations": [],
+      "requires_reboot": false,
+      "undo": "manual-steps",
+      "gui_only_reason": "Settings UI — niente registry stabile cross-versione Win10/11"
+    }
   }
 ]

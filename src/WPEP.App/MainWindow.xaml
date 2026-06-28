@@ -250,7 +250,7 @@
                                 <Border CornerRadius="3" Padding="5,1" VerticalAlignment="Center" Margin="0,0,7,0"
                                         Background="{Binding KindColor, Converter={StaticResource TokenBrush}}">
                                   <TextBlock Text="{Binding KindLabel}" FontSize="9" FontWeight="Bold"
-                                             Foreground="#0F0F14" />
+                                             Foreground="{DynamicResource OnAccent}" />
                                 </Border>
                                 <TextBlock Style="{StaticResource Body}" Text="{Binding Name}"
                                            VerticalAlignment="Center" />
@@ -720,7 +720,7 @@
                   <DockPanel Margin="4,4" LastChildFill="True">
                     <Border DockPanel.Dock="Right" Style="{StaticResource Badge}"
                             Background="{Binding Badge.ColorKey, Converter={StaticResource TokenBrush}}">
-                      <TextBlock Text="{Binding Badge.Label}" FontSize="11" Foreground="#0F0F14" />
+                      <TextBlock Text="{Binding Badge.Label}" FontSize="11" Foreground="{DynamicResource OnAccent}" />
                     </Border>
                     <StackPanel>
                       <TextBlock Style="{StaticResource Body}" Text="{Binding Name}" TextTrimming="CharacterEllipsis" />
@@ -792,7 +792,7 @@
                           <DockPanel>
                             <Border DockPanel.Dock="Right" Background="{DynamicResource Neutral}" CornerRadius="3"
                                     Padding="6,1" VerticalAlignment="Center">
-                              <TextBlock Text="PLACEBO" FontSize="9" FontWeight="Bold" Foreground="#0F0F14" />
+                              <TextBlock Text="PLACEBO" FontSize="9" FontWeight="Bold" Foreground="{DynamicResource OnAccent}" />
                             </Border>
                             <TextBlock Text="{Binding Name}" FontWeight="SemiBold"
                                        Foreground="{DynamicResource Text}" VerticalAlignment="Center" />

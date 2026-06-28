@@ -20,6 +20,9 @@
   <Color x:Key="C.Warn">#FBBF24</Color>
   <Color x:Key="C.Danger">#F87171</Color>
   <Color x:Key="C.Neutral">#6B7280</Color>
+  <!-- OnAccent: testo SCURO da mettere SOPRA Accent (badge/highlight). Costante per design:
+       i preset di tema assumono Accent come tinta forte/saturata su cui un ink scuro resta leggibile. -->
+  <Color x:Key="C.OnAccent">#0F0F14</Color>
 
   <SolidColorBrush x:Key="Bg" Color="{DynamicResource C.Bg}" />
   <SolidColorBrush x:Key="Surface" Color="{DynamicResource C.Surface}" />
@@ -36,6 +39,7 @@
   <SolidColorBrush x:Key="Danger" Color="{DynamicResource C.Danger}" />
   <SolidColorBrush x:Key="Neutral" Color="{DynamicResource C.Neutral}" />
   <SolidColorBrush x:Key="Ink" Color="{DynamicResource C.Ink}" />
+  <SolidColorBrush x:Key="OnAccent" Color="{DynamicResource C.OnAccent}" />
 
   <FontFamily x:Key="UiFont">Segoe UI Variable Display, Segoe UI</FontFamily>
   <FontFamily x:Key="MonoFont">Cascadia Code, Cascadia Mono, Consolas</FontFamily>
