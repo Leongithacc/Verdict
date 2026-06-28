@@ -47,6 +47,44 @@
             </DockPanel>
           </Border>
 
+          <!-- Card "Pronto per Vanguard": Secure Boot + TPM 2.0 sono prerequisiti di Vanguard
+               (Valorant) e Windows 11. Mostrata dopo il primo scan; quando entrambi sono attivi
+               diventa la versione verde "Pronto"; quando uno è spento, link diretto alla guida BIOS. -->
+          <Border Style="{StaticResource Card}" Margin="0,18,0,0"
+                  Visibility="{Binding ShowVanguardCard, Converter={StaticResource BoolToVis}}">
+            <StackPanel>
+              <TextBlock Style="{StaticResource H2}" Text="{Binding VanguardHeadline}" />
+              <TextBlock Style="{StaticResource Muted}" FontSize="11" TextWrapping="Wrap" Margin="0,2,0,10"
+                         Text="Secure Boot + TPM 2.0 sono richiesti da Vanguard (Valorant) e da Windows 11. Se ne manca uno, Vanguard può rifiutare di avviare." />
+
+              <!-- Riga Secure Boot -->
+              <DockPanel Margin="0,4,0,0">
+                <Button DockPanel.Dock="Right" Style="{StaticResource GhostButton}" Content="Istruzioni BIOS"
+                        Command="{Binding OpenSecureBootGuideCommand}"
+                        Visibility="{Binding SecureBootOffUi, Converter={StaticResource BoolToVis}}" />
+                <TextBlock VerticalAlignment="Center" FontSize="14" Text="✓ Secure Boot attivo"
+                           Foreground="{DynamicResource Ok}"
+                           Visibility="{Binding SecureBootOnUi, Converter={StaticResource BoolToVis}}" />
+                <TextBlock VerticalAlignment="Center" FontSize="14" Text="⚠ Secure Boot da abilitare"
+                           Foreground="{DynamicResource Warn}"
+                           Visibility="{Binding SecureBootOffUi, Converter={StaticResource BoolToVis}}" />
+              </DockPanel>
+
+              <!-- Riga TPM 2.0 -->
+              <DockPanel Margin="0,6,0,0">
+                <Button DockPanel.Dock="Right" Style="{StaticResource GhostButton}" Content="Istruzioni BIOS"
+                        Command="{Binding OpenTpmGuideCommand}"
+                        Visibility="{Binding TpmOffUi, Converter={StaticResource BoolToVis}}" />
+                <TextBlock VerticalAlignment="Center" FontSize="14" Text="✓ TPM 2.0 attivo"
+                           Foreground="{DynamicResource Ok}"
+                           Visibility="{Binding TpmOnUi, Converter={StaticResource BoolToVis}}" />
+                <TextBlock VerticalAlignment="Center" FontSize="14" Text="⚠ TPM 2.0 da abilitare"
+                           Foreground="{DynamicResource Warn}"
+                           Visibility="{Binding TpmOffUi, Converter={StaticResource BoolToVis}}" />
+              </DockPanel>
+            </StackPanel>
+          </Border>
+
           <!-- Verdict Score (Lab feature, default-ON): the honest 0–100 number. -->
           <Border Style="{StaticResource Card}" Margin="0,24,0,0" Padding="20,18"
                   Visibility="{Binding ShowScore, Converter={StaticResource BoolToVis}}">

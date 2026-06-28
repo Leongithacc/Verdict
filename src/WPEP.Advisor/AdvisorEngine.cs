@@ -191,6 +191,20 @@ public static class AdvisorEngine
             null => (null, "Stato non rilevato."),
         },
 
+        "secure-boot-enable" => s.SecureBootEnabled switch
+        {
+            true => (true, "Secure Boot già attivo."),
+            false => (false, "Secure Boot disattivato: Vanguard può rifiutare di avviare Valorant su Win11."),
+            null => (null, "Stato non rilevato (probabile boot Legacy/MBR — converti il disco a GPT)."),
+        },
+
+        "tpm-enable" => s.Tpm2Enabled switch
+        {
+            true => (true, "TPM 2.0 già attivo."),
+            false => (false, "TPM 2.0 non attivo: Vanguard può rifiutare di avviare Valorant su Win11."),
+            null => (null, "Stato TPM non rilevato (WMI MicrosoftTpm non disponibile)."),
+        },
+
         "correct-refresh-rate-and-fps-cap" when s.MonitorCurrentHz is int cur && s.MonitorMaxHz is int max =>
             cur >= max
                 ? (true, $"Refresh corretto: {cur}Hz (max {max}Hz). Resta da verificare il cap FPS in-game.")

@@ -33,6 +33,14 @@ public sealed record SystemSnapshot
     public bool? HagsEnabled { get; init; }
     public bool? GameModeEnabled { get; init; }
     public bool? HvciEnabled { get; init; }
+
+    /// <summary>UEFI Secure Boot attivo: requisito di Windows 11 e Valorant Vanguard.
+    /// null se la chiave registry non esiste (es. Windows installato in modalità Legacy/BIOS).</summary>
+    public bool? SecureBootEnabled { get; init; }
+
+    /// <summary>TPM 2.0 / fTPM (Ryzen) / PTT (Intel) presente e abilitato. Requisito di Windows 11
+    /// e Valorant Vanguard. null se WMI ROOT\CIMV2\Security\MicrosoftTpm non è raggiungibile.</summary>
+    public bool? Tpm2Enabled { get; init; }
     public bool? PointerPrecisionEnabled { get; init; }
     public bool? GameDvrEnabled { get; init; }
     public bool? ActiveNicIsWifi { get; init; }

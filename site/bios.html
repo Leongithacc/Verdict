@@ -112,6 +112,100 @@ const T = {
     },
     note:{it:"Solo CPU AMD Ryzen. Sugli X3D il guadagno arriva soprattutto dal clock più alto a temperatura ridotta.",
           en:"AMD Ryzen only. On X3D parts the gain comes mostly from higher clocks at lower temps."}
+  },
+
+  "secure-boot-enable": {
+    title:{it:"Attiva Secure Boot", en:"Enable Secure Boot"},
+    sub:{it:"Richiesto da Vanguard (Valorant) e Windows 11. Su Win11 nativo è quasi sempre già attivo.",
+         en:"Required by Vanguard (Valorant) and Windows 11. On native Win11 it's almost always already on."},
+    warn:{it:"<b>⚠️ Attenzione.</b> Se Windows è installato in modalità Legacy (MBR), attivare Secure Boot può impedire il boot. Verifica PRIMA con <code>msinfo32</code> che <b>BIOS Mode = UEFI</b>; se è Legacy, converti il disco con <code>mbr2gpt</code> senza reinstallare.",
+          en:"<b>⚠️ Warning.</b> If Windows was installed in Legacy (MBR) mode, enabling Secure Boot can prevent boot. Check FIRST with <code>msinfo32</code> that <b>BIOS Mode = UEFI</b>; if Legacy, convert the disk with <code>mbr2gpt</code> without reinstalling."},
+    steps:{
+      asus:{it:["BIOS (<code>Canc</code>) → <code>F7</code> Advanced.","<b>Boot</b> → <b>Secure Boot</b>.","<b>OS Type</b> = <b>Windows UEFI mode</b>.","<b>Secure Boot State</b> = Enabled (se 'Key Management' è vuoto, premi <b>Install default Secure Boot keys</b>).","<code>F10</code> → Salva."],
+            en:["BIOS (<code>Del</code>) → <code>F7</code> Advanced.","<b>Boot</b> → <b>Secure Boot</b>.","<b>OS Type</b> = <b>Windows UEFI mode</b>.","<b>Secure Boot State</b> = Enabled (if 'Key Management' is empty, press <b>Install default Secure Boot keys</b>).","<code>F10</code> → Save."]},
+      msi:{it:["BIOS (<code>Canc</code>) → <b>Settings</b> → <b>Advanced</b> → <b>Windows OS Configuration</b>.","<b>Secure Boot</b> → Enabled.","Se 'Secure Boot Mode' è <b>Custom</b>, prima <b>Enroll all Factory Default keys</b>.","<code>F10</code> → Salva."],
+           en:["BIOS (<code>Del</code>) → <b>Settings</b> → <b>Advanced</b> → <b>Windows OS Configuration</b>.","<b>Secure Boot</b> → Enabled.","If 'Secure Boot Mode' is <b>Custom</b>, first <b>Enroll all Factory Default keys</b>.","<code>F10</code> → Save."]},
+      gigabyte:{it:["BIOS (<code>Canc</code>) → <b>Boot</b>.","<b>Secure Boot</b> → <b>Enabled</b>.","Se 'Secure Boot Mode' è Custom, <b>Restore Factory Keys</b>.","<code>F10</code> → Salva."],
+                en:["BIOS (<code>Del</code>) → <b>Boot</b>.","<b>Secure Boot</b> → <b>Enabled</b>.","If 'Secure Boot Mode' is Custom, <b>Restore Factory Keys</b>.","<code>F10</code> → Save."]},
+      asrock:{it:["BIOS (<code>F2</code> o <code>Canc</code>) → <b>Security</b>.","<b>Secure Boot</b> → <b>Enabled</b>.","Se richiesto, <b>Install default Secure Boot keys</b>.","<code>F10</code> → Salva."],
+              en:["BIOS (<code>F2</code> or <code>Del</code>) → <b>Security</b>.","<b>Secure Boot</b> → <b>Enabled</b>.","If asked, <b>Install default Secure Boot keys</b>.","<code>F10</code> → Save."]}
+    },
+    note:{it:"Verifica in PowerShell: <code>Confirm-SecureBootUEFI</code> deve ritornare <b>True</b>.",
+          en:"Verify in PowerShell: <code>Confirm-SecureBootUEFI</code> must return <b>True</b>."}
+  },
+
+  "tpm-enable": {
+    title:{it:"Attiva TPM 2.0 / fTPM", en:"Enable TPM 2.0 / fTPM"},
+    sub:{it:"Richiesto da Vanguard (Valorant) e Windows 11. Su Ryzen si chiama fTPM, su Intel PTT.",
+         en:"Required by Vanguard (Valorant) and Windows 11. Called fTPM on Ryzen, PTT on Intel."},
+    note:{it:"Verifica con <code>tpm.msc</code> in Windows: deve dire 'TPM è pronto per l'uso, Versione spec 2.0'.",
+          en:"Verify with <code>tpm.msc</code> in Windows: must say 'The TPM is ready for use, Specification 2.0'."},
+    steps:{
+      asus:{it:["BIOS (<code>Canc</code>) → <code>F7</code> Advanced.","Ryzen: <b>Advanced</b> → <b>AMD fTPM Configuration</b> → <b>Firmware TPM</b> = Enabled. Intel: <b>Advanced</b> → <b>PCH-FW Configuration</b> → <b>PTT</b> = Enabled.","<code>F10</code> → Salva."],
+            en:["BIOS (<code>Del</code>) → <code>F7</code> Advanced.","Ryzen: <b>Advanced</b> → <b>AMD fTPM Configuration</b> → <b>Firmware TPM</b> = Enabled. Intel: <b>Advanced</b> → <b>PCH-FW Configuration</b> → <b>PTT</b> = Enabled.","<code>F10</code> → Save."]},
+      msi:{it:["BIOS (<code>Canc</code>) → <b>Settings</b> → <b>Security</b> → <b>Trusted Computing</b>.","<b>Security Device Support</b> = Enable.","Ryzen: <b>AMD fTPM switch</b> = AMD CPU fTPM. Intel: <b>TPM Device Selection</b> = PTT.","<code>F10</code> → Salva."],
+           en:["BIOS (<code>Del</code>) → <b>Settings</b> → <b>Security</b> → <b>Trusted Computing</b>.","<b>Security Device Support</b> = Enable.","Ryzen: <b>AMD fTPM switch</b> = AMD CPU fTPM. Intel: <b>TPM Device Selection</b> = PTT.","<code>F10</code> → Save."]},
+      gigabyte:{it:["BIOS (<code>Canc</code>) → <b>Settings</b> → <b>Miscellaneous</b>.","Ryzen: <b>AMD CPU fTPM</b> = Enabled. Intel: <b>Intel Platform Trust Technology (PTT)</b> = Enabled.","<code>F10</code> → Salva."],
+                en:["BIOS (<code>Del</code>) → <b>Settings</b> → <b>Miscellaneous</b>.","Ryzen: <b>AMD CPU fTPM</b> = Enabled. Intel: <b>Intel Platform Trust Technology (PTT)</b> = Enabled.","<code>F10</code> → Save."]},
+      asrock:{it:["BIOS (<code>F2</code> o <code>Canc</code>) → <b>Advanced</b> → <b>CPU Configuration</b>.","Ryzen: <b>AMD fTPM switch</b> = AMD CPU fTPM. Intel: <b>Intel Platform Trust Technology</b> = Enabled.","<code>F10</code> → Salva."],
+              en:["BIOS (<code>F2</code> or <code>Del</code>) → <b>Advanced</b> → <b>CPU Configuration</b>.","Ryzen: <b>AMD fTPM switch</b> = AMD CPU fTPM. Intel: <b>Intel Platform Trust Technology</b> = Enabled.","<code>F10</code> → Save."]}
+    }
+  },
+
+  "above-4g-decoding-enable": {
+    title:{it:"Attiva Above 4G Decoding", en:"Enable Above 4G Decoding"},
+    sub:{it:"Prerequisito per Resizable BAR / SAM. Da solo non cambia FPS, abilita le features che lo fanno.",
+         en:"Prerequisite for Resizable BAR / SAM. By itself it doesn't change FPS — enables the features that do."},
+    steps:{
+      asus:{it:["BIOS (<code>Canc</code>) → <code>F7</code> Advanced.","<b>Advanced</b> → <b>PCI Subsystem Settings</b>.","<b>Above 4G Decoding</b> = Enabled.","Conviene attivare anche <b>Re-Size BAR Support</b> = Enabled.","<code>F10</code> → Salva."],
+            en:["BIOS (<code>Del</code>) → <code>F7</code> Advanced.","<b>Advanced</b> → <b>PCI Subsystem Settings</b>.","<b>Above 4G Decoding</b> = Enabled.","Best to also enable <b>Re-Size BAR Support</b> = Enabled.","<code>F10</code> → Save."]},
+      msi:{it:["BIOS (<code>Canc</code>) → <b>Settings</b> → <b>Advanced</b> → <b>PCI Subsystem Settings</b>.","<b>Above 4G memory</b> = Enabled.","Conviene attivare anche <b>Re-Size BAR Support</b> = Enabled.","<code>F10</code> → Salva."],
+           en:["BIOS (<code>Del</code>) → <b>Settings</b> → <b>Advanced</b> → <b>PCI Subsystem Settings</b>.","<b>Above 4G memory</b> = Enabled.","Best to also enable <b>Re-Size BAR Support</b> = Enabled.","<code>F10</code> → Save."]},
+      gigabyte:{it:["BIOS (<code>Canc</code>) → <b>Settings</b> → <b>IO Ports</b>.","<b>Above 4G Decoding</b> = Enabled.","Conviene attivare anche <b>Re-Size BAR Support</b> = Enabled.","<code>F10</code> → Salva."],
+                en:["BIOS (<code>Del</code>) → <b>Settings</b> → <b>IO Ports</b>.","<b>Above 4G Decoding</b> = Enabled.","Best to also enable <b>Re-Size BAR Support</b> = Enabled.","<code>F10</code> → Save."]},
+      asrock:{it:["BIOS (<code>F2</code> o <code>Canc</code>) → <b>Advanced</b> → <b>Chipset Configuration</b>.","<b>Above 4G Decoding</b> = Enabled.","Conviene attivare anche <b>Re-Size BAR Support</b> = Enabled.","<code>F10</code> → Salva."],
+              en:["BIOS (<code>F2</code> or <code>Del</code>) → <b>Advanced</b> → <b>Chipset Configuration</b>.","<b>Above 4G Decoding</b> = Enabled.","Best to also enable <b>Re-Size BAR Support</b> = Enabled.","<code>F10</code> → Save."]}
+    },
+    note:{it:"Su BIOS molto vecchi può richiedere CSM disabilitato prima. Se il PC non posta dopo l'attivazione, clear CMOS.",
+          en:"On older BIOS may require CSM disabled first. If the PC doesn't POST after enabling, clear CMOS."}
+  },
+
+  "csm-disable": {
+    title:{it:"Disabilita CSM (Compatibility Support Module)", en:"Disable CSM (Compatibility Support Module)"},
+    sub:{it:"Prerequisito per Resizable BAR e modo UEFI pieno. Win11 e i driver grafici moderni ne hanno bisogno.",
+         en:"Prerequisite for Resizable BAR and full UEFI mode. Win11 and modern GPU drivers need it off."},
+    warn:{it:"<b>⚠️ Attenzione.</b> Se Windows è installato in modalità Legacy/MBR, disabilitare CSM rende impossibile il boot. Verifica PRIMA con <code>msinfo32</code> che <b>BIOS Mode = UEFI</b>; se è Legacy, usa <code>mbr2gpt</code> per convertire il disco a GPT senza reinstallare.",
+          en:"<b>⚠️ Warning.</b> If Windows was installed in Legacy/MBR mode, disabling CSM prevents booting. Check FIRST with <code>msinfo32</code> that <b>BIOS Mode = UEFI</b>; if Legacy, use <code>mbr2gpt</code> to convert the disk to GPT without reinstalling."},
+    steps:{
+      asus:{it:["BIOS (<code>Canc</code>) → <code>F7</code> Advanced → <b>Boot</b>.","<b>CSM (Compatibility Support Module)</b> → <b>Launch CSM</b> = Disabled.","<code>F10</code> → Salva."],
+            en:["BIOS (<code>Del</code>) → <code>F7</code> Advanced → <b>Boot</b>.","<b>CSM (Compatibility Support Module)</b> → <b>Launch CSM</b> = Disabled.","<code>F10</code> → Save."]},
+      msi:{it:["BIOS (<code>Canc</code>) → <b>Settings</b> → <b>Advanced</b> → <b>Windows OS Configuration</b>.","<b>BIOS CSM/UEFI Mode</b> = UEFI.","<code>F10</code> → Salva."],
+           en:["BIOS (<code>Del</code>) → <b>Settings</b> → <b>Advanced</b> → <b>Windows OS Configuration</b>.","<b>BIOS CSM/UEFI Mode</b> = UEFI.","<code>F10</code> → Save."]},
+      gigabyte:{it:["BIOS (<code>Canc</code>) → <b>Boot</b>.","<b>CSM Support</b> = Disabled.","<code>F10</code> → Salva."],
+                en:["BIOS (<code>Del</code>) → <b>Boot</b>.","<b>CSM Support</b> = Disabled.","<code>F10</code> → Save."]},
+      asrock:{it:["BIOS (<code>F2</code> o <code>Canc</code>) → <b>Boot</b> → <b>CSM (Compatibility Support Module)</b>.","<b>CSM</b> = Disabled.","<code>F10</code> → Salva."],
+              en:["BIOS (<code>F2</code> or <code>Del</code>) → <b>Boot</b> → <b>CSM (Compatibility Support Module)</b>.","<b>CSM</b> = Disabled.","<code>F10</code> → Save."]}
+    },
+    note:{it:"Con CSM disabilitato puoi attivare Secure Boot e Resizable BAR. Se non posta, clear CMOS e ritenta dopo aver convertito il disco a GPT.",
+          en:"With CSM disabled you can enable Secure Boot and Resizable BAR. If it doesn't POST, clear CMOS and retry after converting the disk to GPT."}
+  },
+
+  "virtualization-enable": {
+    title:{it:"Attiva Virtualizzazione (VT-x / AMD-V)", en:"Enable Virtualization (VT-x / AMD-V)"},
+    sub:{it:"Serve per Hyper-V, WSL2, Docker, VBS, emulatori Android. Da solo non cambia FPS.",
+         en:"Needed for Hyper-V, WSL2, Docker, VBS, Android emulators. By itself doesn't change FPS."},
+    steps:{
+      asus:{it:["BIOS (<code>Canc</code>) → <code>F7</code> Advanced.","<b>Advanced</b> → <b>CPU Configuration</b>.","Ryzen: <b>SVM Mode</b> = Enabled. Intel: <b>Intel Virtualization Technology</b> = Enabled.","<code>F10</code> → Salva."],
+            en:["BIOS (<code>Del</code>) → <code>F7</code> Advanced.","<b>Advanced</b> → <b>CPU Configuration</b>.","Ryzen: <b>SVM Mode</b> = Enabled. Intel: <b>Intel Virtualization Technology</b> = Enabled.","<code>F10</code> → Save."]},
+      msi:{it:["BIOS (<code>Canc</code>) → <b>OC</b> → <b>CPU Features</b> (o <b>Overclocking → CPU Setup</b>).","Ryzen: <b>SVM Mode</b> = Enabled. Intel: <b>Intel Virtualization Tech (VT-x)</b> = Enabled.","<code>F10</code> → Salva."],
+           en:["BIOS (<code>Del</code>) → <b>OC</b> → <b>CPU Features</b> (or <b>Overclocking → CPU Setup</b>).","Ryzen: <b>SVM Mode</b> = Enabled. Intel: <b>Intel Virtualization Tech (VT-x)</b> = Enabled.","<code>F10</code> → Save."]},
+      gigabyte:{it:["BIOS (<code>Canc</code>) → <b>Tweaker</b> → <b>Advanced CPU Settings</b>.","Ryzen: <b>SVM Mode</b> = Enabled. Intel: <b>Intel Virtualization Technology</b> = Enabled (a volte sotto <b>Chipset</b> → <b>VT-d</b>).","<code>F10</code> → Salva."],
+                en:["BIOS (<code>Del</code>) → <b>Tweaker</b> → <b>Advanced CPU Settings</b>.","Ryzen: <b>SVM Mode</b> = Enabled. Intel: <b>Intel Virtualization Technology</b> = Enabled (sometimes under <b>Chipset</b> → <b>VT-d</b>).","<code>F10</code> → Save."]},
+      asrock:{it:["BIOS (<code>F2</code> o <code>Canc</code>) → <b>Advanced</b> → <b>CPU Configuration</b>.","Ryzen: <b>SVM Mode</b> = Enabled. Intel: <b>Intel Virtualization Technology</b> = Enabled.","<code>F10</code> → Salva."],
+              en:["BIOS (<code>F2</code> or <code>Del</code>) → <b>Advanced</b> → <b>CPU Configuration</b>.","Ryzen: <b>SVM Mode</b> = Enabled. Intel: <b>Intel Virtualization Technology</b> = Enabled.","<code>F10</code> → Save."]}
+    },
+    note:{it:"Verifica in <b>Task Manager → Performance → CPU</b>: deve apparire 'Virtualizzazione: Abilitata'.",
+          en:"Verify in <b>Task Manager → Performance → CPU</b>: must show 'Virtualization: Enabled'."}
   }
 };
 

@@ -18,6 +18,11 @@ public static class BiosGuide
         "resizable-bar-enable",
         "amd-ftpm-bios-update",
         "pbo-curve-optimizer",
+        "secure-boot-enable",
+        "tpm-enable",
+        "above-4g-decoding-enable",
+        "csm-disable",
+        "virtualization-enable",
     };
 
     public static bool HasGuide(string tweakId) => Guided.Contains(tweakId);

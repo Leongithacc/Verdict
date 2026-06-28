@@ -70,7 +70,41 @@ public static class SnapshotBuilder
             Overwatch2Installed = Probe(ReadOverwatch2Installed, (bool?)null),
             TheFinalsInstalled = Probe(ReadTheFinalsInstalled, (bool?)null),
             R6SiegeInstalled = Probe(ReadR6SiegeInstalled, (bool?)null),
+            SecureBootEnabled = Probe(ReadSecureBoot, (bool?)null),
+            Tpm2Enabled = Probe(ReadTpm2, (bool?)null),
         };
+    }
+
+    /// <summary>UEFI Secure Boot via registry. Chiave assente = sistema in Legacy/BIOS (null).
+    /// Value 1 = attivo, 0 (o assente con chiave presente) = disabilitato.</summary>
+    private static bool? ReadSecureBoot()
+    {
+        using var key = Registry.LocalMachine.OpenSubKey(
+            @"SYSTEM\CurrentControlSet\Control\SecureBoot\State");
+        if (key is null) return null;
+        return key.GetValue("UEFISecureBootEnabled") is int v && v == 1;
+    }
+
+    /// <summary>TPM 2.0 via WMI namespace ROOT\CIMV2\Security\MicrosoftTpm. SpecVersion inizia con
+    /// "2" per TPM 2.0; IsEnabled_InitialValue dice se è acceso a livello hardware. Namespace assente
+    /// (Windows molto vecchio o WMI rotto) viene wrappato da Probe → null.</summary>
+    private static bool? ReadTpm2()
+    {
+        var scope = new ManagementScope(@"\\.\ROOT\CIMV2\Security\MicrosoftTpm");
+        scope.Connect();
+        using var searcher = new ManagementObjectSearcher(
+            scope, new ObjectQuery("SELECT SpecVersion, IsEnabled_InitialValue FROM Win32_Tpm"));
+        using var coll = searcher.Get();
+        foreach (ManagementBaseObject mbo in coll)
+        {
+            using (mbo)
+            {
+                var spec = (mbo["SpecVersion"] as string) ?? "";
+                if (!spec.StartsWith("2", StringComparison.Ordinal)) continue;
+                return mbo["IsEnabled_InitialValue"] as bool? ?? false;
+            }
+        }
+        return false; // nessun Win32_Tpm = chip non presente o spento dal BIOS
     }
 
     /// <summary>THE FINALS is Steam app 2073850. (Epic Games copies aren't detected

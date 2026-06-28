@@ -297,6 +297,39 @@ public sealed class VerdictViewModel(MainViewModel main) : ViewModelBase
     /// cosa è già attivo per questo PC.</summary>
     public IReadOnlyList<Recommendation> AllRecommendations => _allRecommendations;
 
+    // ── Card "Pronto per Vanguard": Secure Boot + TPM 2.0 sono prerequisiti Win11+Vanguard. ──
+    /// <summary>null = non rilevato (es. boot Legacy/MBR), true/false = attivo o da abilitare.</summary>
+    /// <summary>True quando c'è almeno uno snapshot in cache: card mostrata. Prima dello scan
+    /// resta nascosta (niente stati 'non rilevato' confusi all'avvio).</summary>
+    public bool ShowVanguardCard => _snapshotCache is not null;
+    public bool? VanguardSecureBootOk => _snapshotCache?.SecureBootEnabled;
+    public bool? VanguardTpmOk => _snapshotCache?.Tpm2Enabled;
+    public bool VanguardReady => VanguardSecureBootOk == true && VanguardTpmOk == true;
+    public bool VanguardActionNeeded => VanguardSecureBootOk == false || VanguardTpmOk == false;
+    // Per-riga (binding XAML via Visibility): true se attivo, false se da abilitare, unknown se null.
+    public bool SecureBootOnUi => VanguardSecureBootOk == true;
+    public bool SecureBootOffUi => VanguardSecureBootOk == false;
+    public bool TpmOnUi => VanguardTpmOk == true;
+    public bool TpmOffUi => VanguardTpmOk == false;
+    public string VanguardHeadline => VanguardReady
+        ? "Pronto per Vanguard"
+        : (VanguardActionNeeded ? "Da abilitare per Vanguard / Win11" : "Pronto per Vanguard");
+
+    public RelayCommand OpenSecureBootGuideCommand => new(() => OpenBiosGuide("secure-boot-enable"));
+    public RelayCommand OpenTpmGuideCommand => new(() => OpenBiosGuide("tpm-enable"));
+
+    private void OpenBiosGuide(string tweakId)
+    {
+        // Vendor omesso: il sito mostra il picker. Manteniamo l'azione semplice e zero-dipendenze.
+        var url = WPEP.Core.Bios.BiosGuide.Url(tweakId, vendorSlug: null, lang: "it");
+        try
+        {
+            System.Diagnostics.Process.Start(
+                new System.Diagnostics.ProcessStartInfo(url) { UseShellExecute = true });
+        }
+        catch { /* user può sempre aprire il link dall'item della lista */ }
+    }
+
     public string Header { get => _header; set => Set(ref _header, value); }
     public string SubHeader { get => _subHeader; set => Set(ref _subHeader, value); }
     public bool IsScanning { get => _isScanning; set => Set(ref _isScanning, value); }
@@ -435,6 +468,17 @@ public sealed class VerdictViewModel(MainViewModel main) : ViewModelBase
     {
         _snapshotCache = snapshot; // reused by the Optimize-for-game filter
         _allRecommendations = allRecommendations; // grounding del co-pilota (V6)
+        // Refresh card "Pronto per Vanguard" (derivata da snapshot)
+        Raise(nameof(VanguardSecureBootOk));
+        Raise(nameof(VanguardTpmOk));
+        Raise(nameof(VanguardReady));
+        Raise(nameof(VanguardActionNeeded));
+        Raise(nameof(VanguardHeadline));
+        Raise(nameof(SecureBootOnUi));
+        Raise(nameof(SecureBootOffUi));
+        Raise(nameof(TpmOnUi));
+        Raise(nameof(TpmOffUi));
+        Raise(nameof(ShowVanguardCard));
         // Game-specific entries live in their own section and never count toward
         // the system verdict header (R7_COPY_AND_KB3 open question, resolved).
         var recommendations = allRecommendations.Where(r => r.Entry.Game is null).ToArray();

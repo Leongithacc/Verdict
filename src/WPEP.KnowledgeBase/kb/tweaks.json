@@ -3458,5 +3458,144 @@
       "requires_reboot": false,
       "undo": "auto-journal"
     }
+  },
+  {
+    "id": "secure-boot-enable",
+    "name": "Attiva Secure Boot (richiesto da Vanguard / Win11)",
+    "category": "security",
+    "description": "Secure Boot impedisce il boot di codice non firmato a livello UEFI. È un requisito ufficiale di Windows 11 e di Valorant (anti-cheat Vanguard) su Win11. Senza, Vanguard può rifiutare di partire con errore 'Secure Boot non abilitato'.",
+    "hardware_prerequisites": [
+      "desktop"
+    ],
+    "expected_impact": "Senza, il client Valorant può non avviarsi su Windows 11. Per altri giochi non cambia FPS: è una condizione di funzionamento, non una performance tweak.",
+    "evidence_level": "evidence_strong",
+    "sources": [
+      "https://support-valorant.riotgames.com/hc/en-us/articles/4406425334419-Windows-11-Update-TPM-2-0-and-Secure-Boot",
+      "https://learn.microsoft.com/en-us/windows-hardware/design/device-experiences/oem-secure-boot"
+    ],
+    "risk": "low",
+    "risk_notes": "Se Windows è installato in modalità Legacy (MBR) il PC non boota più finché non converti il disco a GPT (cmd 'mbr2gpt') o riattivi CSM. Su installazioni Win11 native nessun problema.",
+    "rollback": "BIOS → sezione Boot/Security → Secure Boot → Disabled. Disattiva l'enforcement firma.",
+    "manual_steps": "BIOS → sezione Boot o Security → Secure Boot → Enabled. Su alcuni BIOS prima va impostato 'OS Type: Windows UEFI mode'. Salva con F10. Verifica con PowerShell 'Confirm-SecureBootUEFI' che ritorni True.",
+    "conflicts_with": [],
+    "measurable": false,
+    "apply": {
+      "method": "gui-only",
+      "operations": [],
+      "requires_reboot": false,
+      "undo": "manual-steps",
+      "gui_only_reason": "BIOS setting — no safe programmatic path"
+    }
+  },
+  {
+    "id": "tpm-enable",
+    "name": "Attiva TPM 2.0 / fTPM (richiesto da Vanguard / Win11)",
+    "category": "security",
+    "description": "Trusted Platform Module 2.0 — su CPU Ryzen si chiama fTPM (firmware TPM), su Intel si chiama PTT (Platform Trust Technology) — è un requisito ufficiale di Windows 11 e di Valorant Vanguard. Spesso attivo di default ma può risultare spento dopo un BIOS update o un clear CMOS.",
+    "hardware_prerequisites": [
+      "desktop"
+    ],
+    "expected_impact": "Vanguard non parte senza TPM 2.0 su Win11 (errore 'TPM 2.0 / Secure Boot'). Niente FPS: è una condizione d'accesso al gioco.",
+    "evidence_level": "evidence_strong",
+    "sources": [
+      "https://support-valorant.riotgames.com/hc/en-us/articles/4406425334419-Windows-11-Update-TPM-2-0-and-Secure-Boot",
+      "https://learn.microsoft.com/en-us/windows/security/hardware-security/tpm/trusted-platform-module-overview"
+    ],
+    "risk": "low",
+    "risk_notes": "Su CPU Ryzen di prima generazione (Zen/Zen+, pre-2019) abilitare fTPM può causare il noto stutter periodico: in quel caso aggiorna il BIOS a un AGESA ≥ 1.2.0.7 (vedi tweak amd-ftpm-bios-update).",
+    "rollback": "BIOS → sezione Trusted Computing / Security → AMD fTPM o Intel PTT → Disabled.",
+    "manual_steps": "BIOS → Advanced o Security o Trusted Computing → cerca la voce 'AMD fTPM' (Ryzen) o 'Intel PTT' / 'Intel Platform Trust Technology' (Intel) → Enabled. Salva con F10. Verifica con 'tpm.msc' in Windows: 'TPM è pronto per l'uso'.",
+    "conflicts_with": [],
+    "measurable": false,
+    "apply": {
+      "method": "gui-only",
+      "operations": [],
+      "requires_reboot": false,
+      "undo": "manual-steps",
+      "gui_only_reason": "BIOS setting — no safe programmatic path"
+    }
+  },
+  {
+    "id": "above-4g-decoding-enable",
+    "name": "Attiva Above 4G Decoding",
+    "category": "gpu",
+    "description": "Permette alla scheda madre di mappare risorse PCIe oltre i 4GB di spazio di indirizzamento. Prerequisito hardware per Resizable BAR (NVIDIA RTX 30+, AMD RX 6000+) e per alcune schede di rete/storage moderne. Richiede sistema in modalità UEFI.",
+    "hardware_prerequisites": [
+      "desktop"
+    ],
+    "expected_impact": "Da solo non cambia FPS — abilita altri tweak (Resizable BAR, SAM) che danno gain del 2-15% in giochi specifici (es. Battlefield, AC Valhalla). Senza, le features moderne PCIe non sono disponibili.",
+    "evidence_level": "evidence_strong",
+    "sources": [
+      "https://www.nvidia.com/en-us/geforce/news/geforce-rtx-30-series-resizable-bar-support/",
+      "https://www.amd.com/en/technologies/smart-access-memory"
+    ],
+    "risk": "low",
+    "risk_notes": "Su BIOS molto vecchi (pre-2018) può richiedere CSM disabilitato contestualmente. Se dopo il salvataggio il PC non posta, clear CMOS e ritenta con CSM disabilitato prima.",
+    "rollback": "BIOS → sezione PCI/Chipset/IO Ports → Above 4G Decoding → Disabled.",
+    "manual_steps": "BIOS → Advanced → 'PCI Subsystem Settings' (ASUS) / 'Chipset Configuration' (ASRock) / 'IO Ports' (Gigabyte) → 'Above 4G Decoding' o 'Above 4G memory' (MSI) → Enabled. Spesso conviene attivare insieme anche 'Re-Size BAR Support'. Salva con F10.",
+    "conflicts_with": [],
+    "measurable": false,
+    "apply": {
+      "method": "gui-only",
+      "operations": [],
+      "requires_reboot": false,
+      "undo": "manual-steps",
+      "gui_only_reason": "BIOS setting — no safe programmatic path"
+    }
+  },
+  {
+    "id": "csm-disable",
+    "name": "Disabilita CSM (Compatibility Support Module)",
+    "category": "gpu",
+    "description": "Il CSM permette al BIOS UEFI di emulare il vecchio BIOS legacy per sistemi operativi pre-UEFI. Su Windows 11 e per le features grafiche moderne (Resizable BAR, modern standby, WDDM 3.0) va spento.",
+    "hardware_prerequisites": [
+      "desktop"
+    ],
+    "expected_impact": "Prerequisito per Resizable BAR e per il modo UEFI completo. Senza CSM disabilitato alcune features di Windows 11 e dei driver grafici recenti restano inattive.",
+    "evidence_level": "evidence_strong",
+    "sources": [
+      "https://learn.microsoft.com/en-us/windows-hardware/manufacture/desktop/boot-to-uefi-mode-or-legacy-bios-mode"
+    ],
+    "risk": "medium",
+    "risk_notes": "Se Windows è installato in MBR (legacy), spegnere CSM rende impossibile il boot. Verifica PRIMA con 'msinfo32' che 'BIOS Mode' = UEFI. Se è 'Legacy', usa 'mbr2gpt' per convertire il disco a GPT senza reinstallare.",
+    "rollback": "BIOS → Boot → CSM Support → Enabled. Riattiva l'emulazione legacy.",
+    "manual_steps": "Verifica msinfo32: BIOS Mode deve essere UEFI. BIOS → Boot → 'CSM' o 'CSM Support' o 'Launch CSM' → Disabled. Salva F10. Se il PC non posta, clear CMOS.",
+    "conflicts_with": [],
+    "measurable": false,
+    "apply": {
+      "method": "gui-only",
+      "operations": [],
+      "requires_reboot": false,
+      "undo": "manual-steps",
+      "gui_only_reason": "BIOS setting — no safe programmatic path"
+    }
+  },
+  {
+    "id": "virtualization-enable",
+    "name": "Attiva Virtualizzazione (VT-x / AMD-V)",
+    "category": "security",
+    "description": "Intel VT-x (anche VMX) o AMD SVM (AMD-V): permette alla CPU di eseguire più sistemi operativi isolati a velocità nativa. Prerequisito per Hyper-V, WSL2, Docker Desktop, VBS (Virtualization-Based Security) e per emulatori Android (BlueStacks, LDPlayer).",
+    "hardware_prerequisites": [
+      "desktop"
+    ],
+    "expected_impact": "Da solo non cambia FPS. Serve se usi WSL2, Docker, emulatori, o vuoi VBS attivo. Nota: attivare VBS in Windows può ridurre 1-5% gli FPS — vedi memory-integrity-vbs-off per il tradeoff.",
+    "evidence_level": "evidence_strong",
+    "sources": [
+      "https://learn.microsoft.com/en-us/virtualization/hyper-v-on-windows/reference/hyper-v-requirements",
+      "https://www.intel.com/content/www/us/en/support/articles/000005486/processors.html"
+    ],
+    "risk": "low",
+    "risk_notes": "Su alcuni anti-cheat (Faceit AC, Riot Vanguard) la combinazione con Hyper-V attivo richiede attenzione: solitamente OK se VBS e Memory Integrity sono coerenti.",
+    "rollback": "BIOS → CPU Configuration → 'SVM Mode' (AMD) o 'Intel Virtualization Technology' → Disabled.",
+    "manual_steps": "BIOS → Advanced/OC → 'CPU Configuration' o 'CPU Features' → 'SVM Mode' (Ryzen) o 'Intel Virtualization Technology' / 'Intel VT-x' (Intel) → Enabled. Salva con F10. Verifica in Task Manager → Performance → CPU: 'Virtualizzazione: Abilitata'.",
+    "conflicts_with": [],
+    "measurable": false,
+    "apply": {
+      "method": "gui-only",
+      "operations": [],
+      "requires_reboot": false,
+      "undo": "manual-steps",
+      "gui_only_reason": "BIOS setting — no safe programmatic path"
+    }
   }
 ]
