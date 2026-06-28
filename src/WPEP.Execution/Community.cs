@@ -101,8 +101,10 @@ public sealed class LocalOnlyBackend : ICommunityBackend
 
 public static class CommunityConfig
 {
-    // Vuoto finché Léon non sceglie un server. Niente rete fino ad allora.
-    public const string Endpoint = "";
+    // Backend pubblico V7: Cloudflare Worker + D1 (Leongithacc).
+    // Spec: docs/V7_REMOTE_BACKEND_DESIGN.md. Codice Worker: repo verdict-community.
+    // Spegnere = stringa vuota (l'app torna automatica a LocalOnlyBackend).
+    public const string Endpoint = "https://verdict-community.gz6jk62yk8.workers.dev";
     public static bool IsConfigured => Endpoint.Length > 0;
 }
 
