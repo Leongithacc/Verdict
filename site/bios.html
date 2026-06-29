@@ -209,7 +209,12 @@ const T = {
   }
 };
 
-const VENDORS = [["asus","ASUS"],["msi","MSI"],["gigabyte","Gigabyte"],["asrock","ASRock"]];
+const VENDORS = [["asus","ASUS"],["msi","MSI"],["gigabyte","Gigabyte"],["asrock","ASRock"],["evga","EVGA"],["nzxt","NZXT"]];
+// EVGA + NZXT usano BIOS AMI Aptio (lo stesso framework di ASRock); i path dei menu sono
+// quasi sempre identici ma EVGA ha smesso di produrre mobo nel 2022 e NZXT N7 è di nicchia,
+// quindi NON inventiamo passi 'verificati' — riutilizziamo i passi ASRock con un disclaimer
+// visibile per onestà (regola d'oro KB: nessun claim non verificato).
+const VENDOR_FALLBACK = { evga: "asrock", nzxt: "asrock" };
 const qs = new URLSearchParams(location.search);
 let tweak = qs.get("t") || "xmp-expo-enable";
 let vendor = (qs.get("v")||"").toLowerCase();
@@ -225,8 +230,17 @@ function render(){
   document.getElementById("vendors").innerHTML = VENDORS.map(([k,name])=>
     `<button data-v="${k}" class="${k===vendor?"on":""}">${name}</button>`).join("");
   document.querySelectorAll("#langs button").forEach(b=>b.classList.toggle("on", b.dataset.lang===lang));
-  const steps = (g.steps[vendor]||g.steps.asus)[lang];
+  // Vendor con fallback documentato (EVGA, NZXT → passi ASRock AMI generici).
+  const effectiveVendor = VENDOR_FALLBACK[vendor] || vendor;
+  const steps = (g.steps[effectiveVendor]||g.steps.asus)[lang];
   let html = "";
+  if (VENDOR_FALLBACK[vendor]) {
+    const fallbackName = VENDORS.find(v=>v[0]===VENDOR_FALLBACK[vendor])[1];
+    const disclaimer = lang === "it"
+      ? `Nota: ${VENDORS.find(v=>v[0]===vendor)[1]} usa BIOS AMI Aptio simile a ${fallbackName}. I passi sotto sono quelli ${fallbackName}, validi nella maggior parte dei casi — verifica nel manuale della tua scheda esatta.`
+      : `Note: ${VENDORS.find(v=>v[0]===vendor)[1]} ships AMI Aptio BIOS similar to ${fallbackName}. The steps below are the ${fallbackName} ones, valid in most cases — check your motherboard manual for the exact path.`;
+    html += `<div class="card warn"><b>${lang==="it"?"⚠":"⚠"}</b> ${disclaimer}</div>`;
+  }
   if(g.warn) html += `<div class="card warn">${g.warn[lang]}</div>`;
   html += `<div class="card"><ol>${steps.map(s=>`<li>${s}</li>`).join("")}</ol>`;
   if(g.note) html += `<div class="note">${g.note[lang]}</div>`;

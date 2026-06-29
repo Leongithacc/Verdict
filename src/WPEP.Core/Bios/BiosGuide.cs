@@ -27,8 +27,10 @@ public static class BiosGuide
 
     public static bool HasGuide(string tweakId) => Guided.Contains(tweakId);
 
-    /// <summary>Vendor slug ("asus"/"msi"/"gigabyte"/"asrock") from a Win32_BaseBoard manufacturer
-    /// string, or null if unknown — in which case the page shows a vendor picker instead of guessing.</summary>
+    /// <summary>Vendor slug from a Win32_BaseBoard manufacturer string, or null if unknown —
+    /// in which case the page shows a vendor picker instead of guessing. EVGA (mobo discontinued
+    /// 2022) and NZXT use AMI Aptio BIOS similar to ASRock; the site renders an honest
+    /// disclaimer in those cases instead of fake-specific steps.</summary>
     public static string? VendorSlug(string? manufacturer)
     {
         var m = (manufacturer ?? "").ToLowerInvariant();
@@ -36,6 +38,8 @@ public static class BiosGuide
         if (m.Contains("micro-star") || m.Contains("msi")) return "msi";
         if (m.Contains("gigabyte")) return "gigabyte";
         if (m.Contains("asrock")) return "asrock";
+        if (m.Contains("evga")) return "evga";
+        if (m.Contains("nzxt")) return "nzxt";
         return null;
     }
 

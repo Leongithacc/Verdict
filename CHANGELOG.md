@@ -37,6 +37,17 @@ All notable changes to Verdict are documented here. Format based on
 - Documentation: [docs/V7_REMOTE_BACKEND_DESIGN.md](docs/V7_REMOTE_BACKEND_DESIGN.md)
   (14 sections) and [docs/RELEASE_V1.1_RUNBOOK.md](docs/RELEASE_V1.1_RUNBOOK.md)
   (12 sections, includes the new automatic Actions flow).
+- **EVGA + NZXT** added to the BIOS guide vendor picker. Both use AMI Aptio
+  BIOS similar to ASRock, so the page shows the ASRock steps with an honest
+  disclaimer banner instead of inventing per-model specifics
+  (fedele alla regola d'oro KB).
+- **CLI `wpep doctor`** now prints Secure Boot + TPM 2.0 readiness alongside
+  the existing fields — same data the GUI "Pronto per Vanguard" card uses.
+- **README polish**: vetrina pubblica aggiornata con tutti i 4 brain AI,
+  card Vanguard, vetrina community, link a runbook/workflow, status table
+  estesa a V6 / V7 / V8.
+- **`.github/` templates**: `CHANGELOG.md`, ISSUE_TEMPLATE/(bug_report +
+  feature_request), PULL_REQUEST_TEMPLATE per ready-to-contributor.
 
 ### Changed
 - `CommunityService.Record` now also fires-and-forgets `SubmitAsync` to the
