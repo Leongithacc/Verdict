@@ -10,6 +10,33 @@ Tempo totale stimato: **20–30 minuti** (la maggior parte è il build).
 
 ---
 
+## ⚡ Modalità rapida (release automatica via GitHub Actions)
+
+Dal 2026-06-29 esiste `.github/workflows/release.yml` che fa build + test +
+package + GitHub release **automaticamente** ogni volta che pusho un tag `v*`.
+Se preferisci il flusso semplice, fai SOLO i passi 1–2–5 di sotto (bump version,
+commit, tag+push) e salta i passi 3–4–6: ci pensa la pipeline.
+
+```powershell
+# Da locale, dopo aver bumpato AppVersion.cs + package-release.sh:
+git add src/WPEP.Core/AppVersion.cs tools/package-release.sh
+git commit -m "release: bump v1.1"
+git tag -a v1.1 -m "Verdict v1.1"
+git push origin main
+git push origin v1.1   # ← questo trigger il workflow
+```
+
+Poi guardi su https://github.com/Leongithacc/Verdict/actions: in ~5 minuti la
+release appare in https://github.com/Leongithacc/Verdict/releases con lo zip
+allegato. Il workflow **verifica** che la versione nel tag combaci con
+`AppVersion.Current` E con `VER` di `package-release.sh` — se sono fuori sync,
+fallisce subito invece di pubblicare una release rotta.
+
+I passi sotto restano validi per release **manuali** (es. se vuoi controllare
+ogni step, o se le Actions sono temporaneamente fuori uso).
+
+---
+
 ## 0. Prerequisiti (verifica una volta)
 
 ```powershell

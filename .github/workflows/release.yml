@@ -1,0 +1,90 @@
+name: Release Verdict
+
+# Build automatica + GitHub Release ogni volta che pusho un tag vX.Y.
+# Sostituisce i passi 4-6 di docs/RELEASE_V1.1_RUNBOOK.md: tu fai
+# `git tag v1.1 && git push origin v1.1` e questa pipeline produce
+# dist/Verdict-1.1.zip + crea la release con quel zip allegato.
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write   # serve a gh release create
+
+jobs:
+  build-and-release:
+    runs-on: windows-latest
+    timeout-minutes: 30
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET 10 SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      # Estrae il numero versione dal tag (v1.1 → 1.1) e verifica che combaci
+      # con src/WPEP.Core/AppVersion.cs. Se discordano, ferma la pipeline:
+      # un mismatch genererebbe uno zip con nome diverso dalla AppVersion
+      # mostrata in GUI/CLI, e l'auto-update mostrerebbe versioni sbagliate.
+      - name: Verify AppVersion matches tag
+        shell: pwsh
+        run: |
+          $tag = "${{ github.ref_name }}"
+          $ver = $tag.TrimStart('v')
+          Write-Host "Tag: $tag → expected version: $ver"
+          $content = Get-Content src/WPEP.Core/AppVersion.cs -Raw
+          if ($content -notmatch 'Current\s*=\s*"' + [regex]::Escape($ver) + '"') {
+            Write-Error "AppVersion.Current non corrisponde al tag '$tag'. Bumpa src/WPEP.Core/AppVersion.cs prima di taggare."
+            exit 1
+          }
+          $script = Get-Content tools/package-release.sh -Raw
+          if ($script -notmatch 'VER="' + [regex]::Escape($ver) + '"') {
+            Write-Error "VER in tools/package-release.sh non corrisponde al tag. Allineali a $ver."
+            exit 1
+          }
+          Write-Host "OK: AppVersion + package-release VER allineati a $ver"
+          "VER=$ver" >> $env:GITHUB_ENV
+
+      - name: Build (Release, 0 warnings = 0 errors)
+        shell: pwsh
+        run: |
+          dotnet build WPEP.sln -c Release -m:1 --disable-build-servers -v q
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Test
+        shell: pwsh
+        run: |
+          dotnet test WPEP.sln -c Release -m:1 --disable-build-servers -v q --no-build
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Package portatile
+        shell: bash
+        run: |
+          bash tools/package-release.sh
+          ls -la dist/
+
+      - name: Create GitHub Release
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          $tag = "${{ github.ref_name }}"
+          $notesPath = "RELEASE_NOTES.md"
+          # Se RELEASE_NOTES.md esiste alla root, lo usa come body. Altrimenti
+          # produce un body minimal con il diff dei commit dal tag precedente.
+          if (Test-Path $notesPath) {
+            gh release create $tag "dist/Verdict-$env:VER.zip" --title "Verdict $tag" --notes-file $notesPath
+          } else {
+            $prevTag = git describe --tags --abbrev=0 "$tag^" 2>$null
+            if ($LASTEXITCODE -eq 0 -and $prevTag) {
+              $log = git log --oneline "$prevTag..$tag"
+              $notes = "## Changelog`n`n``````n$log`n``````"
+            } else {
+              $notes = "Prima release. Vedi commit history."
+            }
+            gh release create $tag "dist/Verdict-$env:VER.zip" --title "Verdict $tag" --notes $notes
+          }
