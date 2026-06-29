@@ -1836,9 +1836,9 @@ static async Task<int> RunCopilot(string[] args)
             "Uso: wpep copilot \"la tua domanda\" [--brain ollama|claude] [--model <nome>] [--api-key <key>]");
         return 2;
     }
-    if (brainKind != "ollama" && brainKind != "claude")
+    if (brainKind is not ("ollama" or "claude" or "gemini" or "openai"))
     {
-        Console.Error.WriteLine($"--brain sconosciuto: '{brainKind}'. Usa 'ollama' o 'claude'.");
+        Console.Error.WriteLine($"--brain sconosciuto: '{brainKind}'. Usa ollama, claude, gemini o openai.");
         return 2;
     }
 
@@ -1850,32 +1850,59 @@ static async Task<int> RunCopilot(string[] args)
     var catalog = WPEP.Advisor.AdvisorEngine.Advise(snapshot, entries, LiveDetector(entries));
 
     WPEP.Advisor.CoPilot.ICoPilotBrain brain;
-    if (brainKind == "claude")
+    switch (brainKind)
     {
-        var key = apiKey ?? Environment.GetEnvironmentVariable("ANTHROPIC_API_KEY") ?? "";
-        if (key.Length == 0)
+        case "claude":
         {
-            Console.Error.WriteLine("Per --brain claude serve la API key Anthropic: passa --api-key <key>");
-            Console.Error.WriteLine("oppure imposta la variabile d'ambiente ANTHROPIC_API_KEY.");
-            return 2;
+            var key = apiKey ?? Environment.GetEnvironmentVariable("ANTHROPIC_API_KEY") ?? "";
+            if (key.Length == 0)
+            {
+                Console.Error.WriteLine("Per --brain claude serve la API key Anthropic: passa --api-key <key>");
+                Console.Error.WriteLine("oppure imposta la variabile d'ambiente ANTHROPIC_API_KEY.");
+                return 2;
+            }
+            brain = new WPEP.Advisor.CoPilot.ClaudeBrain(key, model);
+            break;
         }
-        brain = new WPEP.Advisor.CoPilot.ClaudeBrain(key, model);
-    }
-    else
-    {
-        brain = new WPEP.Advisor.CoPilot.OllamaBrain(model);
+        case "gemini":
+        {
+            var key = apiKey ?? Environment.GetEnvironmentVariable("GEMINI_API_KEY") ?? "";
+            if (key.Length == 0)
+            {
+                Console.Error.WriteLine("Per --brain gemini serve la API key Google AI: passa --api-key <key>");
+                Console.Error.WriteLine("oppure imposta la variabile d'ambiente GEMINI_API_KEY.");
+                return 2;
+            }
+            brain = new WPEP.Advisor.CoPilot.GeminiBrain(key, model);
+            break;
+        }
+        case "openai":
+        {
+            var key = apiKey ?? Environment.GetEnvironmentVariable("OPENAI_API_KEY") ?? "";
+            if (key.Length == 0)
+            {
+                Console.Error.WriteLine("Per --brain openai serve la API key OpenAI: passa --api-key <key>");
+                Console.Error.WriteLine("oppure imposta la variabile d'ambiente OPENAI_API_KEY.");
+                return 2;
+            }
+            brain = new WPEP.Advisor.CoPilot.OpenAiBrain(key, model);
+            break;
+        }
+        default:
+            brain = new WPEP.Advisor.CoPilot.OllamaBrain(model);
+            break;
     }
     Console.WriteLine($"Co-pilota: {brain.Name}");
     if (!await brain.IsAvailableAsync())
     {
-        if (brainKind == "claude")
-        {
-            Console.WriteLine("Claude non raggiungibile. Verifica la API key e la connessione internet.");
-        }
-        else
+        if (brainKind == "ollama")
         {
             Console.WriteLine("Ollama non raggiungibile su localhost:11434. Avvialo (ollama serve) e assicurati");
             Console.WriteLine($"che il modello sia installato:  ollama pull {model ?? WPEP.Advisor.CoPilot.CoPilotConfig.DefaultModel}");
+        }
+        else
+        {
+            Console.WriteLine($"{brain.Name} non raggiungibile. Verifica la API key e la connessione internet.");
         }
         return 0;
     }
@@ -2039,13 +2066,14 @@ static void PrintUsage()
                               configurato (la GUI ricarica al riavvio). --disable lo spegne.
 
         — AI co-pilot (V6, sola lettura) —
-          wpep copilot "<domanda>" [--brain ollama|claude] [--model <nome>] [--api-key <key>]
+          wpep copilot "<domanda>" [--brain ollama|claude|gemini|openai] [--model <nome>] [--api-key <key>]
               Chiedi in linguaggio naturale ("rendi Valorant più fluido"): il co-pilota
               interpreta e propone SOLO tweak del catalogo verificato di Verdict (gli id
               inventati vengono scartati), spiegando con onestà. Non applica nulla.
               Cervello di default: Ollama locale (gratis+privato) — serve `ollama serve`.
-              --brain claude usa Anthropic Claude (cloud, qualità superiore): la API key
-              arriva da --api-key o dalla variabile d'ambiente ANTHROPIC_API_KEY.
+              --brain claude → Anthropic (ANTHROPIC_API_KEY o --api-key).
+              --brain gemini → Google AI    (GEMINI_API_KEY o --api-key).
+              --brain openai → OpenAI/GPT   (OPENAI_API_KEY o --api-key).
 
         — Versione & aggiornamenti —
           wpep version        Mostra la versione di Verdict.

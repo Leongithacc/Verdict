@@ -1391,16 +1391,22 @@
           <TextBlock Style="{StaticResource Muted}" Margin="0,4,0,0" TextWrapping="Wrap"
                      Text="Chiedi in parole tue. L'AI interpreta e cita SOLO tweak verificati di Verdict — non inventa, e non applica nulla da sola. Scegli il cervello: Ollama locale (privato) o Claude cloud (qualità superiore, manda la domanda a Anthropic)." />
 
-          <StackPanel Orientation="Horizontal" Margin="0,12,0,0">
+          <WrapPanel Orientation="Horizontal" Margin="0,12,0,0">
             <TextBlock Text="Cervello:" Style="{StaticResource Muted}" FontSize="11"
-                       VerticalAlignment="Center" Margin="0,0,10,0" />
+                       VerticalAlignment="Center" Margin="0,0,10,4" />
             <RadioButton Content="Ollama (locale)" GroupName="copilotBrain"
                          IsChecked="{Binding IsOllama, Mode=TwoWay}"
-                         VerticalAlignment="Center" Margin="0,0,14,0" />
+                         VerticalAlignment="Center" Margin="0,0,14,4" />
             <RadioButton Content="Claude (cloud)" GroupName="copilotBrain"
                          IsChecked="{Binding IsClaude, Mode=TwoWay}"
-                         VerticalAlignment="Center" />
-          </StackPanel>
+                         VerticalAlignment="Center" Margin="0,0,14,4" />
+            <RadioButton Content="Gemini (cloud)" GroupName="copilotBrain"
+                         IsChecked="{Binding IsGemini, Mode=TwoWay}"
+                         VerticalAlignment="Center" Margin="0,0,14,4" />
+            <RadioButton Content="GPT (cloud)" GroupName="copilotBrain"
+                         IsChecked="{Binding IsOpenAi, Mode=TwoWay}"
+                         VerticalAlignment="Center" Margin="0,0,0,4" />
+          </WrapPanel>
 
           <Border Style="{StaticResource Card}" Margin="0,12,0,0">
             <StackPanel>
@@ -1447,6 +1453,58 @@
                   <TextBlock Text="✓ configurata" Style="{StaticResource Muted}" FontSize="11"
                              VerticalAlignment="Center" Margin="10,0,0,0"
                              Visibility="{Binding HasClaudeApiKey, Converter={StaticResource BoolToVis}}" />
+                </StackPanel>
+              </StackPanel>
+
+              <StackPanel Margin="0,12,0,0"
+                          Visibility="{Binding IsGemini, Converter={StaticResource BoolToVis}}">
+                <StackPanel Orientation="Horizontal">
+                  <Button Style="{StaticResource PrimaryButton}" Content="Chiedi"
+                          Command="{Binding AskCommand}" IsEnabled="{Binding CanAsk}" />
+                  <TextBlock Text="Modello Gemini:" Style="{StaticResource Muted}" FontSize="11"
+                             VerticalAlignment="Center" Margin="16,0,6,0" />
+                  <TextBox Text="{Binding GeminiModel, UpdateSourceTrigger=LostFocus}" Width="220"
+                           VerticalAlignment="Center" VerticalContentAlignment="Center"
+                           Foreground="{DynamicResource Text}"
+                           ToolTip="gemini-2.5-pro (default), gemini-2.5-flash (più economico)…" />
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
+                  <TextBlock Text="API key Google AI:" Style="{StaticResource Muted}" FontSize="11"
+                             VerticalAlignment="Center" Margin="0,0,6,0" />
+                  <PasswordBox x:Name="GeminiApiKeyBox" Width="280"
+                               VerticalAlignment="Center" VerticalContentAlignment="Center"
+                               Foreground="{DynamicResource Text}"
+                               PasswordChanged="OnGeminiApiKeyChanged"
+                               ToolTip="Da aistudio.google.com. Salvata cifrata DPAPI sul tuo PC." />
+                  <TextBlock Text="✓ configurata" Style="{StaticResource Muted}" FontSize="11"
+                             VerticalAlignment="Center" Margin="10,0,0,0"
+                             Visibility="{Binding HasGeminiApiKey, Converter={StaticResource BoolToVis}}" />
+                </StackPanel>
+              </StackPanel>
+
+              <StackPanel Margin="0,12,0,0"
+                          Visibility="{Binding IsOpenAi, Converter={StaticResource BoolToVis}}">
+                <StackPanel Orientation="Horizontal">
+                  <Button Style="{StaticResource PrimaryButton}" Content="Chiedi"
+                          Command="{Binding AskCommand}" IsEnabled="{Binding CanAsk}" />
+                  <TextBlock Text="Modello OpenAI:" Style="{StaticResource Muted}" FontSize="11"
+                             VerticalAlignment="Center" Margin="16,0,6,0" />
+                  <TextBox Text="{Binding OpenAiModel, UpdateSourceTrigger=LostFocus}" Width="220"
+                           VerticalAlignment="Center" VerticalContentAlignment="Center"
+                           Foreground="{DynamicResource Text}"
+                           ToolTip="gpt-5 (default), gpt-4o-2024-08-06, gpt-4o-mini…" />
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
+                  <TextBlock Text="API key OpenAI:" Style="{StaticResource Muted}" FontSize="11"
+                             VerticalAlignment="Center" Margin="0,0,6,0" />
+                  <PasswordBox x:Name="OpenAiApiKeyBox" Width="280"
+                               VerticalAlignment="Center" VerticalContentAlignment="Center"
+                               Foreground="{DynamicResource Text}"
+                               PasswordChanged="OnOpenAiApiKeyChanged"
+                               ToolTip="Da platform.openai.com. Salvata cifrata DPAPI sul tuo PC." />
+                  <TextBlock Text="✓ configurata" Style="{StaticResource Muted}" FontSize="11"
+                             VerticalAlignment="Center" Margin="10,0,0,0"
+                             Visibility="{Binding HasOpenAiApiKey, Converter={StaticResource BoolToVis}}" />
                 </StackPanel>
               </StackPanel>
             </StackPanel>

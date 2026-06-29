@@ -36,12 +36,28 @@ public sealed class CoPilotViewModel : ViewModelBase
         set { _main.Settings.ClaudeModel = value?.Trim() ?? ""; _main.Settings.Save(); Raise(); }
     }
 
-    /// <summary>True quando l'utente ha già configurato una API key Anthropic (non la espone in chiaro).
-    /// Usato dall'UI per mostrare "configurata" o un placeholder vuoto sulla PasswordBox.</summary>
-    public bool HasClaudeApiKey => _main.Settings.ClaudeApiKey.Length > 0;
+    /// <summary>Modello Gemini per il co-pilota cloud, persistito. Vuoto = default (gemini-2.5-pro).</summary>
+    public string GeminiModel
+    {
+        get => _main.Settings.GeminiModel;
+        set { _main.Settings.GeminiModel = value?.Trim() ?? ""; _main.Settings.Save(); Raise(); }
+    }
 
-    /// <summary>Chiamato dal code-behind quando l'utente digita nella PasswordBox della pagina
-    /// (PasswordBox non bind-abile in MVVM puro). Salva subito, cifrato at-rest.</summary>
+    /// <summary>Modello OpenAI per il co-pilota cloud, persistito. Vuoto = default (gpt-5).</summary>
+    public string OpenAiModel
+    {
+        get => _main.Settings.OpenAiModel;
+        set { _main.Settings.OpenAiModel = value?.Trim() ?? ""; _main.Settings.Save(); Raise(); }
+    }
+
+    /// <summary>True quando l'utente ha già configurato una API key (non la espone in chiaro).
+    /// Usate dall'UI per mostrare "✓ configurata" o un placeholder vuoto sulla PasswordBox.</summary>
+    public bool HasClaudeApiKey => _main.Settings.ClaudeApiKey.Length > 0;
+    public bool HasGeminiApiKey => _main.Settings.GeminiApiKey.Length > 0;
+    public bool HasOpenAiApiKey => _main.Settings.OpenAiApiKey.Length > 0;
+
+    /// <summary>Chiamati dal code-behind quando l'utente digita nelle PasswordBox della pagina
+    /// (PasswordBox non bind-abile in MVVM puro). Salvano subito, cifrate at-rest.</summary>
     public void SetClaudeApiKey(string? apiKey)
     {
         _main.Settings.ClaudeApiKey = string.IsNullOrEmpty(apiKey) ? "" : apiKey;
@@ -49,19 +65,52 @@ public sealed class CoPilotViewModel : ViewModelBase
         Raise(nameof(HasClaudeApiKey));
         Raise(nameof(CanAsk));
     }
-
-    /// <summary>Cervello attivo: true se Ollama (default). Cambiare via <see cref="IsClaude"/>.
-    /// L'UI usa due RadioButton bindati a IsOllama/IsClaude (group radio implicito).</summary>
-    public bool IsOllama
+    public void SetGeminiApiKey(string? apiKey)
     {
-        get => !string.Equals(_main.Settings.CoPilotBrain, "claude", StringComparison.OrdinalIgnoreCase);
-        set { if (value) SetBrain("ollama"); }
+        _main.Settings.GeminiApiKey = string.IsNullOrEmpty(apiKey) ? "" : apiKey;
+        _main.Settings.Save();
+        Raise(nameof(HasGeminiApiKey));
+        Raise(nameof(CanAsk));
+    }
+    public void SetOpenAiApiKey(string? apiKey)
+    {
+        _main.Settings.OpenAiApiKey = string.IsNullOrEmpty(apiKey) ? "" : apiKey;
+        _main.Settings.Save();
+        Raise(nameof(HasOpenAiApiKey));
+        Raise(nameof(CanAsk));
     }
 
+    /// <summary>Cervello attivo: enum a 4 valori ("ollama"|"claude"|"gemini"|"openai") persistito
+    /// in Settings.CoPilotBrain. L'UI usa 4 RadioButton (group radio "copilotBrain") bindati alle
+    /// 4 property IsOllama/IsClaude/IsGemini/IsOpenAi (TwoWay).</summary>
+    public bool IsOllama
+    {
+        get => Brain == "ollama";
+        set { if (value) SetBrain("ollama"); }
+    }
     public bool IsClaude
     {
-        get => string.Equals(_main.Settings.CoPilotBrain, "claude", StringComparison.OrdinalIgnoreCase);
+        get => Brain == "claude";
         set { if (value) SetBrain("claude"); }
+    }
+    public bool IsGemini
+    {
+        get => Brain == "gemini";
+        set { if (value) SetBrain("gemini"); }
+    }
+    public bool IsOpenAi
+    {
+        get => Brain == "openai";
+        set { if (value) SetBrain("openai"); }
+    }
+
+    private string Brain
+    {
+        get
+        {
+            var b = (_main.Settings.CoPilotBrain ?? "ollama").ToLowerInvariant();
+            return b is "claude" or "gemini" or "openai" ? b : "ollama";
+        }
     }
 
     private void SetBrain(string brain)
@@ -72,6 +121,8 @@ public sealed class CoPilotViewModel : ViewModelBase
         _main.Settings.Save();
         Raise(nameof(IsOllama));
         Raise(nameof(IsClaude));
+        Raise(nameof(IsGemini));
+        Raise(nameof(IsOpenAi));
         Raise(nameof(CanAsk));
         // Status iniziale aggiornato in base al nuovo brain.
         Status = DefaultStatus();
@@ -79,20 +130,45 @@ public sealed class CoPilotViewModel : ViewModelBase
 
     private CoPilotService BuildService()
     {
-        if (IsClaude)
+        switch (Brain)
         {
-            var cModel = string.IsNullOrWhiteSpace(ClaudeModel) ? null : ClaudeModel;
-            return new CoPilotService(new ClaudeBrain(_main.Settings.ClaudeApiKey, cModel));
+            case "claude":
+                return new CoPilotService(new ClaudeBrain(
+                    _main.Settings.ClaudeApiKey,
+                    string.IsNullOrWhiteSpace(ClaudeModel) ? null : ClaudeModel));
+            case "gemini":
+                return new CoPilotService(new GeminiBrain(
+                    _main.Settings.GeminiApiKey,
+                    string.IsNullOrWhiteSpace(GeminiModel) ? null : GeminiModel));
+            case "openai":
+                return new CoPilotService(new OpenAiBrain(
+                    _main.Settings.OpenAiApiKey,
+                    string.IsNullOrWhiteSpace(OpenAiModel) ? null : OpenAiModel));
+            default:
+                return new CoPilotService(new OllamaBrain(
+                    string.IsNullOrWhiteSpace(Model) ? null : Model));
         }
-        var oModel = string.IsNullOrWhiteSpace(Model) ? null : Model;
-        return new CoPilotService(new OllamaBrain(oModel));
     }
 
-    private string DefaultStatus() => IsClaude
-        ? "Chiedi in parole tue. Cervello: Claude (cloud). La domanda + il catalogo di Verdict "
-          + "vengono inviati a Anthropic; la chiave è cifrata at-rest sul tuo PC."
-        : "Chiedi in parole tue (es. \"rendi Valorant più fluido\"). Il co-pilota cita solo tweak "
-          + "verificati di Verdict e non applica nulla da solo. Cervello: Ollama locale, i dati restano sul PC.";
+    private string DefaultStatus() => Brain switch
+    {
+        "claude" => "Chiedi in parole tue. Cervello: Claude (cloud Anthropic). La domanda + il "
+                  + "catalogo Verdict viaggiano cifrati in TLS; la API key è cifrata at-rest sul tuo PC.",
+        "gemini" => "Chiedi in parole tue. Cervello: Gemini (cloud Google). Stesso flusso del co-pilota "
+                  + "Claude: TLS in transito, key DPAPI a riposo.",
+        "openai" => "Chiedi in parole tue. Cervello: GPT (cloud OpenAI). Stesso flusso degli altri "
+                  + "brain cloud: TLS in transito, key DPAPI a riposo.",
+        _ => "Chiedi in parole tue (es. \"rendi Valorant più fluido\"). Il co-pilota cita solo tweak "
+           + "verificati di Verdict e non applica nulla da solo. Cervello: Ollama locale, i dati restano sul PC.",
+    };
+
+    private bool HasActiveCloudKey => Brain switch
+    {
+        "claude" => HasClaudeApiKey,
+        "gemini" => HasGeminiApiKey,
+        "openai" => HasOpenAiApiKey,
+        _ => true, // Ollama non richiede key
+    };
 
     private string _question = "";
     public string Question
@@ -119,7 +195,7 @@ public sealed class CoPilotViewModel : ViewModelBase
         private set { Set(ref _busy, value); Raise(nameof(CanAsk)); }
     }
 
-    public bool CanAsk => !_busy && _question.Trim().Length > 0 && (IsOllama || HasClaudeApiKey);
+    public bool CanAsk => !_busy && _question.Trim().Length > 0 && HasActiveCloudKey;
 
     public ObservableCollection<CoPilotSuggestionVM> Suggestions { get; } = [];
 
@@ -144,10 +220,10 @@ public sealed class CoPilotViewModel : ViewModelBase
             var service = BuildService();
             if (!await service.IsAvailableAsync())
             {
-                Status = IsClaude
-                    ? $"{service.BrainName} non raggiungibile. Verifica la API key Anthropic e la connessione internet."
-                    : $"{service.BrainName} non raggiungibile. Avvia Ollama (\"ollama serve\") e installa "
-                      + "un modello, poi riprova. (Resta tutto locale.)";
+                Status = IsOllama
+                    ? $"{service.BrainName} non raggiungibile. Avvia Ollama (\"ollama serve\") e installa "
+                      + "un modello, poi riprova. (Resta tutto locale.)"
+                    : $"{service.BrainName} non raggiungibile. Verifica la API key e la connessione internet.";
                 return;
             }
 

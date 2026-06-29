@@ -126,4 +126,53 @@ public class CoPilotTests
         Assert.False(await new ClaudeBrain("").IsAvailableAsync());
         Assert.False(await new ClaudeBrain("   ").IsAvailableAsync());
     }
+
+    // ── GeminiBrain smoke (offline) ──────────────────────────────────────
+
+    [Fact]
+    public void GeminiBrain_default_model_is_2_5_pro()
+    {
+        var b = new GeminiBrain("k-test");
+        Assert.Contains("gemini-2.5-pro", b.Name);
+        Assert.Contains("cloud", b.Name);
+    }
+
+    [Fact]
+    public void GeminiBrain_explicit_model_wins()
+    {
+        var b = new GeminiBrain("k-test", "gemini-2.5-flash");
+        Assert.Contains("gemini-2.5-flash", b.Name);
+        Assert.DoesNotContain("pro", b.Name);
+    }
+
+    [Fact]
+    public async Task GeminiBrain_unavailable_when_apikey_empty()
+    {
+        Assert.False(await new GeminiBrain("").IsAvailableAsync());
+        Assert.False(await new GeminiBrain(null).IsAvailableAsync());
+    }
+
+    // ── OpenAiBrain smoke (offline) ──────────────────────────────────────
+
+    [Fact]
+    public void OpenAiBrain_default_model_is_gpt5()
+    {
+        var b = new OpenAiBrain("sk-test");
+        Assert.Contains("gpt-5", b.Name);
+        Assert.Contains("cloud", b.Name);
+    }
+
+    [Fact]
+    public void OpenAiBrain_explicit_model_wins()
+    {
+        var b = new OpenAiBrain("sk-test", "gpt-4o-2024-08-06");
+        Assert.Contains("gpt-4o", b.Name);
+    }
+
+    [Fact]
+    public async Task OpenAiBrain_unavailable_when_apikey_empty()
+    {
+        Assert.False(await new OpenAiBrain("").IsAvailableAsync());
+        Assert.False(await new OpenAiBrain(null).IsAvailableAsync());
+    }
 }

@@ -21,6 +21,16 @@ public static class CoPilotConfig
     // Default = Sonnet 4.6 (bilanciato qualità/costo per testo strutturato e breve).
     // L'utente può puntare a Opus 4.8 (più costoso) o Haiku 4.5 (più economico) da settings.
     public const string DefaultClaudeModel = "claude-sonnet-4-6";
+
+    // ── Google Gemini (cloud, opt-in) ───────────────────────────────────────
+    public const string GeminiEndpoint = "https://generativelanguage.googleapis.com";
+    // Default = Gemini 2.5 Pro (modello flagship). Alternativa economica: gemini-2.5-flash.
+    public const string DefaultGeminiModel = "gemini-2.5-pro";
+
+    // ── OpenAI / GPT (cloud, opt-in) ────────────────────────────────────────
+    public const string OpenAiEndpoint = "https://api.openai.com";
+    // Default = GPT-5 quando disponibile; l'utente può cambiare a gpt-4o-2024-08-06 o gpt-4o-mini.
+    public const string DefaultOpenAiModel = "gpt-5";
 }
 
 /// <summary>Cervello locale via Ollama (http://localhost:11434). Nessun dato lascia il PC.

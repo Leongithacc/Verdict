@@ -96,35 +96,57 @@ public sealed class AppSettings
     [System.Text.Json.Serialization.JsonIgnore]
     public string ClaudeApiKey
     {
-        get
+        get => DecryptKey(ClaudeApiKeyEncrypted);
+        set => ClaudeApiKeyEncrypted = EncryptKey(value);
+    }
+
+    // ── Google Gemini (cloud) — opt-in, key cifrata DPAPI come Claude ──
+    public string GeminiModel { get; set; } = "";
+    public string GeminiApiKeyEncrypted { get; set; } = "";
+    [System.Text.Json.Serialization.JsonIgnore]
+    public string GeminiApiKey
+    {
+        get => DecryptKey(GeminiApiKeyEncrypted);
+        set => GeminiApiKeyEncrypted = EncryptKey(value);
+    }
+
+    // ── OpenAI / GPT (cloud) — opt-in, key cifrata DPAPI come Claude ──
+    public string OpenAiModel { get; set; } = "";
+    public string OpenAiApiKeyEncrypted { get; set; } = "";
+    [System.Text.Json.Serialization.JsonIgnore]
+    public string OpenAiApiKey
+    {
+        get => DecryptKey(OpenAiApiKeyEncrypted);
+        set => OpenAiApiKeyEncrypted = EncryptKey(value);
+    }
+
+    /// <summary>Helper DPAPI condiviso dalle 3 API key (Claude/Gemini/OpenAI): legge base64 cifrato
+    /// e ritorna in chiaro. File spostato da un altro utente/PC ⇒ illeggibile ⇒ stringa vuota
+    /// (l'utente reinserisce la chiave, comportamento desiderato).</summary>
+    private static string DecryptKey(string encrypted)
+    {
+        if (string.IsNullOrEmpty(encrypted)) return "";
+        try
         {
-            if (string.IsNullOrEmpty(ClaudeApiKeyEncrypted)) return "";
-            try
-            {
-                var bytes = Convert.FromBase64String(ClaudeApiKeyEncrypted);
-                var plain = System.Security.Cryptography.ProtectedData.Unprotect(
-                    bytes, null, System.Security.Cryptography.DataProtectionScope.CurrentUser);
-                return System.Text.Encoding.UTF8.GetString(plain);
-            }
-            catch
-            {
-                // Settings spostato da un altro utente / file corrotto: trattalo come "non configurata".
-                return "";
-            }
+            var bytes = Convert.FromBase64String(encrypted);
+            var plain = System.Security.Cryptography.ProtectedData.Unprotect(
+                bytes, null, System.Security.Cryptography.DataProtectionScope.CurrentUser);
+            return System.Text.Encoding.UTF8.GetString(plain);
         }
-        set
+        catch
         {
-            if (string.IsNullOrEmpty(value))
-            {
-                ClaudeApiKeyEncrypted = "";
-                return;
-            }
-            var bytes = System.Security.Cryptography.ProtectedData.Protect(
-                System.Text.Encoding.UTF8.GetBytes(value),
-                null,
-                System.Security.Cryptography.DataProtectionScope.CurrentUser);
-            ClaudeApiKeyEncrypted = Convert.ToBase64String(bytes);
+            return "";
         }
+    }
+
+    private static string EncryptKey(string? plain)
+    {
+        if (string.IsNullOrEmpty(plain)) return "";
+        var bytes = System.Security.Cryptography.ProtectedData.Protect(
+            System.Text.Encoding.UTF8.GetBytes(plain),
+            null,
+            System.Security.Cryptography.DataProtectionScope.CurrentUser);
+        return Convert.ToBase64String(bytes);
     }
 
     /// <summary>Risk Slider (Lab feature): how far the user wants to go. Default Balanced =

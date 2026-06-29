@@ -146,4 +146,16 @@ public partial class MainWindow : Window
             && pb.DataContext is CoPilotViewModel cp)
             cp.SetClaudeApiKey(pb.Password);
     }
+    private void OnGeminiApiKeyChanged(object sender, RoutedEventArgs e)
+    {
+        if (sender is System.Windows.Controls.PasswordBox pb
+            && pb.DataContext is CoPilotViewModel cp)
+            cp.SetGeminiApiKey(pb.Password);
+    }
+    private void OnOpenAiApiKeyChanged(object sender, RoutedEventArgs e)
+    {
+        if (sender is System.Windows.Controls.PasswordBox pb
+            && pb.DataContext is CoPilotViewModel cp)
+            cp.SetOpenAiApiKey(pb.Password);
+    }
 }
