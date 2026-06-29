@@ -1483,6 +1483,12 @@ static int RunDoctor()
         .Select(g => g.Item2).ToList();
     Console.WriteLine($"Giochi     : {(games.Count > 0 ? string.Join(", ", games) : "nessuno dei noti rilevato")}");
 
+    // Prontezza Vanguard / Win11: Secure Boot + TPM 2.0 detection da snapshot.
+    static string Readiness(bool? v, string okLabel, string koLabel) =>
+        v switch { true => okLabel, false => koLabel, _ => "non rilevato" };
+    Console.WriteLine($"Secure Boot: {Readiness(snapshot.SecureBootEnabled, "attivo", "DA ABILITARE (richiesto da Vanguard / Win11)")}");
+    Console.WriteLine($"TPM 2.0    : {Readiness(snapshot.Tpm2Enabled,        "attivo", "DA ABILITARE (richiesto da Vanguard / Win11)")}");
+
     var recs = WPEP.Advisor.AdvisorEngine.Advise(snapshot, entries)
         .Where(r => r.Entry.Game is null).ToArray();
     int oneClick = recs.Count(r => r.Classification == WPEP.Advisor.Classification.Recommended && CanApplyEntry(r.Entry));

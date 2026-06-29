@@ -28,15 +28,32 @@ never applies a placebo.
   inventing one. Three outcomes: real effect · no measurable effect · no verdict.
 - **Diagnostics** — kernel ETW capture of DPC/ISR latency per driver: finds the
   actual stutter culprit, or tells you there is none.
-- **Knowledge Base** — 85 entries graded by evidence (strong / plausible /
+- **Knowledge Base** — 130 entries graded by evidence (strong / plausible /
   controversial / placebo / risky), each with primary sources, exact manual
   steps and rollback. The placebos are shown on purpose.
 - **Apply** — for the entries that are safely scriptable (registry / power plan /
   bcdedit), Verdict can apply them one at a time or all the recommended ones at
   once, behind a single dry-run. Each write is verified by re-reading, journaled,
   and undoable per-change from the Changes page. A conflict guard prevents applying
-  two mutually-exclusive tweaks. ~12 of the 85 entries are one-click; the rest stay
+  two mutually-exclusive tweaks. A subset of the entries is one-click; the rest stay
   manual (in-game / BIOS / driver panel) with deep-links where possible.
+- **AI co-pilot** — natural-language assistant ("make Valorant smoother") that
+  interprets your question against the verified catalog and proposes ONLY entries
+  that actually exist in the KB (invented ids are dropped at the code level, not
+  just in the prompt). Read-only — explains and suggests, never applies. Four
+  swappable brains: Ollama (local, default — free and private), Anthropic Claude,
+  Google Gemini, OpenAI GPT. Cloud API keys are encrypted at rest with DPAPI.
+- **Vanguard readiness card** — Secure Boot + TPM 2.0 status detected at runtime
+  (registry + WMI) and shown on the Verdict page with one-click BIOS guides per
+  motherboard vendor — useful for any anti-cheat or Win11 requirement.
+- **BIOS guide QR** — for the manually-BIOS-only entries (XMP/EXPO, ReBAR, fTPM,
+  PBO, Secure Boot, TPM, Above 4G, CSM, virtualization) a QR opens a per-vendor
+  step-by-step page on your phone, reachable even while the PC is in BIOS.
+  Hosted on GitHub Pages, content verified per ASUS/MSI/Gigabyte/ASRock, IT + EN.
+- **Community evidence (V7)** — opt-in: anonymized outcomes (rig signature hash,
+  tier, tweak id, outcome, measured delta) can be shared with a public backend
+  (Cloudflare Worker + D1) and aggregated to "helped 73% of similar rigs". No
+  PII ever, default OFF, full design in [docs/V7_REMOTE_BACKEND_DESIGN.md](docs/V7_REMOTE_BACKEND_DESIGN.md).
 - **Self-test** — `verify the apply engine works on this machine` before you trust
   it: a write→verify→undo round-trip on a throwaway registry key (no real setting
   touched).
@@ -95,6 +112,22 @@ wpep apply-all [--yes]       all recommended+applicable tweaks, one consent, eac
 wpep changes                 list journaled sessions (applied / undone)
 wpep undo <file|last>        restore previous values, verified
 wpep selftest                prove the engine works here (scratch key, full cleanup)
+
+# AI co-pilot (V6) — swappable brains, read-only
+wpep copilot "..."                                        Ollama local (default)
+wpep copilot "..." --brain claude --api-key sk-ant-...    Anthropic
+wpep copilot "..." --brain gemini --api-key ...           Google Gemini
+wpep copilot "..." --brain openai --api-key sk-...        OpenAI / GPT
+
+# Community (V7) — privacy-first opt-in
+wpep community               status: backend + opt-in + endpoint
+wpep community --enable      opt-in ON (the GUI uses RemoteBackend on next launch)
+wpep community --disable     opt-in OFF (back to LocalOnly)
+wpep evidence                YOUR local outcomes per tweak (always offline)
+
+# Version / update check
+wpep version                 print the engine version (read from AppVersion.Current)
+wpep update-check            consent-first: only reports if a newer release exists
 ```
 
 ## Method, in one paragraph
@@ -110,10 +143,15 @@ flagged, never silently dropped.
 
 ## Build
 
-.NET 10 SDK → `dotnet build` · `dotnet test` (125 tests). WPF app in
+.NET 10 SDK → `dotnet build` · `dotnet test` (300+ tests). WPF app in
 `src/WPEP.App`, CLI in `src/WPEP.Cli`, engine modules underneath — UI and CLI
 share the same services. (If a parallel build crashes an MSBuild node, build
 single-node: `dotnet build -m:1 --disable-build-servers`.)
+
+For shipping a new release, see [docs/RELEASE_V1.1_RUNBOOK.md](docs/RELEASE_V1.1_RUNBOOK.md):
+the short version is `git tag v1.x && git push origin v1.x` — the
+[release workflow](.github/workflows/release.yml) builds and publishes
+the GitHub release automatically.
 
 License: MIT · See [CONTRIBUTING.md](CONTRIBUTING.md) — the golden rule:
 **no source, no recommendation.**
@@ -133,3 +171,6 @@ License: MIT · See [CONTRIBUTING.md](CONTRIBUTING.md) — the golden rule:
 | Pipeline certification — known-effect test | ✅ passed (frame-cap detected, p=0.008, all metrics) |
 | V2 Execution Engine (registry / powercfg / bcdedit, dry-run + journal + undo) | ✅ engine self-test PASS on machine 1; real powercfg/bcdedit writes pending a live apply |
 | Apply in GUI + CLI (single, batch, conflict guard, admin gating) | ✅ |
+| V6 AI Co-pilot (Ollama + Claude + Gemini + GPT, swappable brains) | ✅ |
+| V7 Community evidence (opt-in remote backend, Cloudflare Worker + D1) | ✅ backend live, client opt-in via Settings checkbox |
+| V8 Auto-update from GitHub Releases | ✅ |
