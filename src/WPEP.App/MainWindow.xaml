@@ -47,6 +47,22 @@
             </DockPanel>
           </Border>
 
+          <!-- Card "Rumore di sistema": onestà attiva contro il placebo. Ispirata all'analisi
+               di Hone (docs/VS_HONE.md sez. 3.1). Su sistemi puliti, i tweak background non
+               produrranno FPS misurabili; su sistemi rumorosi sì, ma comunque con Ghost Tweak. -->
+          <Border Style="{StaticResource Card}" Margin="0,18,0,0"
+                  Visibility="{Binding ShowNoiseCard, Converter={StaticResource BoolToVis}}">
+            <StackPanel>
+              <TextBlock Style="{StaticResource H2}"
+                         Foreground="{Binding NoiseColor, Converter={StaticResource TokenBrush}}"
+                         Text="{Binding NoiseHeadline}" />
+              <TextBlock Style="{StaticResource Muted}" Margin="0,6,0,0" TextWrapping="Wrap"
+                         Text="{Binding NoiseBody}" />
+              <TextBlock Style="{StaticResource Muted}" FontSize="11" Margin="0,8,0,0" TextWrapping="Wrap"
+                         Text="{Binding NoiseFactorsText}" />
+            </StackPanel>
+          </Border>
+
           <!-- Card "Pronto per Vanguard": Secure Boot + TPM 2.0 sono prerequisiti di Vanguard
                (Valorant) e Windows 11. Mostrata dopo il primo scan; quando entrambi sono attivi
                diventa la versione verde "Pronto"; quando uno è spento, link diretto alla guida BIOS. -->

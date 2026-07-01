@@ -22,7 +22,7 @@ public static class SnapshotBuilder
         var (throttlingIndex, systemResponsiveness) = Probe(ReadMultimediaProfile, ((int?)null, (int?)null));
         var (gpuTempC, gpuThrottling) = Probe(ReadGpuTelemetry, ((int?)null, (bool?)null));
 
-        return new SystemSnapshot
+        var build = new SystemSnapshot
         {
             CapturedAtUtc = nowUtc,
             CpuName = cpuName,
@@ -73,6 +73,78 @@ public static class SnapshotBuilder
             SecureBootEnabled = Probe(ReadSecureBoot, (bool?)null),
             Tpm2Enabled = Probe(ReadTpm2, (bool?)null),
         };
+        var (noiseScore, noiseFactors) = ComputeNoiseScore(snapshotBase: build);
+        return build with { NoiseScore = noiseScore, NoiseFactors = noiseFactors };
+    }
+
+    /// <summary>System Noise Score (0-100): quanto è rumoroso il sistema per il gaming.
+    /// Calcolato da 5 fattori DOCUMENTATI. Onestà attiva contro il placebo: i tweak background
+    /// hanno effetto misurabile solo se il rumore è già alto. Vedi docs/VS_HONE.md sez. 3.1.
+    /// Contributi (max 90 pt, cap a 100):
+    ///  - StartupAppsCount: min(30, 2*count) — max 30 punti a 15+ app
+    ///  - SearchIndexingRunning: 20 (indexer W10/11 fa disk I/O continuo)
+    ///  - SysMainRunning: 15 (Superfetch prefetch continua)
+    ///  - GameDvrEnabled: 20 (buffer video sempre attivo, hit reale su GPU)
+    ///  - TransparencyEnabled: 5 (compositor blur/vibrancy consuma qualche %)
+    /// Ogni fattore null (probe fallito) non contribuisce né al numeratore né al massimo.</summary>
+    private static (int? score, IReadOnlyList<string> factors) ComputeNoiseScore(SystemSnapshot snapshotBase)
+    {
+        int score = 0;
+        var factors = new List<string>();
+        int signals = 0;
+
+        if (snapshotBase.StartupAppsCount is int apps && apps >= 0)
+        {
+            signals++;
+            int pt = Math.Min(30, apps * 2);
+            if (pt > 0)
+            {
+                score += pt;
+                factors.Add($"{apps} app all'avvio (+{pt})");
+            }
+        }
+        if (snapshotBase.SearchIndexingRunning == true)
+        {
+            score += 20; signals++;
+            factors.Add("Search Indexer attivo (+20)");
+        }
+        else if (snapshotBase.SearchIndexingRunning == false)
+        {
+            signals++;
+        }
+        if (snapshotBase.SysMainRunning == true)
+        {
+            score += 15; signals++;
+            factors.Add("SysMain / Superfetch attivo (+15)");
+        }
+        else if (snapshotBase.SysMainRunning == false)
+        {
+            signals++;
+        }
+        if (snapshotBase.GameDvrEnabled == true)
+        {
+            score += 20; signals++;
+            factors.Add("Game DVR / Xbox capture attivo (+20)");
+        }
+        else if (snapshotBase.GameDvrEnabled == false)
+        {
+            signals++;
+        }
+        if (snapshotBase.TransparencyEnabled == true)
+        {
+            score += 5; signals++;
+            factors.Add("Effetti trasparenza attivi (+5)");
+        }
+        else if (snapshotBase.TransparencyEnabled == false)
+        {
+            signals++;
+        }
+
+        // Se meno di 2 signal utili sono stati rilevati, non emettiamo un noise score:
+        // "sconosciuto" è meglio di un numero con 1 solo input.
+        if (signals < 2) return (null, factors);
+
+        return (Math.Min(100, score), factors);
     }
 
     /// <summary>UEFI Secure Boot via registry. Chiave assente = sistema in Legacy/BIOS (null).

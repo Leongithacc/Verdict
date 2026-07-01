@@ -312,6 +312,36 @@ public sealed class VerdictViewModel(MainViewModel main) : ViewModelBase
     /// cosa è già attivo per questo PC.</summary>
     public IReadOnlyList<Recommendation> AllRecommendations => _allRecommendations;
 
+    // ── Card "Rumore di sistema" (ispirato all'analisi Hone, docs/VS_HONE.md sez. 3.1) ──
+    /// <summary>System Noise Score 0-100 letto dallo snapshot. null = probe insufficienti.</summary>
+    public int? NoiseScore => _snapshotCache?.NoiseScore;
+    public string? NoiseBand => _snapshotCache?.NoiseBand;
+    public bool ShowNoiseCard => _snapshotCache is not null && _snapshotCache.NoiseScore is not null;
+    public string NoiseHeadline => NoiseBand switch
+    {
+        "basso" => $"Sistema pulito ({NoiseScore}/100)",
+        "medio" => $"Rumore medio ({NoiseScore}/100)",
+        "alto" => $"Sistema rumoroso ({NoiseScore}/100)",
+        _ => "Rumore di sistema",
+    };
+    public string NoiseBody => NoiseBand switch
+    {
+        "basso" => "Il tuo sistema ha poco rumore background. I tweak nella categoria \"Background\" qui sotto probabilmente NON produrranno FPS misurabili sul TUO PC — non applicarli in massa. Se vuoi verificare, misura col Ghost Tweak.",
+        "medio" => "Il tuo sistema ha rumore medio. Alcuni tweak background possono migliorare frametime consistency; verifica con Ghost Tweak invece che applicarli tutti alla cieca.",
+        "alto" => "Il tuo sistema è rumoroso. I tweak background qui sotto hanno probabilmente effetto misurabile — ma applicali uno alla volta con Ghost Tweak per capire quali contano davvero.",
+        _ => "",
+    };
+    public string NoiseColor => NoiseBand switch
+    {
+        "basso" => "Ok",
+        "medio" => "Warn",
+        "alto" => "Danger",
+        _ => "Neutral",
+    };
+    public string NoiseFactorsText => _snapshotCache?.NoiseFactors is { Count: > 0 } factors
+        ? string.Join(" · ", factors)
+        : "";
+
     // ── Card "Pronto per Vanguard": Secure Boot + TPM 2.0 sono prerequisiti Win11+Vanguard. ──
     /// <summary>null = non rilevato (es. boot Legacy/MBR), true/false = attivo o da abilitare.</summary>
     /// <summary>True quando c'è almeno uno snapshot in cache: card mostrata. Prima dello scan
@@ -494,6 +524,13 @@ public sealed class VerdictViewModel(MainViewModel main) : ViewModelBase
         Raise(nameof(TpmOnUi));
         Raise(nameof(TpmOffUi));
         Raise(nameof(ShowVanguardCard));
+        Raise(nameof(NoiseScore));
+        Raise(nameof(NoiseBand));
+        Raise(nameof(NoiseHeadline));
+        Raise(nameof(NoiseBody));
+        Raise(nameof(NoiseColor));
+        Raise(nameof(NoiseFactorsText));
+        Raise(nameof(ShowNoiseCard));
         // Game-specific entries live in their own section and never count toward
         // the system verdict header (R7_COPY_AND_KB3 open question, resolved).
         var recommendations = allRecommendations.Where(r => r.Entry.Game is null).ToArray();

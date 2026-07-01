@@ -1488,6 +1488,10 @@ static int RunDoctor()
         v switch { true => okLabel, false => koLabel, _ => "non rilevato" };
     Console.WriteLine($"Secure Boot: {Readiness(snapshot.SecureBootEnabled, "attivo", "DA ABILITARE (richiesto da Vanguard / Win11)")}");
     Console.WriteLine($"TPM 2.0    : {Readiness(snapshot.Tpm2Enabled,        "attivo", "DA ABILITARE (richiesto da Vanguard / Win11)")}");
+    if (snapshot.NoiseScore is int noise)
+        Console.WriteLine($"Rumore     : {noise}/100 ({snapshot.NoiseBand}) · {(snapshot.NoiseFactors.Count > 0 ? string.Join(", ", snapshot.NoiseFactors) : "nessun fattore")}");
+    else
+        Console.WriteLine($"Rumore     : non rilevato (probe insufficienti)");
 
     var recs = WPEP.Advisor.AdvisorEngine.Advise(snapshot, entries)
         .Where(r => r.Entry.Game is null).ToArray();

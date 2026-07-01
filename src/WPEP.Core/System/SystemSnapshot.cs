@@ -91,4 +91,24 @@ public sealed record SystemSnapshot
         "r6siege" => R6SiegeInstalled,
         _ => null,
     };
+
+    /// <summary>System Noise Score (0-100): quanto è rumoroso il sistema per il gaming.
+    /// Calcolato da fattori DOCUMENTATI (startup apps count, servizi background attivi,
+    /// indexing, Game DVR, effetti visivi). Onestà attiva contro il placebo: i tweak background
+    /// hanno effetto misurabile solo se il rumore è già alto. Vedi docs/VS_HONE.md sez. 3.1.</summary>
+    public int? NoiseScore { get; init; }
+
+    /// <summary>Fattori individuali che contribuiscono al <see cref="NoiseScore"/>, con il loro
+    /// peso in punti. Usato dalla UI per spiegare "perché il tuo score è X".</summary>
+    public IReadOnlyList<string> NoiseFactors { get; init; } = [];
+
+    /// <summary>Livello leggibile del <see cref="NoiseScore"/>. Null quando lo score non è
+    /// stato calcolato (probe falliti). Soglie fisse: 25 (basso→medio), 55 (medio→alto).</summary>
+    public string? NoiseBand => NoiseScore switch
+    {
+        null => null,
+        <= 25 => "basso",
+        <= 55 => "medio",
+        _ => "alto",
+    };
 }
