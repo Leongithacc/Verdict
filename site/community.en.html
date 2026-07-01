@@ -1,18 +1,18 @@
 <!doctype html>
-<html lang="it">
+<html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Verdict — Community: tweak più provati</title>
+<title>Verdict — Community: most-tested tweaks</title>
 <link rel="icon" type="image/svg+xml" href="favicon.svg">
-<meta name="description" content="Leaderboard live degli esiti aggregati anonimi dei tweak Verdict — soglia minima 10 sample per riga. Nessun claim inventato, solo misure vere.">
-<meta property="og:title" content="Verdict — Community: tweak più provati">
-<meta property="og:description" content="Esiti reali di tweak gaming, misurati dalla community di Verdict (opt-in). Soglia minima 10 sample. Niente FPS finti.">
+<meta name="description" content="Live leaderboard of aggregated anonymous Verdict tweak outcomes — minimum threshold of 10 samples per row. No invented claims, only real measurements.">
+<meta property="og:title" content="Verdict — Community: most-tested tweaks">
+<meta property="og:description" content="Real outcomes of gaming tweaks, measured by the Verdict community (opt-in). Minimum threshold: 10 samples. No fake FPS numbers.">
 <meta property="og:type" content="website">
-<meta property="og:url" content="https://leongithacc.github.io/Verdict/community.html">
+<meta property="og:url" content="https://leongithacc.github.io/Verdict/community.en.html">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="Verdict — Community: tweak più provati">
-<meta name="twitter:description" content="Leaderboard onesta dei tweak Verdict. Nessuna promessa, solo dati aggregati opt-in.">
+<meta name="twitter:title" content="Verdict — Community: most-tested tweaks">
+<meta name="twitter:description" content="Honest leaderboard of Verdict tweaks. No promises, only opt-in aggregated data.">
 <meta name="theme-color" content="#0B0A12">
 <style>
   :root{--bg:#0B0A12;--card:#15131F;--line:#262232;--text:#ECEAF2;--muted:#8A8696;--accent:#DB4A86;--ok:#34D399;--warn:#FBBF24;--danger:#F87171}
@@ -20,6 +20,9 @@
   body{margin:0;background:var(--bg);color:var(--text);font:16px/1.6 system-ui,-apple-system,Segoe UI,Roboto,sans-serif;padding:22px;max-width:780px;margin:0 auto}
   h1{font-size:22px;font-weight:600;margin:.2em 0}
   .sub{color:var(--muted);font-size:14px;margin-bottom:18px}
+  .lang{display:flex;gap:8px;font-size:13px;margin-bottom:14px}
+  .lang a{color:var(--muted);text-decoration:none;padding:4px 10px;border:1px solid var(--line);border-radius:8px}
+  .lang a.active{background:var(--accent);color:#0F0F14;border-color:var(--accent)}
   .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px 18px;margin:14px 0}
   table{width:100%;border-collapse:collapse;font-size:14px}
   th{text-align:left;color:var(--muted);font-weight:600;padding:8px 6px;border-bottom:1px solid var(--line)}
@@ -36,18 +39,15 @@
   a{color:var(--accent);text-decoration:none}
   a:hover{text-decoration:underline}
   .err{color:var(--danger);font-size:13px;padding:14px;background:rgba(248,113,113,.08);border:1px solid #5A2727;border-radius:10px;margin:14px 0}
-  .lang{display:flex;gap:8px;font-size:13px;margin-bottom:14px}
-  .lang a{color:var(--muted);text-decoration:none;padding:4px 10px;border:1px solid var(--line);border-radius:8px}
-  .lang a.active{background:var(--accent);color:#0F0F14;border-color:var(--accent)}
 </style>
 </head>
 <body>
   <div class="lang">
-    <a href="community.html" class="active">IT</a>
-    <a href="community.en.html">EN</a>
+    <a href="community.html">IT</a>
+    <a href="community.en.html" class="active">EN</a>
   </div>
-  <h1>Community — tweak più provati</h1>
-  <div class="sub">Esiti aggregati anonimi dai rig che hanno scelto di condividere (opt-in). Nessun dato personale: solo categoria del rig, id tweak e percentuale di esiti misurati helped / no-effect / hurt.</div>
+  <h1>Community — most-tested tweaks</h1>
+  <div class="sub">Aggregated anonymous outcomes from rigs that opted in to share. No personal data: only rig category, tweak id and percentage of measured helped / no-effect / hurt outcomes.</div>
 
   <div class="card">
     <table id="board">
@@ -55,23 +55,23 @@
         <tr>
           <th class="rank">#</th>
           <th>Tweak</th>
-          <th>Tier rig</th>
+          <th>Rig tier</th>
           <th class="pct">Sample</th>
           <th class="pct">Helped</th>
           <th class="pct">Hurt</th>
         </tr>
       </thead>
       <tbody id="rows">
-        <tr><td colspan="6" class="empty">Caricamento…</td></tr>
+        <tr><td colspan="6" class="empty">Loading…</td></tr>
       </tbody>
     </table>
   </div>
 
   <div class="foot">
-    Aggiornato di notte (UTC 03:00). Soglia minima: 10 sample per riga (sotto, niente percentuale: rispetta la regola d'oro "niente FPS finti").
+    Updated nightly (UTC 03:00). Minimum threshold: 10 samples per row (below that, no percentage: respecting the "no fake FPS" rule).
     <br/>
-    <a href="index.html">Torna alle guide BIOS</a> ·
-    <a href="https://github.com/Leongithacc/Verdict" target="_blank">Verdict su GitHub</a>
+    <a href="index.en.html">Back to BIOS guides</a> ·
+    <a href="https://github.com/Leongithacc/Verdict" target="_blank">Verdict on GitHub</a>
   </div>
 
 <script>
@@ -85,7 +85,7 @@
       const data = await resp.json();
       const top = Array.isArray(data.top) ? data.top : [];
       if (top.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="6" class="empty">Nessun dato ancora — la community sta scaldando i motori. Torna tra qualche giorno.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="6" class="empty">No data yet — the community is warming up. Come back in a few days.</td></tr>';
         return;
       }
       tbody.innerHTML = top.map((r, i) => `
@@ -102,7 +102,7 @@
       tbody.innerHTML = '';
       const err = document.createElement("div");
       err.className = "err";
-      err.textContent = "Impossibile caricare la leaderboard: " + (e && e.message || e);
+      err.textContent = "Could not load the leaderboard: " + (e && e.message || e);
       document.querySelector(".card").appendChild(err);
     }
   }

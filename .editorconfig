@@ -1,0 +1,38 @@
+root = true
+
+# Universal
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+indent_style = space
+indent_size = 4
+
+# Web
+[*.{html,css,js,ts,json,yml,yaml,md}]
+indent_size = 2
+
+# C#
+[*.{cs,csproj,sln,props}]
+indent_size = 4
+
+# XAML
+[*.xaml]
+indent_size = 4
+
+# Markdown — trailing whitespace ha significato (line-break)
+[*.md]
+trim_trailing_whitespace = false
+
+# PowerShell
+[*.ps1]
+indent_size = 4
+
+# Shell
+[*.{sh,bash}]
+indent_size = 2
+
+# Windows-native
+[*.{bat,cmd}]
+end_of_line = crlf

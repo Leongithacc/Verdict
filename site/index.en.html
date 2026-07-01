@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Verdict — BIOS guides</title>
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<meta name="description" content="Step-by-step BIOS guides per motherboard vendor — designed to be read from your phone while your PC is in BIOS. Part of the Verdict project.">
+<meta property="og:title" content="Verdict — BIOS guides">
+<meta property="og:description" content="BIOS instructions per vendor (ASUS/MSI/Gigabyte/ASRock/EVGA/NZXT), IT and EN, optimized to be read from your phone with your PC in BIOS.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://leongithacc.github.io/Verdict/index.en.html">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Verdict — BIOS guides">
+<meta name="twitter:description" content="Honest, vendor-verified BIOS guides. Zero invented tweaks. Open source.">
+<meta name="theme-color" content="#0B0A12">
+<style>
+  :root{--bg:#0B0A12;--card:#15131F;--line:#262232;--text:#ECEAF2;--muted:#8A8696;--accent:#DB4A86}
+  body{margin:0;background:var(--bg);color:var(--text);font:16px/1.6 system-ui,Segoe UI,Roboto,sans-serif;padding:22px;max-width:680px;margin:0 auto}
+  h1{font-size:22px;font-weight:600}
+  .sub{color:var(--muted);font-size:14px;margin-bottom:18px}
+  .lang{display:flex;gap:8px;font-size:13px;margin-bottom:14px}
+  .lang a{color:var(--muted);text-decoration:none;padding:4px 10px;border:1px solid var(--line);border-radius:8px}
+  .lang a.active{background:var(--accent);color:#0F0F14;border-color:var(--accent)}
+  a.card{display:block;text-decoration:none;color:var(--text);background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px 18px;margin:10px 0}
+  a.card:hover{border-color:var(--accent)}
+  a.card b{font-size:16px}
+  a.card span{display:block;color:var(--muted);font-size:13px;margin-top:3px}
+  .foot{color:var(--muted);font-size:12px;margin-top:22px;border-top:1px solid var(--line);padding-top:12px}
+</style>
+</head>
+<body>
+  <div class="lang">
+    <a href="index.html">IT</a>
+    <a href="index.en.html" class="active">EN</a>
+  </div>
+  <h1>BIOS guides — Verdict</h1>
+  <div class="sub">Step-by-step instructions, per motherboard vendor, designed to be followed from your phone while your PC is in BIOS. Italian and English.</div>
+
+  <a class="card" href="bios.html?t=xmp-expo-enable"><b>Enable XMP / EXPO</b><span>Bring your RAM to its rated speed — real gain, zero cost.</span></a>
+  <a class="card" href="bios.html?t=resizable-bar-enable"><b>Resizable BAR / Smart Access Memory</b><span>Above 4G Decoding + Re-Size BAR.</span></a>
+  <a class="card" href="bios.html?t=amd-ftpm-bios-update"><b>BIOS update (AMD fTPM stutter)</b><span>Delicate operation — with safety warnings.</span></a>
+  <a class="card" href="bios.html?t=pbo-curve-optimizer"><b>PBO + Curve Optimizer</b><span>Advanced Ryzen overclock — at stability risk.</span></a>
+  <a class="card" href="bios.html?t=secure-boot-enable"><b>Enable Secure Boot</b><span>Required by Vanguard (Valorant) and Windows 11.</span></a>
+  <a class="card" href="bios.html?t=tpm-enable"><b>Enable TPM 2.0 / fTPM</b><span>Required by Vanguard and Windows 11 — fTPM on Ryzen, PTT on Intel.</span></a>
+  <a class="card" href="bios.html?t=above-4g-decoding-enable"><b>Above 4G Decoding</b><span>Prerequisite for Resizable BAR and modern PCIe features.</span></a>
+  <a class="card" href="bios.html?t=csm-disable"><b>Disable CSM</b><span>Prerequisite for Win11 + ReBAR. Careful if Windows is in MBR mode.</span></a>
+  <a class="card" href="bios.html?t=virtualization-enable"><b>Enable Virtualization (VT-x / AMD-V)</b><span>For Hyper-V, WSL2, Docker, VBS, Android emulators.</span></a>
+
+  <a class="card" href="community.en.html" style="border-color:var(--accent)"><b>Community — most-tested tweaks</b><span>Live leaderboard of aggregated anonymous outcomes (from users who opted in).</span></a>
+
+  <div class="foot">Menu paths may vary slightly per model and BIOS version. If in doubt, consult your motherboard manual. Verdict never modifies BIOS on your behalf.</div>
+</body>
+</html>

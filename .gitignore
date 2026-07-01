@@ -5,3 +5,7 @@ obj/
 TestResults/
 artifacts/
 dist/
+
+# File di lavoro personali - non committare mai
+SCELTE_APERTE_*.md
+NOTE_PERSONALI_*.md
