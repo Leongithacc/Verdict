@@ -65,6 +65,11 @@ All notable changes to Verdict are documented here. Format based on
     design: non uccide processi, non stoppa servizi, non tocca il gioco.
   - Doc pubblico `docs/VS_HONE.md`: posizionamento onesto vs Hone,
     inclusa la sezione "quando SCEGLIERE Hone invece di Verdict".
+- **RapTechPC competitor research** (`docs/VS_RAPTECHPC.md`): ricerca 2026-07-01
+  su RapTechPC's Free Optimizer Tool. Conclusione: nessuna documentazione
+  tecnica pubblica verificabile, tutte le feature ipotizzate sono già
+  interamente coperte da Verdict. Zero azioni concrete, doc archiviato
+  per completezza con protocollo di riapertura se il repo diventerà pubblico.
 
 ### Changed
 - `CommunityService.Record` now also fires-and-forgets `SubmitAsync` to the

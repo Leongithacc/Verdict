@@ -6,6 +6,10 @@
 > pubbliche, dei suoi claim di marketing e delle recensioni indipendenti
 > disponibili su Reddit / YouTube / forum gaming.
 >
+> Vedi anche [VS_RAPTECHPC.md](VS_RAPTECHPC.md) per la nota di ricerca su
+> RapTechPC (competitor più piccolo, principalmente marketing social senza
+> documentazione tecnica pubblica al 2026-07-01).
+>
 > Questo documento non è marketing anti-Hone: è un esercizio di **onestà
 > intellettuale**. Hone e Verdict risolvono lo stesso problema partendo da
 > filosofie diverse. Se dopo aver letto questo doc decidi che Hone è meglio per
