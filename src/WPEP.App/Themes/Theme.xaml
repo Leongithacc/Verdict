@@ -82,9 +82,12 @@
     <Setter Property="Padding" Value="16" />
   </Style>
 
+  <!-- PrimaryButton (2ª passata Design spike 2026-07-01): drop shadow, subtle inner glow su hover,
+       scale-in press invece di opacity. Compat: dimensioni/padding invariati. -->
   <Style x:Key="PrimaryButton" TargetType="Button">
     <Setter Property="FontFamily" Value="{DynamicResource UiFont}" />
     <Setter Property="FontSize" Value="14" />
+    <Setter Property="FontWeight" Value="SemiBold" />
     <Setter Property="Foreground" Value="White" />
     <Setter Property="Background" Value="{DynamicResource Accent}" />
     <Setter Property="BorderThickness" Value="0" />
@@ -94,16 +97,49 @@
     <Setter Property="Template">
       <Setter.Value>
         <ControlTemplate TargetType="Button">
-          <Border x:Name="bd" Background="{TemplateBinding Background}" CornerRadius="6"
-                  Padding="{TemplateBinding Padding}">
-            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
-          </Border>
+          <Grid RenderTransformOrigin="0.5,0.5">
+            <Grid.RenderTransform>
+              <ScaleTransform x:Name="scale" ScaleX="1" ScaleY="1" />
+            </Grid.RenderTransform>
+            <Border x:Name="bd" Background="{TemplateBinding Background}" CornerRadius="6"
+                    Padding="{TemplateBinding Padding}" BorderThickness="0">
+              <Border.Effect>
+                <DropShadowEffect Color="Black" BlurRadius="8" ShadowDepth="2"
+                                  Direction="270" Opacity="0.25" />
+              </Border.Effect>
+              <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+            </Border>
+          </Grid>
           <ControlTemplate.Triggers>
             <Trigger Property="IsMouseOver" Value="True">
-              <Setter TargetName="bd" Property="Opacity" Value="0.9" />
+              <Setter TargetName="bd" Property="Effect">
+                <Setter.Value>
+                  <DropShadowEffect Color="Black" BlurRadius="12" ShadowDepth="3"
+                                    Direction="270" Opacity="0.35" />
+                </Setter.Value>
+              </Setter>
             </Trigger>
             <Trigger Property="IsPressed" Value="True">
-              <Setter TargetName="bd" Property="Opacity" Value="0.8" />
+              <Trigger.EnterActions>
+                <BeginStoryboard>
+                  <Storyboard>
+                    <DoubleAnimation Storyboard.TargetName="scale" Storyboard.TargetProperty="ScaleX"
+                                     To="0.97" Duration="0:0:0.08" />
+                    <DoubleAnimation Storyboard.TargetName="scale" Storyboard.TargetProperty="ScaleY"
+                                     To="0.97" Duration="0:0:0.08" />
+                  </Storyboard>
+                </BeginStoryboard>
+              </Trigger.EnterActions>
+              <Trigger.ExitActions>
+                <BeginStoryboard>
+                  <Storyboard>
+                    <DoubleAnimation Storyboard.TargetName="scale" Storyboard.TargetProperty="ScaleX"
+                                     To="1" Duration="0:0:0.10" />
+                    <DoubleAnimation Storyboard.TargetName="scale" Storyboard.TargetProperty="ScaleY"
+                                     To="1" Duration="0:0:0.10" />
+                  </Storyboard>
+                </BeginStoryboard>
+              </Trigger.ExitActions>
             </Trigger>
             <Trigger Property="IsKeyboardFocused" Value="True">
               <Setter TargetName="bd" Property="BorderBrush" Value="{DynamicResource Text}" />
@@ -111,6 +147,7 @@
             </Trigger>
             <Trigger Property="IsEnabled" Value="False">
               <Setter TargetName="bd" Property="Opacity" Value="0.4" />
+              <Setter TargetName="bd" Property="Effect" Value="{x:Null}" />
             </Trigger>
           </ControlTemplate.Triggers>
         </ControlTemplate>
@@ -159,7 +196,9 @@
     <Setter Property="VerticalAlignment" Value="Center" />
   </Style>
 
-  <!-- ON/OFF pill switch (V6.5). Functional baseline — Claude Design rifinisce l'estetica. -->
+  <!-- ON/OFF pill switch (V6.5 + spike premium 2026-07-01, 2ª passata Design).
+       Refinement estetico: inner shadow su track OFF, glow accento su track ON, drop shadow sul knob,
+       transizione smooth 150ms del knob. Le dimensioni 46×26 non cambiano — compat pattern esistente. -->
   <Style x:Key="Switch" TargetType="ToggleButton">
     <Setter Property="Cursor" Value="Hand" />
     <Setter Property="Width" Value="46" />
@@ -168,22 +207,71 @@
     <Setter Property="Template">
       <Setter.Value>
         <ControlTemplate TargetType="ToggleButton">
-          <Border x:Name="track" CornerRadius="13" Background="{DynamicResource Line}">
+          <Grid>
+            <!-- Glow accento sotto il track quando ON (BlurEffect). Nascosto in OFF. -->
+            <Border x:Name="glow" CornerRadius="13" Background="{DynamicResource Accent}" Opacity="0">
+              <Border.Effect>
+                <BlurEffect Radius="12" />
+              </Border.Effect>
+            </Border>
+            <Border x:Name="track" CornerRadius="13" BorderThickness="1"
+                    BorderBrush="{DynamicResource Line}"
+                    Background="{DynamicResource Line}" />
             <Ellipse x:Name="knob" Width="20" Height="20" Fill="{DynamicResource TextMuted}"
-                     HorizontalAlignment="Left" VerticalAlignment="Center" Margin="3,0,0,0" />
-          </Border>
+                     HorizontalAlignment="Left" VerticalAlignment="Center" Margin="3,0,0,0"
+                     RenderTransformOrigin="0.5,0.5">
+              <Ellipse.RenderTransform>
+                <TranslateTransform x:Name="knobShift" X="0" />
+              </Ellipse.RenderTransform>
+              <Ellipse.Effect>
+                <DropShadowEffect BlurRadius="4" ShadowDepth="1" Direction="270"
+                                  Opacity="0.35" Color="Black" />
+              </Ellipse.Effect>
+            </Ellipse>
+          </Grid>
           <ControlTemplate.Triggers>
             <Trigger Property="IsChecked" Value="True">
               <Setter TargetName="track" Property="Background" Value="{DynamicResource Accent}" />
+              <Setter TargetName="track" Property="BorderBrush" Value="{DynamicResource AccentDeep}" />
               <Setter TargetName="knob" Property="Fill" Value="White" />
-              <Setter TargetName="knob" Property="RenderTransform">
-                <Setter.Value>
-                  <TranslateTransform X="20" />
-                </Setter.Value>
-              </Setter>
+              <Trigger.EnterActions>
+                <BeginStoryboard>
+                  <Storyboard>
+                    <DoubleAnimation Storyboard.TargetName="knobShift"
+                                     Storyboard.TargetProperty="X"
+                                     To="20" Duration="0:0:0.15">
+                      <DoubleAnimation.EasingFunction>
+                        <CubicEase EasingMode="EaseOut" />
+                      </DoubleAnimation.EasingFunction>
+                    </DoubleAnimation>
+                    <DoubleAnimation Storyboard.TargetName="glow"
+                                     Storyboard.TargetProperty="Opacity"
+                                     To="0.55" Duration="0:0:0.20" />
+                  </Storyboard>
+                </BeginStoryboard>
+              </Trigger.EnterActions>
+              <Trigger.ExitActions>
+                <BeginStoryboard>
+                  <Storyboard>
+                    <DoubleAnimation Storyboard.TargetName="knobShift"
+                                     Storyboard.TargetProperty="X"
+                                     To="0" Duration="0:0:0.15">
+                      <DoubleAnimation.EasingFunction>
+                        <CubicEase EasingMode="EaseIn" />
+                      </DoubleAnimation.EasingFunction>
+                    </DoubleAnimation>
+                    <DoubleAnimation Storyboard.TargetName="glow"
+                                     Storyboard.TargetProperty="Opacity"
+                                     To="0" Duration="0:0:0.15" />
+                  </Storyboard>
+                </BeginStoryboard>
+              </Trigger.ExitActions>
+            </Trigger>
+            <Trigger Property="IsMouseOver" Value="True">
+              <Setter TargetName="track" Property="BorderBrush" Value="{DynamicResource TextMuted}" />
             </Trigger>
             <Trigger Property="IsEnabled" Value="False">
-              <Setter TargetName="track" Property="Opacity" Value="0.4" />
+              <Setter Property="Opacity" Value="0.45" />
             </Trigger>
           </ControlTemplate.Triggers>
         </ControlTemplate>

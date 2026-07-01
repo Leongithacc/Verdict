@@ -145,3 +145,92 @@ dettagliati** — è il punto estetico che ha esplicitamente delegato a te.
 **Vincoli invariati:** solo visivo (XAML/Theme), niente logica; build 0/0 + suite verde; la palette
 Villain (#4A0080, nero/carbonio) c'è già nei token. Gli interruttori sono `ToggleButton`/Button
 templati: dai loro uno stile `x:Key` riutilizzabile in `Themes/Theme.xaml`.
+
+---
+
+## AGGIORNAMENTO 2026-07-01 — 2ª passata Design (dopo la sessione multi-brain + V7 + Hone)
+
+**Cosa è cambiato tra la 1ª passata Design e questa 2ª:**
+
+Tra il 2026-06-26 e il 2026-06-30 sono stati aggiunti 5 componenti UI nuovi che il brief
+originale non copriva. La 2ª passata deve gestirli con lo stesso rigore estetico degli
+interruttori (1ª passata):
+
+### 1. Card "Rumore di sistema" (nuova, pagina Verdict, sopra la lista)
+Fonte funzionale: `ViewModels.cs → VerdictViewModel.ShowNoiseCard`,
+`NoiseHeadline/Body/Color/FactorsText`. Colore semantico dal band (Ok/Warn/Danger via
+`TokenBrush`). Concept: **cockpit heads-up display** con score 0-100 come gauge
+centrale, band label a lato, elenco fattori come "warning lights" in coda. È il primo
+elemento che l'utente vede dopo lo scan — deve essere immediatamente leggibile.
+
+### 2. Card "Pronto per Vanguard" (nuova, pagina Verdict, sotto Rumore)
+Fonte funzionale: `VerdictViewModel.VanguardHeadline`, `SecureBootOnUi/OffUi`,
+`TpmOnUi/OffUi`, `OpenSecureBootGuideCommand`, `OpenTpmGuideCommand`. Due righe di
+status con simbolo ✓/⚠ + bottone "Istruzioni BIOS" (quando ⚠). Concept: **caccia
+militare tactical display** con 2 gauge/status pill (verde/ambra), il bottone "Istruzioni
+BIOS" è discreto ma ovvio.
+
+### 3. Toggle "Vista tecnica / Vista bucket UX" (nuovo, sopra la lista Verdict)
+Fonte funzionale: `VerdictViewModel.ShowByTechnical/ShowByBucket`, handler
+`OnVerdictViewTechnical/OnVerdictViewBucket`. Attualmente `RadioButton` inline. Concept:
+**segmented control premium** stile cockpit (bordo carbon fiber, glow sull'attivo).
+Il default va reso ovvio (vista tecnica).
+
+### 4. Card CTA "Gaming Session Mode" (nuova, nested nella card Rumore)
+Fonte funzionale: `VerdictViewModel.SessionButtonLabel`, `SessionStatus`,
+`ToggleSessionCommand`. Bottone primary + status text a lato. Concept: **pulsante rosso
+missile launch** stile arcade (invitante quando OFF, "active" con pulse leggero
+quando ON, "restore" quando ON con hover che mostra "farà cosa"). Zero micro-animazioni
+distrattive — è azione seria.
+
+### 5. Pagina Co-pilota — 4 RadioButton brain + PasswordBox per 3 cloud brain
+Fonte funzionale: `CoPilotViewModel.IsOllama/IsClaude/IsGemini/IsOpenAi`,
+`ClaudeApiKey/GeminiApiKey/OpenAiApiKey` + handler code-behind. Attualmente `WrapPanel`
+con 4 RadioButton + 4 StackPanel condizionali. Concept: **brain selector premium** come
+un bank di switch cockpit (4 toggle rigidi, uno solo può essere on). Ogni pannello brain
+ha model TextBox + PasswordBox + check "✓ configurata" — rendere il "✓" visibile ma
+non intrusivo (piccola pill verde a lato).
+
+### Priorità della 2ª passata (in ordine)
+
+1. **ToggleButton style refinement**: gli interruttori della lista Verdict (1ª passata)
+   funzionano ma sono ancora "utilitari". La 2ª passata li deve rendere **premium
+   dettagliati**: profondità (subtle inner shadow), micro-glow accento nell'ON, transizione
+   liscia (Storyboard ~150ms), stato "già-attivo" distinguibile (accento diverso, es. Ok).
+2. **Card style refinement**: le `Card` sono `Border` con `Background="Surface"` + border
+   `Line`. Concept 2ª passata: **carbon fiber texture** subtle (linee diagonali molto
+   sottili come Image o LinearGradientBrush), border piu` rifinito (2-color: Line ↑↑ +
+   Line più scuro ↓↓ per pseudo-3D).
+3. **Icone SVG inline** (Path Geometry) per sostituire glyph/emoji rimasti:
+   - ✓ / ⚠ / ✗ nella card Vanguard (Path shield-check, warning-triangle, x-circle)
+   - Bottone "Istruzioni BIOS" (Path chip-icon)
+   - Vista bucket icons per ogni bucket (FPS/Network/QoL/Background)
+   - Brain icons per RadioButton co-pilota (locale = home, cloud = cloud, brand-neutral)
+4. **Icone Nav sidebar**: NavButton attualmente text-only. Aggiungere Path glyph a
+   sinistra del testo per Verdict / Scan / Diagnostica / Report / Modifiche / Profili /
+   Lab / Co-pilota / Impostazioni. Design coerente (line-icon, 1.5px stroke, 20px).
+
+### Cosa NON deve cambiare (invarianti hard)
+
+- **Token `OnAccent`** aggiunto 2026-06-29 (`#0F0F14`) è ora la fonte del testo scuro su
+  accent chiaro. Se un tema light diventa "accent giallo", ridefinisce `OnAccent` a
+  qualcosa di leggibile (per ora costante).
+- **Regola d'oro KB** invariata: il design non tocca i contenuti dei tweak, solo la
+  rappresentazione.
+- **Anti-cheat safe**: niente overlay, niente componenti Win32 esotici. WPF standard.
+- **`Directory.Build.props` con `TreatWarningsAsErrors=true`** valido anche per XAML:
+  binding rotti sono fatal.
+
+### Vincoli operativi
+
+- Léon torna al PC col SDK il 2026-07-05. La 2ª passata Design **può essere fatta**
+  prima, ma build/test rimangono da fare a casa. Ogni XAML rifinito viene validato
+  visivamente solo il 2026-07-05+.
+- Se la 2ª passata produce nuovi token semantici (es. per il gauge cockpit servono
+  gradients), aggiungerli sotto la sezione `<!-- Extended semantic tokens -->` in
+  `Theme.xaml` con commento chiaro sul purpose. NON riusare token esistenti per scopi
+  diversi.
+- I 10 preset di tema (`ThemePresets.All` in `Infrastructure.cs`) sono già definiti: la
+  2ª passata deve funzionare con TUTTI e 10, non solo Villain. Test mentale: il gauge
+  cockpit su un tema "Aurora" (chiaro) resta leggibile? Se no, ridefinire con
+  `DynamicResource` invece che hardcoded.
