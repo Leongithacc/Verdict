@@ -98,7 +98,9 @@ della sessione, ripristina all'uscita.
 Verdict ora ha `wpep session <processo.exe>`:
 
 - Setta `PriorityClass = BelowNormal` per una lista curata di processi noti
-  come "rumore gaming" (Discord, OneDrive, backup vari, indexer).
+  come "rumore gaming" (Discord + Canary/PTB, OneDrive, Google Drive, Dropbox,
+  Spotify, Slack, Zoom, Teams, WhatsApp/Telegram desktop, updater vari
+  Edge/Chrome/Steam/Epic).
 - Alla chiusura del processo target (o CTRL+C), ripristina `Normal`.
 - Zero permanent changes, zero registry, zero journal necessario.
 

@@ -56,9 +56,9 @@ never applies a placebo.
 - **Gaming Session Mode** — `wpep session` (or the missile-launch button on the
   Verdict page) temporarily lowers `PriorityClass` to `BelowNormal` for a curated
   list of known "gaming noise" processes (Discord, OneDrive, Dropbox, Google Drive,
-  Spotify, browser/store updaters). Restores on Ctrl+C or exit. **No process is
-  ever killed, no service is ever stopped, the game itself is never touched** —
-  anti-cheat safe by design.
+  Spotify, Slack, Zoom, Teams, WhatsApp/Telegram desktop, browser/store updaters).
+  Restores on Ctrl+C or exit. **No process is ever killed, no service is ever
+  stopped, the game itself is never touched** — anti-cheat safe by design.
 - **BIOS guide QR** — for the manually-BIOS-only entries (XMP/EXPO, ReBAR, fTPM,
   PBO, Secure Boot, TPM, Above 4G, CSM, virtualization) a QR opens a per-vendor
   step-by-step page on your phone, reachable even while the PC is in BIOS.

@@ -33,6 +33,14 @@ public sealed class GamingSession
         "DropboxUpdate",
         // Streaming / audio
         "Spotify",
+        // Work-chat / videoconf (spesso lasciate aperte)
+        "slack",
+        "Zoom",
+        "Teams",
+        "ms-teams",
+        // Messaging desktop
+        "WhatsApp",
+        "Telegram",
         // Browser update helper
         "MicrosoftEdgeUpdate",
         "GoogleUpdate",
