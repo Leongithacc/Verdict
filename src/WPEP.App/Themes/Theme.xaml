@@ -74,12 +74,61 @@
   </Style>
 
   <!-- ============ CONTROLS ============ -->
+  <!-- Card (2ª passata Design spike): drop shadow per profondita, background con linear
+       gradient sottile (Surface → Surface2) per pseudo carbon-fiber sheen. -->
   <Style x:Key="Card" TargetType="Border">
-    <Setter Property="Background" Value="{DynamicResource Surface}" />
     <Setter Property="BorderBrush" Value="{DynamicResource Line}" />
     <Setter Property="BorderThickness" Value="1" />
     <Setter Property="CornerRadius" Value="10" />
     <Setter Property="Padding" Value="16" />
+    <Setter Property="Background">
+      <Setter.Value>
+        <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+          <GradientStop Color="{DynamicResource C.Surface}" Offset="0" />
+          <GradientStop Color="{DynamicResource C.Surface2}" Offset="1" />
+        </LinearGradientBrush>
+      </Setter.Value>
+    </Setter>
+    <Setter Property="Effect">
+      <Setter.Value>
+        <DropShadowEffect Color="Black" BlurRadius="12" ShadowDepth="3"
+                          Direction="270" Opacity="0.30" />
+      </Setter.Value>
+    </Setter>
+  </Style>
+
+  <!-- Icone SVG inline via Path Geometry — sostituiscono ✓⚠✗ dei glyph emoji (regola d'oro
+       brief). Usage: <Path Style="{StaticResource IconCheck}" Fill="{DynamicResource Ok}" /> -->
+  <Style x:Key="IconBase" TargetType="Path">
+    <Setter Property="Width" Value="14" />
+    <Setter Property="Height" Value="14" />
+    <Setter Property="Stretch" Value="Uniform" />
+    <Setter Property="Fill" Value="{DynamicResource Text}" />
+  </Style>
+  <Style x:Key="IconCheck" TargetType="Path" BasedOn="{StaticResource IconBase}">
+    <Setter Property="Data" Value="M 2 8 L 6 12 L 14 3" />
+    <Setter Property="Stroke" Value="{Binding Path=Fill, RelativeSource={RelativeSource Self}}" />
+    <Setter Property="StrokeThickness" Value="2.2" />
+    <Setter Property="StrokeStartLineCap" Value="Round" />
+    <Setter Property="StrokeEndLineCap" Value="Round" />
+    <Setter Property="Fill" Value="Transparent" />
+  </Style>
+  <Style x:Key="IconWarn" TargetType="Path" BasedOn="{StaticResource IconBase}">
+    <Setter Property="Data" Value="M 8 1 L 15 14 L 1 14 Z M 8 5 L 8 10 M 8 12 L 8 12.5" />
+  </Style>
+  <Style x:Key="IconX" TargetType="Path" BasedOn="{StaticResource IconBase}">
+    <Setter Property="Data" Value="M 3 3 L 13 13 M 13 3 L 3 13" />
+    <Setter Property="Stroke" Value="{Binding Path=Fill, RelativeSource={RelativeSource Self}}" />
+    <Setter Property="StrokeThickness" Value="2.2" />
+    <Setter Property="StrokeStartLineCap" Value="Round" />
+    <Setter Property="StrokeEndLineCap" Value="Round" />
+    <Setter Property="Fill" Value="Transparent" />
+  </Style>
+  <Style x:Key="IconChip" TargetType="Path" BasedOn="{StaticResource IconBase}">
+    <Setter Property="Data" Value="M 4 4 L 12 4 L 12 12 L 4 12 Z M 0 6 L 4 6 M 0 10 L 4 10 M 12 6 L 16 6 M 12 10 L 16 10" />
+    <Setter Property="Stroke" Value="{Binding Path=Fill, RelativeSource={RelativeSource Self}}" />
+    <Setter Property="StrokeThickness" Value="1.5" />
+    <Setter Property="Fill" Value="Transparent" />
   </Style>
 
   <!-- PrimaryButton (2ª passata Design spike 2026-07-01): drop shadow, subtle inner glow su hover,
