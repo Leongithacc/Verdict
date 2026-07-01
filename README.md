@@ -43,6 +43,7 @@ never applies a placebo.
   just in the prompt). Read-only — explains and suggests, never applies. Four
   swappable brains: Ollama (local, default — free and private), Anthropic Claude,
   Google Gemini, OpenAI GPT. Cloud API keys are encrypted at rest with DPAPI.
+  See [docs/BRAINS.md](docs/BRAINS.md) for when to pick which brain.
 - **Vanguard readiness card** — Secure Boot + TPM 2.0 status detected at runtime
   (registry + WMI) and shown on the Verdict page with one-click BIOS guides per
   motherboard vendor — useful for any anti-cheat or Win11 requirement.
@@ -53,7 +54,8 @@ never applies a placebo.
 - **Community evidence (V7)** — opt-in: anonymized outcomes (rig signature hash,
   tier, tweak id, outcome, measured delta) can be shared with a public backend
   (Cloudflare Worker + D1) and aggregated to "helped 73% of similar rigs". No
-  PII ever, default OFF, full design in [docs/V7_REMOTE_BACKEND_DESIGN.md](docs/V7_REMOTE_BACKEND_DESIGN.md).
+  PII ever, default OFF. Design in [docs/V7_REMOTE_BACKEND_DESIGN.md](docs/V7_REMOTE_BACKEND_DESIGN.md),
+  privacy policy in [docs/PRIVACY.md](docs/PRIVACY.md).
 - **Self-test** — `verify the apply engine works on this machine` before you trust
   it: a write→verify→undo round-trip on a throwaway registry key (no real setting
   touched).
