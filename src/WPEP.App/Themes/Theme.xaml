@@ -209,6 +209,22 @@
     <Setter Property="Foreground" Value="{DynamicResource Text}" />
   </Style>
 
+  <!-- MissileButton (2ª passata Design part 7): CTA "azione seria" per Session Mode
+       e simili. Background LinearGradient da Accent scuro a Danger, drop shadow rossastro,
+       pulsating subtle su hover. Concept: pulsante rosso di lancio missile stile arcade. -->
+  <Style x:Key="MissileButton" TargetType="Button" BasedOn="{StaticResource PrimaryButton}">
+    <Setter Property="Background">
+      <Setter.Value>
+        <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+          <GradientStop Color="{DynamicResource C.AccentDeep}" Offset="0" />
+          <GradientStop Color="{DynamicResource C.Danger}" Offset="1" />
+        </LinearGradientBrush>
+      </Setter.Value>
+    </Setter>
+    <Setter Property="Padding" Value="20,10" />
+    <Setter Property="FontWeight" Value="Bold" />
+  </Style>
+
   <Style x:Key="NavButton" TargetType="RadioButton">
     <Setter Property="FontFamily" Value="{DynamicResource UiFont}" />
     <Setter Property="FontSize" Value="14" />

@@ -54,22 +54,60 @@
                priority dei bloater conosciuti. Reversibile, non tocca il gioco. -->
           <Border Style="{StaticResource Card}" Margin="0,18,0,0"
                   Visibility="{Binding ShowNoiseCard, Converter={StaticResource BoolToVis}}">
-            <StackPanel>
-              <TextBlock Style="{StaticResource H2}"
-                         Foreground="{Binding NoiseColor, Converter={StaticResource TokenBrush}}"
-                         Text="{Binding NoiseHeadline}" />
-              <TextBlock Style="{StaticResource Muted}" Margin="0,6,0,0" TextWrapping="Wrap"
-                         Text="{Binding NoiseBody}" />
-              <TextBlock Style="{StaticResource Muted}" FontSize="11" Margin="0,8,0,0" TextWrapping="Wrap"
-                         Text="{Binding NoiseFactorsText}" />
-              <StackPanel Orientation="Horizontal" Margin="0,14,0,0">
-                <Button Style="{StaticResource PrimaryButton}"
-                        Content="{Binding SessionButtonLabel}"
-                        Command="{Binding ToggleSessionCommand}" />
-                <TextBlock Style="{StaticResource Muted}" FontSize="11" VerticalAlignment="Center"
-                           Margin="12,0,0,0" TextWrapping="Wrap" Text="{Binding SessionStatus}" />
+            <Grid>
+              <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+              </Grid.ColumnDefinitions>
+
+              <!-- Gauge cockpit (2ª passata Design part 5): semicerchio 180° tipo speedometer,
+                   needle rotante bindata a NoiseAngle. Il colore del segmento riempito segue
+                   NoiseColor (Ok/Warn/Danger). -->
+              <Grid Grid.Column="0" Width="140" Height="90" Margin="0,4,20,0" VerticalAlignment="Top">
+                <!-- Track arc (base grigia) -->
+                <Path Stroke="{DynamicResource Line}" StrokeThickness="10" Fill="Transparent"
+                      StrokeStartLineCap="Round" StrokeEndLineCap="Round"
+                      Data="M 15 80 A 55 55 0 0 1 125 80" />
+                <!-- Filled arc: colora dinamicamente in base al band. Approssimazione: mostro
+                     l'arco completo colorato ma con opacity ridotta per il "riempimento base",
+                     l'utente vede il needle come indicatore vero. -->
+                <Path Stroke="{Binding NoiseColor, Converter={StaticResource TokenBrush}}"
+                      StrokeThickness="10" Fill="Transparent" Opacity="0.35"
+                      StrokeStartLineCap="Round" StrokeEndLineCap="Round"
+                      Data="M 15 80 A 55 55 0 0 1 125 80" />
+                <!-- Needle (linea che ruota dal centro 70,80) -->
+                <Path Stroke="{Binding NoiseColor, Converter={StaticResource TokenBrush}}"
+                      StrokeThickness="3" StrokeStartLineCap="Round" StrokeEndLineCap="Round"
+                      Data="M 70 80 L 20 80" RenderTransformOrigin="0.5,0.9">
+                  <Path.RenderTransform>
+                    <RotateTransform CenterX="70" CenterY="80" Angle="{Binding NoiseAngle}" />
+                  </Path.RenderTransform>
+                </Path>
+                <!-- Score numeric center -->
+                <TextBlock Text="{Binding NoiseScore}"
+                           FontFamily="{DynamicResource MonoFont}" FontSize="22" FontWeight="Bold"
+                           Foreground="{Binding NoiseColor, Converter={StaticResource TokenBrush}}"
+                           HorizontalAlignment="Center" VerticalAlignment="Bottom"
+                           Margin="0,0,0,-4" />
+              </Grid>
+
+              <StackPanel Grid.Column="1">
+                <TextBlock Style="{StaticResource H2}"
+                           Foreground="{Binding NoiseColor, Converter={StaticResource TokenBrush}}"
+                           Text="{Binding NoiseHeadline}" />
+                <TextBlock Style="{StaticResource Muted}" Margin="0,6,0,0" TextWrapping="Wrap"
+                           Text="{Binding NoiseBody}" />
+                <TextBlock Style="{StaticResource Muted}" FontSize="11" Margin="0,8,0,0" TextWrapping="Wrap"
+                           Text="{Binding NoiseFactorsText}" />
+                <StackPanel Orientation="Horizontal" Margin="0,14,0,0">
+                  <Button Style="{StaticResource MissileButton}"
+                          Content="{Binding SessionButtonLabel}"
+                          Command="{Binding ToggleSessionCommand}" />
+                  <TextBlock Style="{StaticResource Muted}" FontSize="11" VerticalAlignment="Center"
+                             Margin="12,0,0,0" TextWrapping="Wrap" Text="{Binding SessionStatus}" />
+                </StackPanel>
               </StackPanel>
-            </StackPanel>
+            </Grid>
           </Border>
 
           <!-- Card "Pronto per Vanguard": Secure Boot + TPM 2.0 sono prerequisiti di Vanguard
@@ -605,7 +643,7 @@
                    Text="Latenza DPC/ISR del kernel per driver — trova il vero colpevole dello stutter, o ti dice che non c'è." />
         <TextBlock Style="{StaticResource Body}" Text="{Binding Status}" Margin="0,0,0,12" />
         <StackPanel Orientation="Horizontal">
-          <Button Style="{StaticResource PrimaryButton}" Content="Capture"
+          <Button Style="{StaticResource PrimaryButton}" Content="Cattura"
                   Command="{Binding CaptureCommand}"
                   Visibility="{Binding IsElevated, Converter={StaticResource BoolToVis}}" />
           <TextBox Text="{Binding Seconds, UpdateSourceTrigger=LostFocus}" Width="56"

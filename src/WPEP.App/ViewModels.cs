@@ -342,6 +342,10 @@ public sealed class VerdictViewModel(MainViewModel main) : ViewModelBase
         ? string.Join(" · ", factors)
         : "";
 
+    /// <summary>Angolo del needle del gauge cockpit (0°→180° per score 0→100).
+    /// Usato via RotateTransform.Angle nel gauge XAML. Concept: docs/CLAUDE_DESIGN_BRIEF.md sez. 5.</summary>
+    public double NoiseAngle => NoiseScore is int s ? Math.Clamp(s * 1.8, 0.0, 180.0) : 0.0;
+
     // ── Gaming Session Mode (docs/VS_HONE.md sez. 3.3) ──
     private readonly WPEP.Execution.GamingSession _session = new();
     private string _sessionStatus = "";
@@ -623,6 +627,7 @@ public sealed class VerdictViewModel(MainViewModel main) : ViewModelBase
         Raise(nameof(NoiseBody));
         Raise(nameof(NoiseColor));
         Raise(nameof(NoiseFactorsText));
+        Raise(nameof(NoiseAngle));
         Raise(nameof(ShowNoiseCard));
         Raise(nameof(BucketedGroups));
         Raise(nameof(ActiveGroups));
