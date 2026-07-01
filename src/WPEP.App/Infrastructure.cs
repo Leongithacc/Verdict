@@ -81,6 +81,11 @@ public sealed class AppSettings
     /// LocalOnlyBackend, niente rete. Vedi docs/V7_REMOTE_BACKEND_DESIGN.md.</summary>
     public bool CommunityShareEnabled { get; set; }
 
+    /// <summary>Vista lista Verdict: false = raggruppa per stato (Recommended/AlreadyActive/…),
+    /// true = raggruppa per macro-bucket UX (FPS/Network/QoL/Background). Persistito.
+    /// Vedi docs/VS_HONE.md sez. 3.2.</summary>
+    public bool ShowByBucket { get; set; }
+
     /// <summary>Modello Claude per il co-pilota cloud. Vuoto = default (claude-sonnet-4-6).
     /// Cambiabile a claude-opus-4-8, claude-haiku-4-5-20251001, ecc.</summary>
     public string ClaudeModel { get; set; } = "";

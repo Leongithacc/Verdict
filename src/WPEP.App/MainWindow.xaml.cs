@@ -158,4 +158,17 @@ public partial class MainWindow : Window
             && pb.DataContext is CoPilotViewModel cp)
             cp.SetOpenAiApiKey(pb.Password);
     }
+
+    /// <summary>Toggle vista Verdict → per stato (tecnica). RadioButton usa Click invece di
+    /// TwoWay binding per evitare feedback loop bool→bool.</summary>
+    private void OnVerdictViewTechnical(object sender, RoutedEventArgs e)
+    {
+        if (sender is System.Windows.FrameworkElement fe && fe.DataContext is VerdictViewModel vm)
+            vm.ShowByBucket = false;
+    }
+    private void OnVerdictViewBucket(object sender, RoutedEventArgs e)
+    {
+        if (sender is System.Windows.FrameworkElement fe && fe.DataContext is VerdictViewModel vm)
+            vm.ShowByBucket = true;
+    }
 }

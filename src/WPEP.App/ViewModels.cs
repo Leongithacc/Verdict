@@ -342,6 +342,62 @@ public sealed class VerdictViewModel(MainViewModel main) : ViewModelBase
         ? string.Join(" · ", factors)
         : "";
 
+    // ── Vista bucket UX (docs/VS_HONE.md sez. 3.2): 4 macro-categorie invece di stato. ──
+    /// <summary>Toggle persistito: false = raggruppamento tecnico (default), true = 4 bucket
+    /// FPS/Network/QoL/Background. La vista tecnica resta il default per compatibilità.</summary>
+    public bool ShowByBucket
+    {
+        get => main.Settings.ShowByBucket;
+        set
+        {
+            if (main.Settings.ShowByBucket == value) return;
+            main.Settings.ShowByBucket = value;
+            main.Settings.Save();
+            Raise();
+            Raise(nameof(ShowByTechnical));
+            Raise(nameof(BucketedGroups));
+            Raise(nameof(ActiveGroups));
+        }
+    }
+    /// <summary>Inverso di <see cref="ShowByBucket"/> per binding Visibility semplice in XAML.</summary>
+    public bool ShowByTechnical => !ShowByBucket;
+
+    /// <summary>Groups derivati raggruppando <see cref="_allRecommendations"/> per macro-bucket
+    /// (FPS/Network/QoL/Background). Ricalcolato ogni get — costo O(N) su ~130 voci, trascurabile.
+    /// Voci NotApplicable escluse (uguale ai Groups tecnici).</summary>
+    public IReadOnlyList<VerdictGroup> BucketedGroups
+    {
+        get
+        {
+            var byBucket = _allRecommendations
+                .Where(r => r.Entry.Game is null && r.Classification != Classification.NotApplicable)
+                .GroupBy(r => WPEP.Advisor.MacroCategory.Bucket(r.Entry.Category))
+                .OrderBy(g => WPEP.Advisor.MacroCategory.All.ToList().IndexOf(g.Key));
+            var result = new List<VerdictGroup>();
+            foreach (var group in byBucket)
+            {
+                var vg = new VerdictGroup(group.Key, BucketColor(group.Key));
+                foreach (var r in group.OrderBy(x => x.Classification))
+                    vg.Items.Add(new VerdictItem(r.Entry, r.StateNote, main, r.Classification == Classification.AlreadyActive));
+                if (vg.Items.Count > 0) result.Add(vg);
+            }
+            return result;
+        }
+    }
+
+    private static string BucketColor(string bucket) => bucket switch
+    {
+        WPEP.Advisor.MacroCategory.FpsLatency => "Accent",
+        WPEP.Advisor.MacroCategory.NetworkPing => "Info",
+        WPEP.Advisor.MacroCategory.StabilityQoL => "Ok",
+        WPEP.Advisor.MacroCategory.Background => "Neutral",
+        _ => "Neutral",
+    };
+
+    /// <summary>Sorgente unica per l'ItemsControl principale: switch runtime tra la vista
+    /// tecnica (default) e la vista a bucket UX (ShowByBucket=true).</summary>
+    public IEnumerable<VerdictGroup> ActiveGroups => ShowByBucket ? BucketedGroups : Groups;
+
     // ── Card "Pronto per Vanguard": Secure Boot + TPM 2.0 sono prerequisiti Win11+Vanguard. ──
     /// <summary>null = non rilevato (es. boot Legacy/MBR), true/false = attivo o da abilitare.</summary>
     /// <summary>True quando c'è almeno uno snapshot in cache: card mostrata. Prima dello scan
@@ -531,6 +587,8 @@ public sealed class VerdictViewModel(MainViewModel main) : ViewModelBase
         Raise(nameof(NoiseColor));
         Raise(nameof(NoiseFactorsText));
         Raise(nameof(ShowNoiseCard));
+        Raise(nameof(BucketedGroups));
+        Raise(nameof(ActiveGroups));
         // Game-specific entries live in their own section and never count toward
         // the system verdict header (R7_COPY_AND_KB3 open question, resolved).
         var recommendations = allRecommendations.Where(r => r.Entry.Game is null).ToArray();

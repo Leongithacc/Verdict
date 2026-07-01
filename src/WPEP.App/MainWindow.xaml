@@ -240,7 +240,23 @@
             </Border>
           </UniformGrid>
 
-          <ItemsControl ItemsSource="{Binding Groups}" Margin="0,24,0,0">
+          <!-- Vista lista: tecnica (default, raggruppata per stato) vs bucket UX (4 macro-categorie
+               ispirate da docs/VS_HONE.md sez. 3.2). Toggle persistito in AppSettings. -->
+          <StackPanel Orientation="Horizontal" Margin="0,24,0,0">
+            <TextBlock Text="Vista:" Style="{StaticResource Muted}" FontSize="11"
+                       VerticalAlignment="Center" Margin="0,0,10,0" />
+            <RadioButton Content="Per stato (default)" GroupName="verdictListView"
+                         IsChecked="{Binding ShowByTechnical, Mode=OneWay}"
+                         Click="OnVerdictViewTechnical"
+                         VerticalAlignment="Center" Margin="0,0,14,0" />
+            <RadioButton Content="Per bucket UX (FPS / Network / QoL / Background)"
+                         GroupName="verdictListView"
+                         IsChecked="{Binding ShowByBucket, Mode=OneWay}"
+                         Click="OnVerdictViewBucket"
+                         VerticalAlignment="Center" />
+          </StackPanel>
+
+          <ItemsControl ItemsSource="{Binding ActiveGroups}" Margin="0,12,0,0">
             <ItemsControl.ItemTemplate>
               <DataTemplate>
                 <StackPanel Margin="0,0,0,20">
