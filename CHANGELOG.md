@@ -48,6 +48,23 @@ All notable changes to Verdict are documented here. Format based on
   estesa a V6 / V7 / V8.
 - **`.github/` templates**: `CHANGELOG.md`, ISSUE_TEMPLATE/(bug_report +
   feature_request), PULL_REQUEST_TEMPLATE per ready-to-contributor.
+- **Hone competitor integration** (`docs/VS_HONE.md`): 4 feature derivate
+  dall'analisi Perplexity di [Hone](https://gethone.co), l'app di gaming
+  tweaks su Epic Games. Prese solo le meccaniche coerenti coi principi di
+  Verdict, scartata la retorica del "+15-30% FPS universale":
+  - **System Noise Score** (0–100): quanto è rumoroso il sistema per il
+    gaming. Onestà attiva contro il placebo — su PC puliti i tweak
+    background non produrranno FPS misurabili, e Verdict lo dice.
+  - **Macro-categorie UI**: raggruppamento alternativo a 4 bucket
+    (FPS/Latenza, Network/Ping, Stabilità/QoL, Sfondo) attivabile con un
+    toggle nella pagina Verdict. La KB non cambia.
+  - **Gaming Session Mode**: `wpep session` (o CTA nella card Rumore)
+    abbassa temporaneamente la `ProcessPriorityClass` dei bloater noti
+    (Discord, OneDrive, Dropbox, Google Drive, Spotify, updater
+    Edge/Chrome/Steam/Epic). Reversibile al Ctrl+C. Anti-cheat safe per
+    design: non uccide processi, non stoppa servizi, non tocca il gioco.
+  - Doc pubblico `docs/VS_HONE.md`: posizionamento onesto vs Hone,
+    inclusa la sezione "quando SCEGLIERE Hone invece di Verdict".
 
 ### Changed
 - `CommunityService.Record` now also fires-and-forgets `SubmitAsync` to the

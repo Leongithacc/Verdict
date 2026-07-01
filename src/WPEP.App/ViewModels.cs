@@ -342,6 +342,43 @@ public sealed class VerdictViewModel(MainViewModel main) : ViewModelBase
         ? string.Join(" · ", factors)
         : "";
 
+    // ── Gaming Session Mode (docs/VS_HONE.md sez. 3.3) ──
+    private readonly WPEP.Execution.GamingSession _session = new();
+    private string _sessionStatus = "";
+    public bool SessionActive => _session.IsActive;
+    public string SessionStatus
+    {
+        get
+        {
+            if (_sessionStatus.Length > 0) return _sessionStatus;
+            return _session.IsActive
+                ? $"Sessione attiva: {_session.TouchedProcesses.Count} processi a BelowNormal."
+                : "Sessione non attiva.";
+        }
+        private set { Set(ref _sessionStatus, value); Raise(nameof(SessionActive)); }
+    }
+    public string SessionButtonLabel => _session.IsActive ? "Ripristina priorità" : "Attiva modalità gaming";
+    public RelayCommand ToggleSessionCommand => new(() =>
+    {
+        if (_session.IsActive)
+        {
+            int origCount = _session.TouchedProcesses.Count;
+            int restored = _session.Stop();
+            SessionStatus = origCount == 0
+                ? "Sessione chiusa (nessun processo era stato toccato)."
+                : $"Ripristinati {restored}/{origCount} processi a priorità normale.";
+        }
+        else
+        {
+            int down = _session.Start();
+            SessionStatus = down > 0
+                ? $"Sessione avviata: {down} processi a BelowNormal ({string.Join(", ", _session.TouchedProcesses.Select(t => t.ProcessName))})."
+                : "Nessun processo rumoroso in esecuzione — sistema già pulito per il gaming.";
+        }
+        Raise(nameof(SessionActive));
+        Raise(nameof(SessionButtonLabel));
+    });
+
     // ── Vista bucket UX (docs/VS_HONE.md sez. 3.2): 4 macro-categorie invece di stato. ──
     /// <summary>Toggle persistito: false = raggruppamento tecnico (default), true = 4 bucket
     /// FPS/Network/QoL/Background. La vista tecnica resta il default per compatibilità.</summary>

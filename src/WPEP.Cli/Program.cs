@@ -92,6 +92,8 @@ switch (args[0])
         return RunEvidence();
     case "community":
         return RunCommunity(args.Skip(1).ToArray());
+    case "session":
+        return await RunSession(args.Skip(1).ToArray());
     default:
         Console.Error.WriteLine($"Comando sconosciuto: {args[0]}");
         PrintUsage();
@@ -1932,6 +1934,53 @@ static async Task<int> RunCopilot(string[] args)
     return 0;
 }
 
+static async Task<int> RunSession(string[] args)
+{
+    // wpep session [--wait <secs>]
+    // Applica priority BelowNormal ai processi noti come bloater (Discord, OneDrive, cloud sync,
+    // updater). Idea da docs/VS_HONE.md sez. 3.3 (Gaming Session Mode). Reversibile a Ctrl+C
+    // o al timeout --wait. Non uccide, non stoppa servizi, non tocca il gioco.
+    int? waitSecs = null;
+    for (int i = 0; i < args.Length; i++)
+    {
+        if (args[i] == "--wait" && i + 1 < args.Length && int.TryParse(args[++i], out var s))
+            waitSecs = s;
+        else if (args[i] == "--help")
+        {
+            Console.WriteLine("Uso: wpep session [--wait <secondi>]");
+            Console.WriteLine("Senza --wait: attende Ctrl+C per ripristinare.");
+            return 0;
+        }
+    }
+
+    var session = new WPEP.Execution.GamingSession();
+    int down = session.Start();
+    Console.WriteLine($"Gaming Session avviata: {down} processi abbassati a BelowNormal.");
+    foreach (var t in session.TouchedProcesses)
+        Console.WriteLine($"  · {t.ProcessName} (pid {t.Pid}): {t.OriginalPriority} → BelowNormal");
+    if (down == 0)
+        Console.WriteLine("(nessun bloater in esecuzione — sistema già pulito per il gaming)");
+
+    using var cts = new CancellationTokenSource();
+    Console.CancelKeyPress += (_, e) => { e.Cancel = true; cts.Cancel(); };
+
+    if (waitSecs is int seconds)
+    {
+        Console.WriteLine($"\nRipristino automatico tra {seconds}s (Ctrl+C anticipa).");
+        try { await Task.Delay(TimeSpan.FromSeconds(seconds), cts.Token); } catch (TaskCanceledException) { }
+    }
+    else
+    {
+        Console.WriteLine("\nSessione attiva. Ctrl+C per ripristinare e uscire.");
+        try { await Task.Delay(Timeout.Infinite, cts.Token); } catch (TaskCanceledException) { }
+    }
+
+    int originalCount = session.TouchedProcesses.Count;
+    int restored = session.Stop();
+    Console.WriteLine($"\nRipristinati {restored}/{originalCount} processi.");
+    return 0;
+}
+
 static async Task<int> RunUpdateCheck()
 {
     var info = await WPEP.Core.Update.UpdateChecker.CheckAsync(WPEP.Core.AppVersion.Current);
@@ -2074,6 +2123,14 @@ static void PrintUsage()
                               Stato community + controllo opt-in da CLI. Di default LOCALE:
                               nulla lascia il PC. --enable attiva l'invio anonimo al backend
                               configurato (la GUI ricarica al riavvio). --disable lo spegne.
+
+        — Gaming Session Mode (docs/VS_HONE.md sez. 3.3) —
+          wpep session [--wait <secondi>]
+              Abbassa temporaneamente a BelowNormal la priority dei processi
+              noti come "rumore gaming" (Discord, OneDrive, Dropbox, Google
+              Drive, Spotify, updater Edge/Chrome/Steam/Epic). Ripristina al
+              termine (Ctrl+C o timeout --wait). Non uccide, non stoppa
+              servizi, non tocca il gioco — anti-cheat safe by design.
 
         — AI co-pilot (V6, sola lettura) —
           wpep copilot "<domanda>" [--brain ollama|claude|gemini|openai] [--model <nome>] [--api-key <key>]
