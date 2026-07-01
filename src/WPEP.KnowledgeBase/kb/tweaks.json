@@ -375,7 +375,7 @@
     "expected_impact": "Piccolo ma reale nella prevenzione di interferenze (update, notifiche). Sul frame rate puro l'effetto è tipicamente entro la varianza; il valore è la consistenza, non gli FPS medi.",
     "evidence_level": "evidence_strong",
     "sources": [
-      "https://support.microsoft.com/en-us/help/4028293/windows-using-game-mode-on-your-pc"
+      "https://support.xbox.com/en-US/help/games-apps/game-setup-and-play/use-game-mode-gaming-on-pc"
     ],
     "risk": "none",
     "risk_notes": "",
@@ -923,7 +923,7 @@
     "expected_impact": "Piccolo ma reale su sistemi encoder/IO-limitati; tipicamente entro la varianza su hardware potente. A costo zero se non usi la funzione.",
     "evidence_level": "plausible",
     "sources": [
-      "https://support.microsoft.com/en-us/help/4026387/windows-10-keyboard-shortcuts-for-game-bar"
+      "https://support.xbox.com/en-US/help/games-apps/game-setup-and-play/customize-game-bar-on-windows-10"
     ],
     "risk": "none",
     "risk_notes": "",
@@ -2541,7 +2541,7 @@
     "expected_impact": "Su monitor VRR: meno tearing/stutter nei giochi in finestra che altrimenti non userebbero il refresh variabile. Nessun lato negativo se il monitor lo supporta.",
     "evidence_level": "evidence_strong",
     "sources": [
-      "https://devblogs.microsoft.com/directx/variable-refresh-rate-windows/"
+      "https://devblogs.microsoft.com/directx/os-variable-refresh-rate/"
     ],
     "risk": "none",
     "risk_notes": "",
@@ -3636,7 +3636,7 @@
     "expected_impact": "Zero riavvii a sorpresa nelle 18 ore configurate. Gli aggiornamenti restano in coda e si applicano al primo riavvio manuale.",
     "evidence_level": "evidence_strong",
     "sources": [
-      "https://support.microsoft.com/en-us/windows/change-active-hours-for-windows-update-fa913124-c8b0-72cf-67d2-9af4fce7b97e"
+      "https://support.microsoft.com/en-us/windows/keep-your-pc-up-to-date-with-active-hours-de79813c-7919-5fed-080f-0871c7bd9bde"
     ],
     "risk": "none",
     "risk_notes": "Microsoft impone un cap di 18 ore (le restanti 6 sono riservate a riavvii forzati per patch critiche). Non lo aggira.",
@@ -3661,7 +3661,7 @@
     "expected_impact": "Zero notifiche di sistema durante gioco fullscreen. Quando esci, ricevi il riepilogo di cosa hai perso.",
     "evidence_level": "evidence_strong",
     "sources": [
-      "https://support.microsoft.com/en-us/windows/turn-do-not-disturb-on-or-off-in-windows-1f7ddc05-7adc-7c34-fa19-86c1a8c10a55"
+      "https://support.microsoft.com/en-us/windows/notifications-and-do-not-disturb-in-windows-feeca47f-0baf-5680-16f0-8801db1a8466"
     ],
     "risk": "none",
     "risk_notes": "Solo notifiche di sistema. Audio di Discord/Spotify/Teams non viene toccato — quelli si silenziano dai client.",
@@ -3770,6 +3770,57 @@
       ],
       "requires_reboot": false,
       "undo": "auto-journal"
+    }
+  },
+  {
+    "id": "storage-sense-disable",
+    "name": "Storage Sense: disattiva la pulizia automatica",
+    "category": "background",
+    "description": "Storage Sense e' la pulizia automatica di file temporanei/OneDrive offline documentata da Microsoft. Puo' partire quando lo spazio disco scende sotto soglia — anche in mezzo a una sessione di gioco (I/O spike inatteso, stutter frame). Disattivarla e' onesto: se il tuo SSD e' capiente e non hai problemi di spazio non serve, e il costo di 'esegue durante la partita' e' reale su NVMe condivisi.",
+    "hardware_prerequisites": [],
+    "expected_impact": "Zero automated I/O spikes durante il gioco causati dalla pulizia automatica. Devi pulire manualmente il disco quando serve (Impostazioni → Sistema → Archiviazione). Trade-off consapevole.",
+    "evidence_level": "plausible",
+    "sources": [
+      "https://learn.microsoft.com/en-us/windows/configuration/storage/storage-sense"
+    ],
+    "risk": "none",
+    "risk_notes": "Se non pulisci manualmente il disco puo' riempirsi (temp files, cestino, OneDrive offline). Reversibile.",
+    "rollback": "Impostazioni → Sistema → Archiviazione → Storage Sense → riattiva.",
+    "manual_steps": "Impostazioni → Sistema → Archiviazione → Storage Sense → toggle Off. Alternativamente: pulisci esplicitamente lo scheduling (Run Storage Sense: Never; Delete temp files: unchecked).",
+    "conflicts_with": [],
+    "measurable": false,
+    "apply": {
+      "method": "gui-only",
+      "operations": [],
+      "requires_reboot": false,
+      "undo": "manual-steps",
+      "gui_only_reason": "Settings UI — regia GPO/Intune preferibile a registry per compatibilita' cross-version"
+    }
+  },
+  {
+    "id": "nic-power-management-off",
+    "name": "NIC: disattiva 'Consenti al computer di spegnere questo dispositivo'",
+    "category": "network",
+    "description": "L'impostazione 'Consenti al computer di spegnere questo dispositivo per risparmiare energia' sulla scheda di rete e' documentata da Microsoft. Quando attiva, Windows sospende la NIC ai resume/sleep e la reinizializza — in gaming online questo puo' produrre disconnessioni brevi o hitch di ping al ritorno da sleep/idle. Disattivarla e' safe: consumo energetico irrilevante su desktop AC, latenza piu' stabile.",
+    "hardware_prerequisites": [],
+    "expected_impact": "Nessuna hitch di rete su transizioni di power state (wake-from-sleep, uscita idle) e nessuna disconnessione breve. Consumo idle della NIC leggermente piu' alto (irrilevante su desktop, minore su laptop AC).",
+    "evidence_level": "plausible",
+    "sources": [
+      "https://learn.microsoft.com/en-us/troubleshoot/windows-client/networking/power-management-on-network-adapter",
+      "https://learn.microsoft.com/en-us/powershell/module/netadapter/disable-netadapterpowermanagement"
+    ],
+    "risk": "low",
+    "risk_notes": "Su laptop a batteria: consumo energetico un po' piu' alto in idle (wifi non entra in low-power state). Reversibile via checkbox Device Manager.",
+    "rollback": "Device Manager → Network adapters → tuo adapter → Properties → Power Management → riattiva 'Allow the computer to turn off this device'.",
+    "manual_steps": "Device Manager → Network adapters → click destro sull'adapter → Properties → tab Power Management → deseleziona 'Allow the computer to turn off this device to save power'. Alternativa PowerShell (admin): Disable-NetAdapterPowerManagement -Name 'Ethernet' (o il nome del tuo adapter).",
+    "conflicts_with": [],
+    "measurable": true,
+    "apply": {
+      "method": "gui-only",
+      "operations": [],
+      "requires_reboot": false,
+      "undo": "manual-steps",
+      "gui_only_reason": "Device Manager tab — registry equivalente e' per-instance (PnP GUID) non stabile cross-hardware"
     }
   }
 ]
