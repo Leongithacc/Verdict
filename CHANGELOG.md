@@ -122,6 +122,26 @@ All notable changes to Verdict are documented here. Format based on
   - every KB entry's `game` field must be in the 8-key allowlist (fortnite / valorant / cs2 / apex / overwatch2 / thefinals / r6siege / warzone)
   - every `category` in the 7-key allowlist (power / gpu / scheduler / input / network / background / security)
   - every `source` must be an absolute `http(s)://` URL that passes `Uri.TryCreate` (catches malformed URLs like `www.foo.com` without a scheme that would silently fail on browser open).
+
+### Round 3 (2026-07-01, autonomous session)
+- **KB URL audit**: verified 30+ potentially unstable URLs via WebFetch. Fixed 5 dead/redirected URLs:
+  - `windows-game-mode` and `disable-gamedvr-background-recording` now point to the new Xbox support hub (Microsoft moved gaming support pages to xbox.com).
+  - `windows-update-active-hours-extend` → new MS support URL (old one 404'd).
+  - `focus-assist-fullscreen-game` → new MS support URL for the renamed "Do Not Disturb" feature (old Focus Assist URL 404'd).
+  - `win11-variable-refresh-rate` → new DirectX devblog URL for OS Variable Refresh Rate.
+- **2 new KB entries** with primary MS Learn sources:
+  - `storage-sense-disable` — prevents automatic cleanup from running during a gaming session (I/O spike prevention). Documented setting.
+  - `nic-power-management-off` — Device Manager tab / `Disable-NetAdapterPowerManagement` PowerShell cmdlet, for stable ping and no reconnect hitches on power state transitions.
+- Knowledge Base now has **135 entries** (was 133).
+- **Worker `/v1/health`** endpoint (retro-compat, safe): returns `{status, service, version, db, timestamp}` after a read-only DB probe. Returns 503 if D1 is unreachable — suitable for external uptime monitors (BetterUptime, UptimeRobot). No PII exposed.
+- **vitest test** for `/v1/health` (asserts status + db=ready + Cache-Control no-store).
+- **`docs/COMPARISON.md`** — matrice onesta Verdict vs Hone / RapTechPC / Wemod / Iolo / IObit / RTSS / MSI Afterburner / Windows Game Mode. Nessuno è "cattivo": documenta quando scegliere quale, e cosa Verdict esplicitamente NON è.
+- **`docs/ARCHITECTURE.md`** — reference architetturale con ASCII diagram client/backend, moduli, vincoli invarianti (`WPEP.Core` no-UI, `InvariantGlobalization=false` solo App, regola d'oro codificata, ecc.).
+- **`docs/BLOG_POST_DRAFT.md`** — draft blog post per HN "Show HN" / DEV.to / r/pcgaming / Medium al lancio v1.1. 600 parole + note per canale.
+- **`SUPPORT.md`** — canali di supporto ordinati per tipo di richiesta.
+- **`.editorconfig`** — cross-editor consistency per file .cs/.md/.ts/.xaml/.ps1/.sh/.yml.
+- **Site EN localization**: `site/index.en.html` e `site/community.en.html` completi con language switcher IT ↔ EN bidirezionale.
+- **`.gitignore`**: aggiunta esclusione `SCELTE_APERTE_*.md` e `NOTE_PERSONALI_*.md` per file di lavoro personali.
 - 5 new sanity tests in `SessionModeTests` for the curated `KnownNoiseProcesses` list: no `.exe` suffix, no case-insensitive duplicates, no whitespace-only or untrimmed entries, coverage of the families documented in `docs/VS_HONE.md` §3.3, and `OriginalState` record value equality. No `Process.GetProcessesByName` calls — safe in CI.
 - 6 new tests in `SystemSnapshotTests` covering `NoiseBand` thresholds (boundary tests at 25/26/55/56), `GameInstalled` switch parity for all 8 known game keys (fortnite, valorant, cs2, apex, overwatch2, thefinals, r6siege, warzone), null-safety, and `NoiseFactors` default (empty, not null).
 - DPAPI key encrypt/decrypt extracted to shared helpers in `AppSettings`

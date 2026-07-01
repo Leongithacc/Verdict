@@ -28,7 +28,7 @@ never applies a placebo.
   inventing one. Three outcomes: real effect · no measurable effect · no verdict.
 - **Diagnostics** — kernel ETW capture of DPC/ISR latency per driver: finds the
   actual stutter culprit, or tells you there is none.
-- **Knowledge Base** — 133 entries graded by evidence (strong / plausible /
+- **Knowledge Base** — 135 entries graded by evidence (strong / plausible /
   controversial / placebo / risky), each with primary sources, exact manual
   steps and rollback. The placebos are shown on purpose.
 - **Apply** — for the entries that are safely scriptable (registry / power plan /
