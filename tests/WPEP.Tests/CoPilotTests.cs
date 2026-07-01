@@ -175,4 +175,23 @@ public class CoPilotTests
         Assert.False(await new OpenAiBrain("").IsAvailableAsync());
         Assert.False(await new OpenAiBrain(null).IsAvailableAsync());
     }
+
+    // ── OllamaBrain smoke (offline) ──────────────────────────────────────
+    // Il brain locale non ha API key: qui verifichiamo solo default/custom model.
+    // IsAvailableAsync richiede endpoint HTTP reale → non testato qui.
+
+    [Fact]
+    public void OllamaBrain_default_model_is_qwen2_5()
+    {
+        var b = new OllamaBrain();
+        Assert.Contains("qwen2.5", b.Name);
+        Assert.Contains("locale", b.Name);
+    }
+
+    [Fact]
+    public void OllamaBrain_explicit_model_wins()
+    {
+        var b = new OllamaBrain("qwen2.5vl:32b");
+        Assert.Contains("qwen2.5vl:32b", b.Name);
+    }
 }
