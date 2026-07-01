@@ -100,6 +100,21 @@ All notable changes to Verdict are documented here. Format based on
   design spike) instead of "must be handled" — closes the loop between brief
   and reality.
 
+### Community / OSS polish (2026-07-01)
+- **`SECURITY.md`** — responsible disclosure policy: modello di minaccia in 2 righe, superficie non-negoziabile (no kernel driver, no injection, no telemetry default), come segnalare, tempi risposta realistici.
+- **`CODE_OF_CONDUCT.md`** — 3 regole corte: sii diretto, rispetta la regola d'oro, non tollerato.
+- **`docs/FAQ.md`** — nuove risposte a domande frequenti (anti-cheat, brain cloud, community, "perché unsigned", "perché WPF", ecc.).
+- **`docs/ROADMAP.md`** — banner "STATO 2026-07-01: V1–V8 completate", sezione **Post-v1.1** con target v1.2 (loc EN, nuovi giochi, PDF export, SessionMode espansione) e visione v2.0.
+- **`.github/workflows/ci.yml`** (nuovo) — CI su push/PR: `dotnet restore + build + test` su `windows-latest`, 0 warning/0 failing atteso.
+- **`SessionMode.KnownNoiseProcesses` esteso**: aggiunti `slack`, `Zoom`, `Teams`, `ms-teams`, `WhatsApp`, `Telegram` (comuni bloater da lavoro/messaging). Coerente col nuovo elenco documentato in `docs/VS_HONE.md` §3.3 e nella card bullet Session Mode del README.
+
+### verdict-community (repo separato, LIVE su GitHub)
+- Repo pubblico creato su [Leongithacc/verdict-community](https://github.com/Leongithacc/verdict-community) 2026-07-01 con MIT LICENSE.
+- **CI workflow** (`.github/workflows/ci.yml`): `tsc --noEmit + npm test + wrangler dry-run` su ogni PR.
+- **CONTRIBUTING.md dedicato**: privacy-first come regola d'oro non-negoziabile, setup dev locale, come aggiungere endpoint / migrazione DB.
+- **Issue + PR templates**: bug report con endpoint/body, feature request con obbligo di dichiarare impatto privacy.
+- **README badges**: CI status, License MIT, endpoint live.
+
 ### Internal
 - 9 new smoke tests in `CoPilotTests` (3 per cloud brain) — no network calls.
 - 2 new smoke tests in `CoPilotTests` for `OllamaBrain` (default model `qwen2.5`, custom model wins), symmetrizing coverage across all 4 brains.
