@@ -1,5 +1,15 @@
 # Verdict — Roadmap a versioni (finire l'app, non solo "V1 solida")
 
+> **STATO 2026-07-01**: V1–V8 **tutte completate**. v1.0 è live su
+> [GitHub Releases](https://github.com/Leongithacc/Verdict/releases). v1.1 è
+> pronta al tag (build in attesa di SDK). Cronologia completa in
+> [CHANGELOG.md](../CHANGELOG.md). Per la visione post-v1.1 vedi la sezione
+> **Post-v1.1** in fondo a questo file.
+>
+> Il resto del documento è preservato come reference storica del piano
+> originale (2026-06-22 → 2026-06-30). Le tick "✅ FATTO" sono ora attendibili
+> per V1–V5, V6 e V7 sono in v1.1, V8 è in v1.0.
+
 > Idea di Léon (2026-06-22): andiamo avanti V per V finché l'app è COMPLETA. Molte sessioni.
 > Ogni versione è un traguardo coerente e rilasciabile. Ordine indicativo, si può rimescolare.
 
@@ -64,3 +74,46 @@ distribuibile.
   versioni con dipendenze esterne (V6 LLM, V7 server) le facciamo con Léon / decisioni dedicate.
 - Si può interleave: es. V2 design + V3 misura in parallelo, perché toccano parti diverse.
 - Ogni V chiude con: build 0/0, suite verde, artifact ripubblicato.
+
+---
+
+## Post-v1.1 (aggiornamento 2026-07-01)
+
+### v1.2 — target Q3 2026
+
+Feature grosse candidate, non ancora ordinate:
+
+- **Localizzazione EN completa**: GUI + CLI + site/ attualmente misti IT/EN.
+  Target: parity IT ↔ EN.
+- **Placebo Museum come endpoint community**: mostrare quali tweak "popolari
+  sul web" la community ha misurato come no-effect. Anti-marketing puro.
+- **Nuovi giochi in catalogo**: Rocket League, Marvel Rivals, Deadlock,
+  Battlefield 6, EFT (con fonti primarie o publisher docs).
+- **Report PDF export**: HTML report c'è; PDF via Playwright è next step.
+- **Espansione SessionMode**: Slack, Zoom, Teams, WhatsApp Desktop.
+
+### v2.0 — 2027 (visione, non impegno)
+
+Cose che cambierebbero forma al prodotto:
+
+- **Kernel-mode diagnostics (opt-in)**: DPC/ISR già passivo. Un driver
+  signed per metriche più profonde è tecnicamente possibile — decisione
+  UNSIGNED verrebbe ripensata. Solo se la value prop è netta.
+- **Multi-monitor benchmark**: Ghost Tweak attualmente single-monitor.
+- **Overlay dashboard read-only**: nessun overlay oggi. Un overlay
+  ETW-driven read-only che mostra frametime durante il gioco è possibile
+  ma alza il rischio anti-cheat. Sperimentazione isolata prima.
+
+### Non farò (esplicito)
+
+- **"Optimize everything" button**: viola la filosofia.
+- **Subscription / Premium tier**: MIT, gratis, sempre.
+- **Tweak senza fonte primaria**: neanche uno.
+- **Marketing "+30% FPS garantiti"**: mai.
+
+### Come influenzare la roadmap
+
+- Apri una [feature request](../.github/ISSUE_TEMPLATE/feature_request.md)
+  con almeno una fonte primaria per il tweak / feature.
+- Vota con 👍 sulle issue esistenti.
+- Contribuisci: PR con test verdi + fonte verificata sono la via più veloce.
