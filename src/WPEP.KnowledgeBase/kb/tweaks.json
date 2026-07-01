@@ -1468,7 +1468,8 @@
     "expected_impact": "Se il monitor era sulla scheda madre: guadagno enorme e immediato. Se è già sulla GPU: nulla da fare.",
     "evidence_level": "plausible",
     "sources": [
-      "https://pcguide101.com/motherboard/should-you-connect-monitor-to-gpu-or-motherboard/"
+      "https://learn.microsoft.com/en-us/windows-hardware/drivers/display/using-cross-adapter-resources-in-a-hybrid-system",
+      "https://devblogs.microsoft.com/directx/optimizing-hybrid-laptop-performance-with-cross-adapter-scan-out-caso/"
     ],
     "risk": "none",
     "risk_notes": "",
