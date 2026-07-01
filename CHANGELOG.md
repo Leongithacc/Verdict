@@ -29,11 +29,17 @@ All notable changes to Verdict are documented here. Format based on
   - Full design: [docs/V7_REMOTE_BACKEND_DESIGN.md](docs/V7_REMOTE_BACKEND_DESIGN.md)
 - **GitHub Actions release workflow**: pushing a `v*` tag triggers an automatic
   build + test + zip + GitHub release. Sanity-checks that the tag version matches
-  `AppVersion.Current` and `tools/package-release.sh`.
+  `AppVersion.Current` and `tools/package-release.sh`. Now looks for release notes
+  at `docs/RELEASE_NOTES_v<version>.md` first (per-release), then legacy
+  `RELEASE_NOTES.md` at root, then falls back to auto-generated commit log.
 - **Design token `OnAccent`**: extracted `#0F0F14` from 3 hardcoded sites in
   `MainWindow.xaml` into a proper theme resource. Reduces design-system debt
   for the next theme pass.
-- Knowledge Base now has **130 entries** (was 122).
+- **3 additional KB entries** with primary sources (2026-07-01):
+  - `warzone-reflex-on`: Call of Duty Warzone is in the official NVIDIA Reflex list. `SystemSnapshot` gains `WarzoneInstalled` (Steam app 1962663); `wpep doctor` now lists Warzone alongside the other titles; `NetworkDuel.GamePublisher` gains the `warzone → callofduty.com` route anchor, so `wpep network warzone` works out of the box (kept in sync with the existing `GamePublisher_CoversEveryKbGameSlug` parity test).
+  - `ultimate-performance-plan-enable`: unlocks the hidden Ultimate Performance power scheme via `powercfg -duplicatescheme` (desktop only, conflicts with `power-plan-high-performance`).
+  - `delivery-optimization-p2p-disable`: turns off Windows Update peer-to-peer upload — a common source of jitter during gaming on asymmetric links. MS Learn documented.
+- Knowledge Base now has **133 entries** (was 122).
 - Documentation: [docs/V7_REMOTE_BACKEND_DESIGN.md](docs/V7_REMOTE_BACKEND_DESIGN.md)
   (14 sections) and [docs/RELEASE_V1.1_RUNBOOK.md](docs/RELEASE_V1.1_RUNBOOK.md)
   (12 sections, includes the new automatic Actions flow).
@@ -46,6 +52,14 @@ All notable changes to Verdict are documented here. Format based on
 - **README polish**: vetrina pubblica aggiornata con tutti i 4 brain AI,
   card Vanguard, vetrina community, link a runbook/workflow, status table
   estesa a V6 / V7 / V8.
+- **CONTRIBUTING.md rewritten end-to-end**: ora riflette V2 Execution Engine
+  (era ancora fermo a "V1 is read-only" dell'inizio 2026), la regola d'oro
+  KB con esempi di fonti primarie valide, checklist step-by-step per
+  aggiungere un tweak KB / un gioco (con tutti i 6 punti di parity) / un
+  co-pilot brain. Include workflow PR + build/test locali.
+- **PR template esteso** (`.github/PULL_REQUEST_TEMPLATE.md`): 2 checkbox nuovi
+  che rimandano a CONTRIBUTING.md — se il PR aggiunge un gioco (6 punti di sync)
+  o un co-pilot brain (ICoPilotBrain + config + ViewModel + settings + CLI + doc).
 - **`.github/` templates**: `CHANGELOG.md`, ISSUE_TEMPLATE/(bug_report +
   feature_request), PULL_REQUEST_TEMPLATE per ready-to-contributor.
 - **Hone competitor integration** (`docs/VS_HONE.md`): 4 feature derivate
@@ -77,9 +91,24 @@ All notable changes to Verdict are documented here. Format based on
   invoke the backend directly.
 - `HANDOVER.md` updated: closed the `ApplyDialog` cleanup item (already done
   in commit `1bd1fe5`) and the V7 design item (now spec'd in full).
+- `docs/V7_REMOTE_BACKEND_DESIGN.md` header refreshed to reflect that the design
+  is **implemented and LIVE** (not "to implement") — Cloudflare Worker deployed,
+  client `RemoteBackend` in `Community.cs`, CLI + Settings opt-in wired.
+- `docs/CLAUDE_DESIGN_BRIEF.md` 2026-07-01 addendum refreshed: the 5 components
+  of the 2nd design pass ("Rumore" card, Vanguard card, bucket toggle, Missile
+  Button, 4-brain selector) are now marked as **implemented** (via the 7-commit
+  design spike) instead of "must be handled" — closes the loop between brief
+  and reality.
 
 ### Internal
 - 9 new smoke tests in `CoPilotTests` (3 per cloud brain) — no network calls.
+- 2 new smoke tests in `CoPilotTests` for `OllamaBrain` (default model `qwen2.5`, custom model wins), symmetrizing coverage across all 4 brains.
+- 3 new integrity tests in `KnowledgeBaseTests` — safety nets against silent typos:
+  - every KB entry's `game` field must be in the 8-key allowlist (fortnite / valorant / cs2 / apex / overwatch2 / thefinals / r6siege / warzone)
+  - every `category` in the 7-key allowlist (power / gpu / scheduler / input / network / background / security)
+  - every `source` must be an absolute `http(s)://` URL that passes `Uri.TryCreate` (catches malformed URLs like `www.foo.com` without a scheme that would silently fail on browser open).
+- 5 new sanity tests in `SessionModeTests` for the curated `KnownNoiseProcesses` list: no `.exe` suffix, no case-insensitive duplicates, no whitespace-only or untrimmed entries, coverage of the families documented in `docs/VS_HONE.md` §3.3, and `OriginalState` record value equality. No `Process.GetProcessesByName` calls — safe in CI.
+- 6 new tests in `SystemSnapshotTests` covering `NoiseBand` thresholds (boundary tests at 25/26/55/56), `GameInstalled` switch parity for all 8 known game keys (fortnite, valorant, cs2, apex, overwatch2, thefinals, r6siege, warzone), null-safety, and `NoiseFactors` default (empty, not null).
 - DPAPI key encrypt/decrypt extracted to shared helpers in `AppSettings`
   (DRY across Claude / Gemini / OpenAI keys).
 

@@ -1,10 +1,13 @@
 # V7 — Backend community remoto: design
 
-> Mini-spec per il `RemoteBackend` da implementare dietro l'interfaccia esistente
-> `WPEP.Execution.ICommunityBackend`. Scritta 2026-06-28 (Claude Code) chiudendo il
-> TODO #3 della sezione 4 di `HANDOVER.md`. Quando esiste un endpoint pubblico
-> funzionante, basta cambiare `CommunityConfig.Endpoint` e la community remota si
-> accende, senza toccare il resto del codice.
+> Mini-spec per il `RemoteBackend` (design 2026-06-28, **implementato 2026-06-30**)
+> dietro l'interfaccia esistente `WPEP.Execution.ICommunityBackend`.
+>
+> **STATO 2026-07-01**: endpoint LIVE su `https://verdict-community.gz6jk62yk8.workers.dev`
+> (Cloudflare Worker + D1). `RemoteBackend` client in `WPEP.Execution/Community.cs`.
+> Checkbox opt-in in Settings (`CommunityShareEnabled`), CLI `wpep community --enable`.
+> Vetrina pubblica in `site/community.html`. Questo doc resta come reference tecnica
+> del design implementato — non c'è più nulla "da implementare".
 
 ## 1. Obiettivo
 

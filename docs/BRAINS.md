@@ -50,8 +50,10 @@ API key: [console.anthropic.com](https://console.anthropic.com) → Settings →
 Env var: `ANTHROPIC_API_KEY` (CLI) o inseriscila nella pagina Co-pilota (GUI,
 cifrata DPAPI a riposo).
 
-Alternative modello: `claude-opus-4-8` (più costoso, qualità marginale
-superiore), `claude-haiku-4-5-20251001` (più economico, buono per query semplici).
+Alternative modello: `claude-sonnet-5` (top-tier bilanciato, uscito dopo il
+default 4.6), `claude-opus-4-8` (più costoso, qualità marginale superiore per
+ragionamento complesso), `claude-haiku-4-5-20251001` (più economico, buono per
+query semplici).
 
 ### Gemini (Google) — usa quando
 

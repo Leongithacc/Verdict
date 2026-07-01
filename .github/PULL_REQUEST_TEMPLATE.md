@@ -21,6 +21,8 @@
 - [ ] Se ho toccato la KB: la nuova entry ha una **fonte primaria** verificata (regola d'oro)
 - [ ] Se ho toccato un comando CLI: ho aggiornato anche il `PrintUsage` in `Program.cs`
 - [ ] Se ho toccato la GUI: ho aggiunto/aggiornato il `Raise(nameof(...))` per le property bind-ate
+- [ ] Se ho aggiunto un **nuovo gioco**: ho toccato tutti i 6 punti di sync elencati in [CONTRIBUTING.md](../CONTRIBUTING.md) ("Adding a game")
+- [ ] Se ho aggiunto un **nuovo brain co-pilota**: ho aggiornato ICoPilotBrain, DefaultXxxModel, CoPilotViewModel.BuildService, AppSettings, CLI subcommand, e [docs/BRAINS.md](../docs/BRAINS.md)
 - [ ] CHANGELOG.md aggiornato sotto `[Unreleased]` se la modifica è user-visible
 
 ## Note per il review

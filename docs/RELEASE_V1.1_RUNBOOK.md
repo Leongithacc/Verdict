@@ -121,8 +121,9 @@ Test piena:
 
 ```powershell
 dotnet test WPEP.sln -c Release -m:1 --disable-build-servers -v q
-# Atteso: 342 / 342 passing (era 339 + 3 smoke ClaudeBrain aggiunti il 2026-06-28).
-# Se cambia, aggiorna questo numero qui per le release successive.
+# Atteso: ~360 passing (base 339 + 9 smoke CoPilot per Claude/Gemini/OpenAI
+# + 5 smoke SessionMode + 6 smoke SystemSnapshot aggiunti tra il 2026-06-28 e
+# il 2026-07-01). Il numero esatto varia; l'importante è 0 failing.
 ```
 
 Smoke CLI:
@@ -140,8 +141,11 @@ Smoke GUI (manuale, 30 secondi):
 dotnet run --project src/WPEP.App
 # Apre la GUI. Click su 'Riscansiona' nella pagina Verdict. Verifica:
 # - footer / titolo dice "Verdict v1.1"
-# - card "Pronto per Vanguard" appare con stato corretto (✓/⚠ Secure Boot + TPM)
-# - pagina Co-pilota mostra il selettore Ollama/Claude
+# - card "Pronto per Vanguard" appare con stato corretto (Secure Boot + TPM 2.0)
+# - card "Rumore di sistema" mostra il gauge cockpit con needle e Noise Score
+# - toggle vista Bucket/Tecnica funziona nella pagina Verdict
+# - pagina Co-pilota mostra il selettore 4-way (Ollama/Claude/Gemini/GPT)
+# - pagina Impostazioni ha la checkbox "Condividi con community" (V7 opt-in)
 # Chiudi la GUI.
 ```
 
@@ -191,17 +195,21 @@ il tag resta solo locale e la release GitHub non può puntarci.
 
 ## 6. Pubblica la release su GitHub
 
-Una sola riga con `gh`:
+Le release notes complete sono in [`docs/RELEASE_NOTES_v1.1.md`](RELEASE_NOTES_v1.1.md)
+— usale come body della release invece di riscriverle a mano:
 
 ```powershell
 gh release create v1.1 dist/Verdict-1.1.zip `
   -R Leongithacc/Verdict `
   -t "Verdict v1.1" `
-  -n "Cosa cambia in v1.1:`n- ClaudeBrain (co-pilota cloud opzionale)`n- 5 nuovi tweak BIOS guidati (Secure Boot, TPM, Above 4G, CSM, Virtualization)`n- Card 'Pronto per Vanguard' sulla pagina Verdict`n- 3 nuovi tweak (Intel undervolt, Win Update active hours, Focus Assist fullscreen)`n- Auto-update porta i precedenti da v1.0 a v1.1 automaticamente."
+  -F docs/RELEASE_NOTES_v1.1.md
 ```
 
-Riempi le release notes con quello che è cambiato davvero dal `v1.0..v1.1`. Per generare
-il diff dei commit:
+`-F` legge il body dal file. Modifica prima `docs/RELEASE_NOTES_v1.1.md` se serve
+aggiustare qualcosa (es. rimuovere il preambolo "> Testo destinato al body..." che è
+meta-commento non necessario sulla pagina).
+
+Per rigenerare il diff dei commit inclusi in questa release:
 
 ```powershell
 git log v1.0..v1.1 --oneline

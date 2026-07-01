@@ -73,12 +73,19 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           $tag = "${{ github.ref_name }}"
-          $notesPath = "RELEASE_NOTES.md"
-          # Se RELEASE_NOTES.md esiste alla root, lo usa come body. Altrimenti
-          # produce un body minimal con il diff dei commit dal tag precedente.
-          if (Test-Path $notesPath) {
+          # Cerca in ordine: docs/RELEASE_NOTES_v<ver>.md (per-release),
+          # poi RELEASE_NOTES.md (legacy root-level fallback).
+          # Fallback finale: commit log dal tag precedente.
+          $notesCandidates = @(
+            "docs/RELEASE_NOTES_$tag.md",
+            "RELEASE_NOTES.md"
+          )
+          $notesPath = $notesCandidates | Where-Object { Test-Path $_ } | Select-Object -First 1
+          if ($notesPath) {
+            Write-Host "Uso release notes da: $notesPath"
             gh release create $tag "dist/Verdict-$env:VER.zip" --title "Verdict $tag" --notes-file $notesPath
           } else {
+            Write-Host "Nessun file release notes trovato; genero da commit log."
             $prevTag = git describe --tags --abbrev=0 "$tag^" 2>$null
             if ($LASTEXITCODE -eq 0 -and $prevTag) {
               $log = git log --oneline "$prevTag..$tag"

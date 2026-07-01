@@ -150,10 +150,14 @@ templati: dai loro uno stile `x:Key` riutilizzabile in `Themes/Theme.xaml`.
 
 ## AGGIORNAMENTO 2026-07-01 — 2ª passata Design (dopo la sessione multi-brain + V7 + Hone)
 
+> **STATO 2026-07-01**: la 2ª passata è stata implementata (design spike part 1-7,
+> 7 commit locali). I 5 componenti sotto sono **già rifiniti** al livello descritto.
+> Il brief resta come reference del concept per future 3ª+ passate.
+
 **Cosa è cambiato tra la 1ª passata Design e questa 2ª:**
 
 Tra il 2026-06-26 e il 2026-06-30 sono stati aggiunti 5 componenti UI nuovi che il brief
-originale non copriva. La 2ª passata deve gestirli con lo stesso rigore estetico degli
+originale non copriva. La 2ª passata li ha gestiti con lo stesso rigore estetico degli
 interruttori (1ª passata):
 
 ### 1. Card "Rumore di sistema" (nuova, pagina Verdict, sopra la lista)

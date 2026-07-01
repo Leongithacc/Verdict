@@ -28,7 +28,7 @@ never applies a placebo.
   inventing one. Three outcomes: real effect · no measurable effect · no verdict.
 - **Diagnostics** — kernel ETW capture of DPC/ISR latency per driver: finds the
   actual stutter culprit, or tells you there is none.
-- **Knowledge Base** — 130 entries graded by evidence (strong / plausible /
+- **Knowledge Base** — 133 entries graded by evidence (strong / plausible /
   controversial / placebo / risky), each with primary sources, exact manual
   steps and rollback. The placebos are shown on purpose.
 - **Apply** — for the entries that are safely scriptable (registry / power plan /
@@ -47,6 +47,18 @@ never applies a placebo.
 - **Vanguard readiness card** — Secure Boot + TPM 2.0 status detected at runtime
   (registry + WMI) and shown on the Verdict page with one-click BIOS guides per
   motherboard vendor — useful for any anti-cheat or Win11 requirement.
+- **System Noise Score (0–100)** — measures how noisy your machine is for gaming
+  (startup apps, indexing, SysMain, Game DVR, transparency effects). Shown as a
+  cockpit gauge. When the score is low, Verdict actively tells you the background
+  tweaks won't produce measurable FPS gains — the opposite of "apply everything,
+  guaranteed boost". See [docs/VS_HONE.md](docs/VS_HONE.md) for the honest
+  positioning vs marketing-first competitors.
+- **Gaming Session Mode** — `wpep session` (or the missile-launch button on the
+  Verdict page) temporarily lowers `PriorityClass` to `BelowNormal` for a curated
+  list of known "gaming noise" processes (Discord, OneDrive, Dropbox, Google Drive,
+  Spotify, browser/store updaters). Restores on Ctrl+C or exit. **No process is
+  ever killed, no service is ever stopped, the game itself is never touched** —
+  anti-cheat safe by design.
 - **BIOS guide QR** — for the manually-BIOS-only entries (XMP/EXPO, ReBAR, fTPM,
   PBO, Secure Boot, TPM, Above 4G, CSM, virtualization) a QR opens a per-vendor
   step-by-step page on your phone, reachable even while the PC is in BIOS.
@@ -145,7 +157,7 @@ flagged, never silently dropped.
 
 ## Build
 
-.NET 10 SDK → `dotnet build` · `dotnet test` (300+ tests). WPF app in
+.NET 10 SDK → `dotnet build` · `dotnet test` (350+ tests). WPF app in
 `src/WPEP.App`, CLI in `src/WPEP.Cli`, engine modules underneath — UI and CLI
 share the same services. (If a parallel build crashes an MSBuild node, build
 single-node: `dotnet build -m:1 --disable-build-servers`.)
@@ -166,7 +178,7 @@ License: MIT · See [CONTRIBUTING.md](CONTRIBUTING.md) — the golden rule:
 | R2 Benchmark (PresentMon wrapper) | ✅ validated live |
 | R3 Statistics (MW + bootstrap + noise gate + MDE) | ✅ |
 | R4 Knowledge Base (85 entries, primary sources) | ✅ ([research notes](docs/KB_RESEARCH.md)) |
-| R5 Advisor + SystemAnalyzer (Fortnite/Valorant/CS2/Apex/OW2 detection) | ✅ |
+| R5 Advisor + SystemAnalyzer (Fortnite/Valorant/CS2/Apex/OW2/TheFinals/R6Siege/Warzone detection) | ✅ |
 | R6 Reporting (HTML, one-click badges, applied changes) | ✅ |
 | R7 App (verdict-first UI, wizard, first-run, theming) | ✅ |
 | Pipeline certification — A/A test | ✅ passed on machine 1 (MDE 0.8%, no false positive) |
