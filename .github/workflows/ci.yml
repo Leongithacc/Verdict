@@ -1,0 +1,32 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build-and-test:
+    runs-on: windows-latest
+    timeout-minutes: 20
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET 10 SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Restore
+        shell: pwsh
+        run: dotnet restore WPEP.sln
+
+      - name: Build (Release, 0 warnings = 0 errors — TreatWarningsAsErrors=true repo-wide)
+        shell: pwsh
+        run: dotnet build WPEP.sln -c Release -m:1 --disable-build-servers -v q --no-restore
+
+      - name: Test (~360 tests incl. KB integrity, SessionMode sanity, SystemSnapshot NoiseBand, CoPilot 4-brain, URL integrity)
+        shell: pwsh
+        run: dotnet test WPEP.sln -c Release -m:1 --disable-build-servers -v q --no-build
