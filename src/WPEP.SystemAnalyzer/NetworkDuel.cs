@@ -34,6 +34,7 @@ public static class NetworkDuel
             ["overwatch2"] = ("Blizzard / Overwatch 2 (CDN)", "blizzard.com"),
             ["thefinals"] = ("Embark / THE FINALS (sito)", "embark-studios.com"),
             ["r6siege"] = ("Ubisoft / Rainbow Six (CDN)", "ubisoft.com"),
+            ["warzone"] = ("Activision / Warzone (CDN)", "callofduty.com"),
         };
 
     /// <summary>Default anchor set (no game chosen): baselines + the three most common ecosystems.

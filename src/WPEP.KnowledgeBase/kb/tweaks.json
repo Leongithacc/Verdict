@@ -3676,5 +3676,100 @@
       "undo": "manual-steps",
       "gui_only_reason": "Settings UI — niente registry stabile cross-versione Win10/11"
     }
+  },
+  {
+    "id": "warzone-reflex-on",
+    "name": "Call of Duty Warzone: NVIDIA Reflex on",
+    "category": "gpu",
+    "game": "warzone",
+    "description": "Call of Duty Warzone è tra i titoli con supporto NVIDIA Reflex documentato dal vendor. Reflex sincronizza CPU e GPU per ridurre la latenza di sistema (input → pixel), particolarmente utile in un titolo BR competitivo dove il primo colpo decide il duello. Va abbinato al fullscreen esclusivo e a un cap FPS ~3 sotto il refresh se G-SYNC/VRR è attivo.",
+    "hardware_prerequisites": [
+      "gpu:nvidia"
+    ],
+    "expected_impact": "Riduzione di latenza documentata dal vendor. Nessun costo grafico, nessuno svantaggio competitivo. Da tenere sempre attivo.",
+    "evidence_level": "evidence_strong",
+    "sources": [
+      "https://www.nvidia.com/en-us/geforce/news/reflex-low-latency-apex-legends-valorant-fortnite-cs2/"
+    ],
+    "risk": "none",
+    "risk_notes": "",
+    "rollback": "Stessa impostazione in-game → Off.",
+    "manual_steps": "Call of Duty Warzone → Opzioni → Grafica → NVIDIA Reflex Low Latency = On (o On+Boost se hai la corrente e vuoi la latenza minima possibile).",
+    "conflicts_with": [],
+    "measurable": true,
+    "apply": {
+      "method": "gui-only",
+      "operations": [],
+      "requires_reboot": false,
+      "undo": "manual-steps",
+      "gui_only_reason": "In-game setting"
+    }
+  },
+  {
+    "id": "ultimate-performance-plan-enable",
+    "name": "Ultimate Performance power plan (sblocca lo schema nascosto)",
+    "category": "power",
+    "description": "Windows 11 nasconde per default il piano energetico 'Ultimate Performance' (GUID e9a42b02-d5df-448d-aa00-03f14749eb61), pensato per workstation server e desktop always-plugged. Va sbloccato con `powercfg -duplicatescheme <GUID>` e poi selezionato. Rispetto a High Performance disabilita ulteriori policy di risparmio energetico (es. USB selective suspend più aggressivo, sleep di dispositivi PCIe). Su desktop desktop-only alimentati non c'è downside pratico oltre al consumo idle.",
+    "hardware_prerequisites": [
+      "desktop"
+    ],
+    "expected_impact": "Riduce ulteriormente latenze da wake-up di dispositivi (USB/PCIe) rispetto a High Performance. Su gaming rig moderni ben raffreddati il delta di frametime è tipicamente entro la varianza; il valore è consistency (frame pacing) più che FPS grezzi. Consumo idle più alto e temperature idle più alte. Reversibile.",
+    "evidence_level": "plausible",
+    "sources": [
+      "https://learn.microsoft.com/en-us/windows-server/administration/performance-tuning/hardware/power/power-performance-tuning"
+    ],
+    "risk": "low",
+    "risk_notes": "Consumo idle più alto. NON abilitarlo su laptop a batteria: drena la carica molto rapidamente. Reversibile: seleziona un altro piano o cancella lo schema duplicato con powercfg -delete.",
+    "rollback": "Pannello di controllo → Opzioni risparmio energia → seleziona il piano precedente (High Performance o Balanced). Per rimuovere lo schema: powercfg -delete e9a42b02-d5df-448d-aa00-03f14749eb61.",
+    "manual_steps": "Terminale come amministratore: `powercfg -duplicatescheme e9a42b02-d5df-448d-aa00-03f14749eb61`. Poi Pannello di controllo → Opzioni risparmio energia → seleziona 'Ultimate Performance'.",
+    "conflicts_with": [
+      "power-plan-high-performance"
+    ],
+    "measurable": true,
+    "apply": {
+      "method": "powercfg",
+      "operations": [
+        {
+          "path": "active-scheme",
+          "value_after": "e9a42b02-d5df-448d-aa00-03f14749eb61",
+          "verify": "powercfg /getactivescheme",
+          "kind": "powercfg"
+        }
+      ],
+      "requires_reboot": false,
+      "undo": "auto-journal",
+      "gui_only_reason": null
+    }
+  },
+  {
+    "id": "delivery-optimization-p2p-disable",
+    "name": "Delivery Optimization P2P disattivato (niente upload update)",
+    "category": "network",
+    "description": "Windows Delivery Optimization usa una rete peer-to-peer per scaricare (e distribuire ad altri PC) aggiornamenti di Windows e Store. Documentato da Microsoft come 'DownloadMode': valore 3 include PC su Internet, valore 1 solo LAN, valore 0 disabilita completamente il P2P e usa solo HTTP dai server Microsoft. Durante il gioco l'upload P2P può saturare l'uplink e alzare il ping — spegnerlo (o limitarlo a LAN) elimina un vettore di jitter comune non ovvio.",
+    "hardware_prerequisites": [],
+    "expected_impact": "Upload di background eliminato o ridotto a soli PC in LAN. Su connessioni asimmetriche (upload basso) può ridurre bufferbloat/jitter durante le sessioni. Nessun effetto sul download degli update stessi, che restano da server Microsoft.",
+    "evidence_level": "evidence_strong",
+    "sources": [
+      "https://learn.microsoft.com/en-us/windows/deployment/do/waas-delivery-optimization"
+    ],
+    "risk": "none",
+    "risk_notes": "Su reti aziendali con Delivery Optimization configurato lato dominio (GPO) questo setting può essere sovrascritto. Reversibile.",
+    "rollback": "Impostazioni → Windows Update → Opzioni avanzate → Optimize delivery → riattiva 'Allow downloads from other PCs' e scegli 'PCs on my local network' o 'PCs on the internet and on my local network'.",
+    "manual_steps": "Impostazioni → Windows Update → Opzioni avanzate → Optimize delivery → disattiva 'Allow downloads from other PCs'. Equivalente registry: HKLM\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\DeliveryOptimization\\Config\\DODownloadMode = 0 (o 1 per limitare a LAN).",
+    "conflicts_with": [],
+    "measurable": true,
+    "apply": {
+      "method": "registry",
+      "operations": [
+        {
+          "path": "HKLM\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\DeliveryOptimization\\Config\\DODownloadMode",
+          "value_after": "0",
+          "verify": "0",
+          "kind": "dword"
+        }
+      ],
+      "requires_reboot": false,
+      "undo": "auto-journal"
+    }
   }
 ]

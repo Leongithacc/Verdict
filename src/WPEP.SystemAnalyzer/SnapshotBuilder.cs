@@ -70,6 +70,7 @@ public static class SnapshotBuilder
             Overwatch2Installed = Probe(ReadOverwatch2Installed, (bool?)null),
             TheFinalsInstalled = Probe(ReadTheFinalsInstalled, (bool?)null),
             R6SiegeInstalled = Probe(ReadR6SiegeInstalled, (bool?)null),
+            WarzoneInstalled = Probe(ReadWarzoneInstalled, (bool?)null),
             SecureBootEnabled = Probe(ReadSecureBoot, (bool?)null),
             Tpm2Enabled = Probe(ReadTpm2, (bool?)null),
         };
@@ -200,6 +201,11 @@ public static class SnapshotBuilder
 
     /// <summary>CS2 is Steam app 730.</summary>
     private static bool? ReadCs2Installed() => SteamAppInstalled(730);
+
+    /// <summary>Call of Duty: Warzone standalone is Steam app 1962663. Battle.net copies
+    /// under `%ProgramFiles(x86)%\Call of Duty\` aren't detected here; null/false only means
+    /// 'not found via Steam' and the game section stays shown on null.</summary>
+    private static bool? ReadWarzoneInstalled() => SteamAppInstalled(1962663);
 
     /// <summary>Apex Legends is Steam app 1172470. (EA App copies aren't detected
     /// here; null/false only means 'not found via Steam', section stays shown on null.)</summary>
