@@ -42,6 +42,24 @@ public class CommunityTests
         => Assert.Empty(EvidenceLedger.Load(TempPath()));
 
     [Fact]
+    public void Ledger_recovers_from_corrupt_file_and_leaves_no_tmp()
+    {
+        // Un evidence.json troncato (es. crash a metà scrittura) non deve rompere
+        // Append: si riparte dal record nuovo, e il file temp non resta sul disco.
+        var path = TempPath();
+        try
+        {
+            File.WriteAllText(path, "[{\"RigSignature\":\"trunc");
+            EvidenceLedger.Append(Rec("helped"), path);
+            var all = EvidenceLedger.Load(path);
+            Assert.Single(all);
+            Assert.Equal("helped", all[0].Outcome);
+            Assert.False(File.Exists(path + ".tmp"));
+        }
+        finally { File.Delete(path); }
+    }
+
+    [Fact]
     public void Aggregate_uses_only_measured_outcomes_for_percentages()
     {
         // 3 helped + 1 no-effect = 4 measured; the "applied" record is NOT counted in the percentages.

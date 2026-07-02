@@ -50,13 +50,24 @@ public static class EvidenceLedger
 
     public static void Append(EvidenceRecord record) => Append(record, FilePath);
 
+    /// <summary>Tetto sul registro: oltre questa soglia si scartano i record più VECCHI.
+    /// Il file viene riscritto per intero a ogni Append, quindi senza cap ogni apply
+    /// diventa via via più lento e il file cresce per sempre.</summary>
+    private const int MaxRecords = 5000;
+
     public static void Append(EvidenceRecord record, string path)
     {
         try
         {
             var all = new List<EvidenceRecord>(Load(path)) { record };
+            if (all.Count > MaxRecords)
+                all.RemoveRange(0, all.Count - MaxRecords);
             Directory.CreateDirectory(Path.GetDirectoryName(path)!);
-            File.WriteAllText(path, JsonSerializer.Serialize(all, new JsonSerializerOptions { WriteIndented = true }));
+            // Write-temp + rename: un crash a metà scrittura sul file vero lascerebbe
+            // un JSON troncato → Load() torna [] → storico perso in silenzio.
+            var tmp = path + ".tmp";
+            File.WriteAllText(tmp, JsonSerializer.Serialize(all, new JsonSerializerOptions { WriteIndented = true }));
+            File.Move(tmp, path, overwrite: true);
         }
         catch { /* l'evidence è best-effort: non deve MAI rompere un apply */ }
     }
