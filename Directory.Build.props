@@ -5,5 +5,10 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <InvariantGlobalization>true</InvariantGlobalization>
+    <!-- NU1510: l'SDK .NET 10 segnala System.Security.Cryptography.ProtectedData
+         come "ridondante" (fornito dal framework). TreatWarningsAsErrors lo rende
+         un errore di RESTORE. Lo teniamo referenziato (compat con SDK piu vecchi
+         che non lo forniscono in-framework) e sopprimiamo solo questo codice. -->
+    <NoWarn>$(NoWarn);NU1510</NoWarn>
   </PropertyGroup>
 </Project>
