@@ -23,11 +23,22 @@ A prior development log exists at [docs/OPUS_AUDIT_LOG.md](OPUS_AUDIT_LOG.md) �
 
 ### Execution status (updated 2026-07-02, same session as the audit)
 
-Work that does **not** need the .NET SDK was executed immediately (the SDK returns 2026-07-05, gating Phase 0 and all C# changes):
+**Phase 0 gate CLEARED early via CI.** The `.github/workflows/ci.yml` pipeline builds + runs the full test suite on every push to `main` using the .NET 10 SDK on a Windows runner — so "blind" C# is actually verified within minutes. In the course of this the CI turned out to have been **red since before the audit** for two reasons unrelated to functionality, both now fixed:
 
-- **F11 (Phase 6, Worker) — partially DONE:** `rebuildStatsCacheAndPrune` now wraps the `stats_cache` DELETE+INSERT in a single `env.DB.batch(...)` (atomic — no transient-empty window); new vitest exercises the cron rebuild end-to-end (aggregates 10 evidence rows → correct percentages); the CORS `*`-on-POST decision and the non-secret `database_id` are now documented in code; `scheduled` handler signature modernized to `ScheduledController`. `tsc --noEmit` clean, 21/21 tests, deployed live. **Still open (Léon-only):** WAF per-IP rule (A1), uptime monitor (A2), D1 DR decision (A3).
-- **F3 (Phase 3, release integrity) — DONE (pending a real tag run):** `tools/package-release.sh` now emits `dist/SHA256SUMS.txt`; `release.yml` attaches it to the GitHub Release; README documents `Get-FileHash` verification. Cannot be end-to-end verified until the next `v*` tag build (needs Phase 0 SDK).
-- **Everything else (F1, F2, F4, F5, F6, F7, F8-client, F9, F14) remains SDK-gated** — it modifies C# that must build+test against the ~360-test suite on 2026-07-05. Doing it blind would violate the Phase 0 gate this document defines.
+- **NU1510 blocked *restore*.** The .NET 10 SDK flags `System.Security.Cryptography.ProtectedData` as framework-provided (`NU1510`), and repo-wide `TreatWarningsAsErrors` escalated it to a restore error — so no recent C# had ever been compiled by CI. Fixed by suppressing NU1510 in `Directory.Build.props` (kept the package for older-SDK compat).
+- **A latent Warzone test failed.** `SystemSnapshot.GameInstalled` was case-sensitive while its parity test asserted `"WARZONE"`. Never caught because CI never ran. Fixed (case-insensitive switch).
+
+With both fixed, **CI is green (run `28609167074`, commit `66e1428`): 399 tests pass, 0 warnings.** The entire repo — every blind commit from this session and before — is now verified building.
+
+Executed and **CI-verified** this session:
+
+- **F1 (Phase 2) — DONE + verified.** `KnowledgeBaseValidator` now validates apply-op *values* fail-closed (registry hive allowlist + `key\name`; powercfg GUID; powercfg-value `guid/guid`+int; bcdedit element/value alphanumeric — **kills argument-splitting, closes F4**; nvidia-drs hex/dec uint32; dxuser identifier+0/1). Regexes were empirically checked against all 135 shipped entries *before* writing the C#. +12 test cases, all green.
+- **F2 + F5 (Phase 1) — DONE + verified.** New `WPEP.Core/Io/AtomicJson` (temp → `Flush(true)` → atomic rename). Routed: `ExecutionEngine.Save` (the journal / undo safety net), `EvidenceLedger.Append` (L3 refactored onto it), `AppSettings.Save`. +3 tests, all green.
+- **F4 — DONE** (folded into F1: bcdedit element/value regex rejects spaces/quotes at load).
+- **F11 (Phase 6, Worker) — code DONE + tested.** Atomic `stats_cache` rebuild via `env.DB.batch`; cron-rebuild vitest; CORS/`database_id` decisions documented; `ScheduledController` signature. `tsc` clean, 21/21, deployed live. **Léon-only remaining:** WAF per-IP (A1), uptime monitor (A2), D1 DR (A3).
+- **F3 (Phase 3, release integrity) — DONE** (verifiable at the next `v*` tag): `SHA256SUMS.txt` emitted + attached + documented.
+
+**Still open (SDK/CI available now, just not yet done):** F6 (SafeOpen scheme guard), F7 (statistical multiplicity), F8-client (RigDna 64-bit, needs a beta-reset decision), F9 (CI real-backend round-trip), F14 (resume half-applied), F10 (MDE doc).
 
 ---
 

@@ -45,6 +45,15 @@ public static class ComparisonEngine
         /// the whole comparison should be presented as "no verdict".</summary>
         public bool GateTriggered =>
             Metrics.Count > 0 && Metrics[0].Verdict == Verdict.ScenarioTooNoisy;
+
+        /// <summary>The single honest verdict = the PRIMARY metric (median frametime,
+        /// Metrics[0]). We report 4 metrics, but "any of 4 significant at α=0.05" is
+        /// NOT "the tweak worked": that inflates the family-wise false-positive rate to
+        /// ~1−0.95⁴ ≈ 18.5% — the placebo pattern this engine exists to prevent (audit
+        /// F7). The other three metrics stay descriptive. Median is the robust primary
+        /// signal and the unit of the noise gate.</summary>
+        public Verdict PrimaryVerdict =>
+            Metrics.Count > 0 ? Metrics[0].Verdict : Verdict.NoMeasurableEffect;
     }
 
     public static ComparisonReport Compare(

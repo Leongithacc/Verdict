@@ -33,8 +33,12 @@ public static class PipelineValidator
                 report);
         }
 
-        bool effectDetected = report.Metrics.Any(
-            m => m.Verdict is Verdict.Improvement or Verdict.Regression);
+        // PRIMARY metric only (median frametime). "Any of 4 metrics significant" at
+        // α=0.05 inflates the family-wise false-positive rate to ~1−0.95⁴ ≈ 18.5% —
+        // so an A/A test between two identical groups would spuriously "detect an
+        // effect" ~1 in 5 times. Basing the decision on the primary metric keeps the
+        // A/A false-positive rate at ≈ α (audit F7).
+        bool effectDetected = report.PrimaryVerdict is Verdict.Improvement or Verdict.Regression;
 
         return expectation switch
         {
