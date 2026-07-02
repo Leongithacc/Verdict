@@ -42,7 +42,10 @@ Executed and **CI-verified** this session:
 - **F6 (Phase 2) — DONE + verified.** `SafeOpen.Url` guards the two browser-open sites (BIOS guide, update page) to http/https only before they reach the shell — the shell-open counterpart of the OpenSettings allowlist. Local-file opens are app-computed paths, left as-is.
 - **F8 (Phase 5) — DONE + verified (pragmatic variant, no migration).** `RigDna` now uses a **64-bit** FNV-1a and derives the two code segments from **independent 20-bit slices** → 40 bits of real entropy (was ~32: the 2nd segment used to be a rotation of the 1st), moving the birthday-collision threshold from ~65k to ~1M rigs. **Deliberately kept the `RIG-XXXX-XXXX` format** so the Worker regex is unchanged and **no migration / beta-reset is needed** (existing near-empty evidence simply re-populates under the new codes). Literal "≥64 bits" would require a longer code + a server regex change + a format-version negotiation — disproportionate for a hobby-scale user base where 40 bits (~1M) already far exceeds realistic scale. The "reversibility" half of F8 is a wording matter, already handled in M1 (PRIVACY §3.3 "self-reported, unattested"). If the user base ever approaches ~10⁵ rigs, widen the format then.
 
-**Still open (SDK/CI available now, just not yet done):** F9 (CI real-backend HKCU round-trip), F14 (resume half-applied), F10 (MDE method doc). All Low/Info.
+- **F9 (Phase 7) — DONE + verified.** New test calls `EngineSelfTest.RunReal()` — the **real** `RealRegistryAccess` write→verify→undo pipeline on a throwaway HKCU key (no admin, self-cleaning) — so the highest-risk code (actual registry writes) now has automated CI coverage, not just fake-backed orchestration.
+- **F10 (Phase 4) — DONE.** README method note now states precisely that the noise-gate MDE = null-CI half-width (a conservative repeatability proxy, not a powered sample-size calc) and that the verdict is primary-metric-driven.
+
+**Still open — a single Low item, deliberately deferred:** F14 (on-startup reconciliation of a half-applied multi-op tweak). It's optional polish: the journal already records what happened, so such a state is recoverable by hand today, and F2 (atomic journal) made that journal trustworthy. Left for a focused session; everything else in the audit is closed and CI-verified.
 
 ---
 

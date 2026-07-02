@@ -57,4 +57,19 @@ public class EngineSelfTestTests : IDisposable
 
         Assert.False(result.Passed);
     }
+
+    [Fact]
+    public void RunReal_exercisesRealRegistryBackend_endToEnd()
+    {
+        // F9 (audit): esercita il backend REALE (RealRegistryAccess) — non un fake —
+        // con l'intera pipeline BuildPlan→Execute→verify→Undo su una chiave HKCU
+        // usa-e-getta (niente admin, self-cleaning). Prima solo l'orchestrazione con
+        // fake era in CI; questo copre il path di scrittura reale, il più a rischio.
+        var result = EngineSelfTest.RunReal();
+
+        Assert.True(result.Passed,
+            string.Join(" · ", result.Steps.Select(s => $"{s.Name}={s.Ok}:{s.Detail}")));
+        // Nessun residuo: la chiave scratch non deve esistere dopo il self-test.
+        Assert.False(new RealRegistryAccess().Read(EngineSelfTest.ScratchPath).Exists);
+    }
 }

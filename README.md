@@ -165,6 +165,15 @@ driver/display/power plan changed), and a noise gate: when the baseline's minimu
 detectable effect exceeds the threshold, no verdict is emitted. Outlier runs are
 flagged, never silently dropped.
 
+*(A note on the MDE, to be precise: the "minimum detectable effect" used by the
+noise gate is estimated as the bootstrap CI half-width of a null comparison — the
+baseline resampled against itself — relative to the median. It is a conservative
+proxy for repeatability, not a formal 80%-power sample-size calculation; we prefer
+to under-claim than to invent a false guarantee. When we test the four frametime
+metrics, the single verdict is driven by the primary metric, median frametime —
+"any of four significant" would inflate the false-positive rate, which is exactly
+the placebo pattern this tool exists to avoid.)*
+
 ## Build
 
 .NET 10 SDK → `dotnet build` · `dotnet test` (350+ tests). WPF app in
