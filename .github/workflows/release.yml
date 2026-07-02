@@ -81,9 +81,12 @@ jobs:
             "RELEASE_NOTES.md"
           )
           $notesPath = $notesCandidates | Where-Object { Test-Path $_ } | Select-Object -First 1
+          # Allega sia lo zip sia il checksum SHA256 (package-release.sh lo genera):
+          # l'utente puo' verificare il download con Get-FileHash prima di eseguirlo.
+          $assets = @("dist/Verdict-$env:VER.zip", "dist/SHA256SUMS.txt")
           if ($notesPath) {
             Write-Host "Uso release notes da: $notesPath"
-            gh release create $tag "dist/Verdict-$env:VER.zip" --title "Verdict $tag" --notes-file $notesPath
+            gh release create $tag @assets --title "Verdict $tag" --notes-file $notesPath
           } else {
             Write-Host "Nessun file release notes trovato; genero da commit log."
             $prevTag = git describe --tags --abbrev=0 "$tag^" 2>$null
@@ -93,5 +96,5 @@ jobs:
             } else {
               $notes = "Prima release. Vedi commit history."
             }
-            gh release create $tag "dist/Verdict-$env:VER.zip" --title "Verdict $tag" --notes $notes
+            gh release create $tag @assets --title "Verdict $tag" --notes $notes
           }

@@ -78,3 +78,15 @@ rm -f "$ROOT/dist/Verdict-$VER.zip"
 ( cd "$ROOT/dist" && "$WINTAR" -a -c -f "Verdict-$VER.zip" "Verdict-$VER" )
 echo "== DONE: dist/Verdict-$VER.zip =="
 du -sh "$ROOT/dist/Verdict-$VER.zip" 2>/dev/null || true
+
+# Published checksum so users can verify the download (we verify PresentMon's
+# hash before running it — we hold our own binary to the same bar). Prefer
+# sha256sum (Git Bash); fall back to Windows certutil.
+echo "== Checksum =="
+if command -v sha256sum >/dev/null 2>&1; then
+  ( cd "$ROOT/dist" && sha256sum "Verdict-$VER.zip" > "SHA256SUMS.txt" )
+else
+  ( cd "$ROOT/dist" && certutil -hashfile "Verdict-$VER.zip" SHA256 \
+      | sed -n '2p' | tr -d '\r' | awk -v f="Verdict-$VER.zip" '{print $1"  "f}' > "SHA256SUMS.txt" )
+fi
+cat "$ROOT/dist/SHA256SUMS.txt"

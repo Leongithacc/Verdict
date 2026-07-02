@@ -21,6 +21,14 @@
 
 A prior development log exists at [docs/OPUS_AUDIT_LOG.md](OPUS_AUDIT_LOG.md) — that is a *change history*, not a findings audit. This document does not duplicate it.
 
+### Execution status (updated 2026-07-02, same session as the audit)
+
+Work that does **not** need the .NET SDK was executed immediately (the SDK returns 2026-07-05, gating Phase 0 and all C# changes):
+
+- **F11 (Phase 6, Worker) — partially DONE:** `rebuildStatsCacheAndPrune` now wraps the `stats_cache` DELETE+INSERT in a single `env.DB.batch(...)` (atomic — no transient-empty window); new vitest exercises the cron rebuild end-to-end (aggregates 10 evidence rows → correct percentages); the CORS `*`-on-POST decision and the non-secret `database_id` are now documented in code; `scheduled` handler signature modernized to `ScheduledController`. `tsc --noEmit` clean, 21/21 tests, deployed live. **Still open (Léon-only):** WAF per-IP rule (A1), uptime monitor (A2), D1 DR decision (A3).
+- **F3 (Phase 3, release integrity) — DONE (pending a real tag run):** `tools/package-release.sh` now emits `dist/SHA256SUMS.txt`; `release.yml` attaches it to the GitHub Release; README documents `Get-FileHash` verification. Cannot be end-to-end verified until the next `v*` tag build (needs Phase 0 SDK).
+- **Everything else (F1, F2, F4, F5, F6, F7, F8-client, F9, F14) remains SDK-gated** — it modifies C# that must build+test against the ~360-test suite on 2026-07-05. Doing it blind would violate the Phase 0 gate this document defines.
+
 ---
 
 ## 1. Architecture as-built

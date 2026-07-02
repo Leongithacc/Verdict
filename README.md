@@ -104,6 +104,16 @@ folder and WPEP was never here.
 Measure and Diagnostics ask for elevation only when you use them (ETW is
 admin-only by Windows design).
 
+**Verify your download.** Verdict is unsigned, so every release ships a
+`SHA256SUMS.txt` next to the zip. Confirm the hash matches before running:
+
+```powershell
+Get-FileHash Verdict-<version>.zip -Algorithm SHA256   # compare with SHA256SUMS.txt
+```
+
+We verify PresentMon's hash before executing it; we hold our own binary to the
+same bar.
+
 **CLI** (`wpep.exe`, same engine):
 
 ```
