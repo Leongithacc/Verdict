@@ -160,4 +160,30 @@ public class PipelineValidatorTests
         Assert.False(result.Passed);
         Assert.Contains("rumoroso", result.Summary);
     }
+
+    // Run con la coda 0.2% low indipendente dalla mediana (per il caso F7).
+    private static BenchmarkRun RunTail(double medianMs, double p998Ms) => new(
+        "t", "g.exe", DateTimeOffset.UnixEpoch, 60,
+        new RunMetrics(10_000, 0, medianMs, medianMs, medianMs * 1.5, p998Ms, null), []);
+
+    [Fact]
+    public void AaTest_PrimaryFlat_SecondaryMetricFires_StillPasses_F7()
+    {
+        // Mediana (primaria) identica tra i gruppi; solo la coda 0.2% low differisce.
+        // La vecchia logica "una qualsiasi delle 4 metriche significativa" avrebbe fatto
+        // FALLIRE questo A/A test; decidere sulla metrica primaria tiene il falso-positivo
+        // a ≈ α (audit F7).
+        BenchmarkRun[] a = [RunTail(10.0, 18.0), RunTail(10.05, 18.05), RunTail(9.95, 17.95),
+                            RunTail(10.02, 18.02), RunTail(9.98, 17.98)];
+        BenchmarkRun[] b = [RunTail(10.0, 23.0), RunTail(10.05, 23.05), RunTail(9.95, 22.95),
+                            RunTail(10.02, 23.02), RunTail(9.98, 22.98)];
+
+        var report = ComparisonEngine.Compare(a, b);
+        // Sanity: la primaria è un non-effetto, una secondaria (0.2% low) ha sparato.
+        Assert.Equal(Verdict.NoMeasurableEffect, report.PrimaryVerdict);
+        Assert.Equal(Verdict.Regression, report.Metrics[2].Verdict);
+
+        var result = PipelineValidator.Run(a, b, PipelineValidator.Expectation.None);
+        Assert.True(result.Passed, "primaria piatta → l'A/A non deve dichiarare un falso effetto");
+    }
 }
