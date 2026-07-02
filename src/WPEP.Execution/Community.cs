@@ -62,12 +62,9 @@ public static class EvidenceLedger
             var all = new List<EvidenceRecord>(Load(path)) { record };
             if (all.Count > MaxRecords)
                 all.RemoveRange(0, all.Count - MaxRecords);
-            Directory.CreateDirectory(Path.GetDirectoryName(path)!);
-            // Write-temp + rename: un crash a metà scrittura sul file vero lascerebbe
-            // un JSON troncato → Load() torna [] → storico perso in silenzio.
-            var tmp = path + ".tmp";
-            File.WriteAllText(tmp, JsonSerializer.Serialize(all, new JsonSerializerOptions { WriteIndented = true }));
-            File.Move(tmp, path, overwrite: true);
+            // Atomico (audit F2/L3): un write troncato lascerebbe un JSON illeggibile
+            // → Load() torna [] → storico perso in silenzio. Helper condiviso.
+            WPEP.Core.Io.AtomicJson.Write(path, all, new JsonSerializerOptions { WriteIndented = true });
         }
         catch { /* l'evidence è best-effort: non deve MAI rompere un apply */ }
     }

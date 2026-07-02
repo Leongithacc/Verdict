@@ -201,12 +201,11 @@ public sealed class AppSettings
         return new() { IsFirstRun = true };
     }
 
-    public void Save()
-    {
-        Directory.CreateDirectory(DataDirectory);
-        File.WriteAllText(FilePath, JsonSerializer.Serialize(this,
-            new JsonSerializerOptions { WriteIndented = true }));
-    }
+    public void Save() =>
+        // Atomico (audit F5): un crash a metà scrittura corromperebbe preferenze +
+        // API key cifrate. Helper condiviso col journal e l'evidence ledger.
+        WPEP.Core.Io.AtomicJson.Write(FilePath, this,
+            new JsonSerializerOptions { WriteIndented = true });
 }
 
 /// <summary>A FULL theme system (design handoff 2026-06): palette + text + a chrome-darkening

@@ -478,8 +478,9 @@ public sealed class ExecutionEngine(
     }
 
     private static void Save(string file, JournalSession session) =>
-        System.IO.File.WriteAllText(file, JsonSerializer.Serialize(session,
-            new JsonSerializerOptions { WriteIndented = true }));
+        // Atomico (audit F2): il journal è la rete di sicurezza dell'undo — un write
+        // troncato a metà lo renderebbe illeggibile e la modifica non più annullabile.
+        WPEP.Core.Io.AtomicJson.Write(file, session, new JsonSerializerOptions { WriteIndented = true });
 
     /// <summary>Hard cap on how long we let System Restore run before giving up.
     /// Checkpoint-Computer can stall for minutes (VSS busy, provider hung, disabled)
