@@ -203,11 +203,17 @@ Cloudflare Workers ha rate limiting nativo. Regole proposte:
   - `rig_signature` regex `^RIG-[0-9A-HJKMNPQRSTVWXYZ]{4}-[0-9A-HJKMNPQRSTVWXYZ]{4}$`
   - `rig_tier` in enum MITICO/LEGGENDARIO/EPICO/RARO/COMUNE
 
-**Anti-Sybil**: il limit per `rig_signature` evita 1000 POST dalla stessa origine
-con rig casuali. Chi vuole davvero spammare può però variare `rig_signature` ogni
-request. Mitigazioni:
-- Sample minimo 10 + bilanciamento honest/dishonest 1:1 → manipolare le percentuali
-  richiede sforzo non banale
+**Anti-Sybil — limite noto e accettato** (audit 2026-07-02): la chiave del rate
+limit (`rig_signature`) è generata dal client, quindi chi la ruota a ogni request
+lo aggira — il per-rig è un secondo livello, non una difesa. Stato reale:
+- Implementato nel Worker: 60 req/min per `rig_signature`, validazione Zod,
+  body max 100 KB, max 100 record/batch, stessa firma per tutto il batch.
+- NON implementato nel codice: il limite per-IP. Va configurato come WAF
+  rate-limiting rule dal dashboard Cloudflare (Security > WAF) — non è
+  esprimibile in wrangler.toml.
+- Niente lega una firma a hardware reale: la leaderboard è falsificabile da uno
+  script motivato. Per questo i numeri sono etichettati "auto-riportati, non
+  attestati" ovunque vengano mostrati (community.html, PRIVACY.md sez. 3.3).
 - Future: Cloudflare Turnstile (PoW captcha invisibile) se si vede abuse reale
 
 ## 10. Retention

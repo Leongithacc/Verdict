@@ -147,6 +147,40 @@ All notable changes to Verdict are documented here. Format based on
 - DPAPI key encrypt/decrypt extracted to shared helpers in `AppSettings`
   (DRY across Claude / Gemini / OpenAI keys).
 
+### Security / audit fixes (2026-07-02)
+
+Findings from the aggressive internal audit of 2026-07-02, all fixed same day:
+
+- **`TryCreateRestorePoint` hardened** (`ExecutionEngine.cs`): the description is
+  now reduced to a character whitelist before being interpolated into the
+  PowerShell `-Command` string. The previous `'` → `''` escape did not cover `"`,
+  which could break out of the argument quoting (not exploitable today — the only
+  caller passes `Verdict: <tweak-id>` with ids restricted to `[a-z0-9-]` — but
+  fragile against future callers).
+- **`EvidenceLedger.Append` made atomic** (`Community.cs`): writes to a temp file
+  then renames over `evidence.json`. A crash mid-write previously left a truncated
+  JSON, which `Load()` silently turned into an empty history. Capped at 5000
+  records (the file is fully rewritten per append). New test: corrupt-file
+  recovery + no leftover `.tmp`.
+- **`OpenSettings` runtime allowlist** (`ApplyFlow.cs`): the deep-link prefix
+  allowlist that CI enforces on the shipped KB is now also enforced at runtime
+  (defence-in-depth against a locally tampered KB reaching
+  `Process.Start(UseShellExecute: true)`).
+- **`VersionCompare` overflow fix** (`UpdateCheck.cs`): numeric components are
+  parsed as `long`, and components too large even for `long` saturate instead of
+  collapsing to 0 (which could have hidden a real update). 3 new test rows.
+- **Honest Sybil-limit disclosure (audit M1)**: the community leaderboard numbers
+  are self-reported by anonymous clients and unattested — now stated explicitly
+  in `docs/PRIVACY.md` §3.3, `docs/V7_REMOTE_BACKEND_DESIGN.md` §9 (which
+  previously overstated the implemented defences) and on both community pages.
+- (verdict-community repo) **CORS fixed on all responses** — the leaderboard
+  fetch from github.io was blocked by the browser; **rate-limit comments now
+  match reality** (60 req/min per rig, client-controlled key; per-IP defence
+  requires a Cloudflare WAF rule); **the vitest suite is actually runnable** for
+  the first time (setup used `readFileSync` inside workerd — CI had been red
+  since creation); toolchain upgraded to wrangler 4 + vitest 4 +
+  vitest-pool-workers 0.17 with `tsc --noEmit` finally green.
+
 ## [1.0] — 2026-06-26
 
 First public release. See the

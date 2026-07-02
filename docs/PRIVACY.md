@@ -95,6 +95,10 @@ INSERT su una colonna IP.
   puoi vedere la percentuale aggregata "ha aiutato il X% dei rig simili". Solo
   quando ci sono almeno 10 sample per (tweak, tier), altrimenti la percentuale
   è nascosta (regola d'oro "niente FPS finti").
+- **Quanto fidarti dei numeri**: gli esiti sono auto-riportati da client anonimi
+  e non attestati — il server non può verificare che dietro una `rig_signature`
+  ci sia hardware reale. Le percentuali community sono un indizio, non una
+  prova: la prova sul TUO rig resta Measure.
 - **Come disattivarlo**: togli il flag dalla pagina Impostazioni. Da CLI:
   `wpep community --disable`.
 
