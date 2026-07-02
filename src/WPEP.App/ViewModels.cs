@@ -464,12 +464,7 @@ public sealed class VerdictViewModel(MainViewModel main) : ViewModelBase
     {
         // Vendor omesso: il sito mostra il picker. Manteniamo l'azione semplice e zero-dipendenze.
         var url = WPEP.Core.Bios.BiosGuide.Url(tweakId, vendorSlug: null, lang: "it");
-        try
-        {
-            System.Diagnostics.Process.Start(
-                new System.Diagnostics.ProcessStartInfo(url) { UseShellExecute = true });
-        }
-        catch { /* user può sempre aprire il link dall'item della lista */ }
+        SafeOpen.Url(url); // solo http/https (audit F6)
     }
 
     public string Header { get => _header; set => Set(ref _header, value); }
@@ -1187,17 +1182,7 @@ public sealed class SettingsViewModel : ViewModelBase
         }
     });
 
-    public RelayCommand OpenDownloadCommand => new(() =>
-    {
-        if (_updateUrl is null)
-            return;
-        try
-        {
-            System.Diagnostics.Process.Start(
-                new System.Diagnostics.ProcessStartInfo(_updateUrl) { UseShellExecute = true });
-        }
-        catch { /* best-effort: il browser apre la pagina di download */ }
-    });
+    public RelayCommand OpenDownloadCommand => new(() => SafeOpen.Url(_updateUrl));
 
     // ── V7 community evidence: stato + le TUE prove (sempre locali, anonime) ──
     public string CommunityStatus

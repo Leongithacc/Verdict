@@ -38,7 +38,10 @@ Executed and **CI-verified** this session:
 - **F11 (Phase 6, Worker) — code DONE + tested.** Atomic `stats_cache` rebuild via `env.DB.batch`; cron-rebuild vitest; CORS/`database_id` decisions documented; `ScheduledController` signature. `tsc` clean, 21/21, deployed live. **Léon-only remaining:** WAF per-IP (A1), uptime monitor (A2), D1 DR (A3).
 - **F3 (Phase 3, release integrity) — DONE** (verifiable at the next `v*` tag): `SHA256SUMS.txt` emitted + attached + documented.
 
-**Still open (SDK/CI available now, just not yet done):** F6 (SafeOpen scheme guard), F7 (statistical multiplicity), F8-client (RigDna 64-bit, needs a beta-reset decision), F9 (CI real-backend round-trip), F14 (resume half-applied), F10 (MDE doc).
+- **F7 (Phase 4) — DONE + verified.** Pipeline verdict now driven by the PRIMARY metric (median frametime), exposed as `ComparisonReport.PrimaryVerdict`; `PipelineValidator` no longer treats "any of 4 metrics significant" as an effect (that inflated the A/A false-positive rate to ~18.5%). New test: primary flat + a secondary metric firing → A/A still passes.
+- **F6 (Phase 2) — DONE + verified.** `SafeOpen.Url` guards the two browser-open sites (BIOS guide, update page) to http/https only before they reach the shell — the shell-open counterpart of the OpenSettings allowlist. Local-file opens are app-computed paths, left as-is.
+
+**Still open (SDK/CI available now, just not yet done):** F8-client (RigDna 64-bit — **needs a decision: reset the beta community table vs dual-format**), F9 (CI real-backend HKCU round-trip), F14 (resume half-applied), F10 (MDE method doc).
 
 ---
 
