@@ -12,8 +12,11 @@
          resta portatile. Genera il QR per le guide BIOS sul telefono. -->
     <PackageReference Include="QRCoder" Version="1.6.0" />
     <!-- DPAPI (Windows) per cifrare at-rest l'API key di Anthropic in settings.json.
-         Microsoft-first-party, Windows-only — l'app è già net*-windows, niente costi di portabilità. -->
-    <PackageReference Include="System.Security.Cryptography.ProtectedData" Version="9.0.0" />
+         Microsoft-first-party, Windows-only — l'app è già net*-windows, niente costi di portabilità.
+         NoWarn NU1510: l'SDK .NET 10 lo segnala come "ridondante" (fornito dal framework) e
+         TreatWarningsAsErrors lo trasformerebbe in errore di restore — ma tenerlo referenziato
+         non rompe nulla e resta compatibile con SDK più vecchi che NON lo forniscono in-framework. -->
+    <PackageReference Include="System.Security.Cryptography.ProtectedData" Version="9.0.0" NoWarn="NU1510" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\WPEP.Core\WPEP.Core.csproj" />
