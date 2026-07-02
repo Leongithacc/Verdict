@@ -44,12 +44,22 @@ public sealed class ExecutionService
 
     public static bool IsElevated => Elevation.IsElevated();
 
+    /// <summary>Same allowlist the CI test enforces on the shipped KB
+    /// (KnowledgeBaseTests.ShippedKb_SettingsDeepLinks_...): keep the two in sync.</summary>
+    private static readonly string[] AllowedSettingsPrefixes =
+        ["ms-settings:", "windowsdefender:", "control", "services.msc", "SystemProperties", "mmsys"];
+
     /// <summary>Opens a Windows settings page / control panel for a gui-only
     /// tweak. Navigation only — never a system write. Handles both URI schemes
     /// (ms-settings:, windowsdefender:) and "command args" forms
     /// (control.exe powercfg.cpl, mmsys.cpl, services.msc).</summary>
     public static void OpenSettings(string uri)
     {
+        // Defence-in-depth: CI already enforces this allowlist on the shipped KB,
+        // but Process.Start(UseShellExecute) is the one place where a tampered
+        // local KB could launch anything — enforce it at runtime too.
+        if (!AllowedSettingsPrefixes.Any(p => uri.StartsWith(p, StringComparison.Ordinal)))
+            return;
         try
         {
             // URI schemes launch as-is; "command args" forms are split so the
