@@ -23,8 +23,13 @@ public static class RigDna
             inv.RamTotalGb?.ToString("F0") ?? "?",
             inv.Disks.FirstOrDefault()?.Model ?? "").ToUpperInvariant();
 
-        uint h = Fnv1a(canonical);
-        string code = "RIG-" + Encode(h, 4) + "-" + Encode(h >> 7 | h << 25, 4);
+        // Hash a 64 bit e DUE slice indipendenti da 20 bit → 40 bit di entropia reale
+        // nel codice condivisibile (audit F8). Prima: hash 32 bit e 2° segmento = pura
+        // rotazione del 1° ⇒ solo ~32 bit effettivi, collisioni di compleanno a ~65k rig.
+        // A 40 bit la soglia sale a ~1M rig. Il FORMATO resta RIG-XXXX-XXXX: nessun cambio
+        // al regex del Worker, nessuna migrazione (il dataset beta si ri-popola da solo).
+        ulong h = Fnv1a64(canonical);
+        string code = "RIG-" + Encode(h & 0xFFFFF, 4) + "-" + Encode((h >> 20) & 0xFFFFF, 4);
         int hue = (int)(h % 360);
         var (tier, color) = TierOf(inv, gpu);
         var traits = BuildTraits(inv, gpu);
@@ -75,14 +80,14 @@ public static class RigDna
         return string.Join(' ', gpu.Split(' ', StringSplitOptions.RemoveEmptyEntries));
     }
 
-    private static uint Fnv1a(string s)
+    private static ulong Fnv1a64(string s)
     {
-        uint h = 2166136261;
-        foreach (char ch in s) { h ^= ch; h *= 16777619; }
+        ulong h = 14695981039346656037UL;               // FNV-1a 64-bit offset basis
+        foreach (char ch in s) { h ^= ch; h *= 1099511628211UL; } // FNV-1a 64-bit prime
         return h;
     }
 
-    private static string Encode(uint value, int chars)
+    private static string Encode(ulong value, int chars)
     {
         var sb = new System.Text.StringBuilder(chars);
         for (int i = 0; i < chars; i++) { sb.Append(Alphabet[(int)(value & 31)]); value >>= 5; }

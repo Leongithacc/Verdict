@@ -63,4 +63,19 @@ public class RigDnaTests
         Assert.Contains("EXPO ✓", RigDna.Compute(Inv(expo: true)).Traits);
         Assert.Contains("EXPO ✗", RigDna.Compute(Inv(expo: false)).Traits);
     }
+
+    [Fact]
+    public void Codes_AreUniqueAcrossManyDistinctRigs()
+    {
+        // Molti rig distinti → codici distinti. Rete contro un collasso di entropia
+        // (es. i due segmenti derivati dagli stessi bit). A 40 bit 400 campioni non
+        // collidono in pratica; con la vecchia derivazione a rotazione la probabilità
+        // di collisione era molto più alta. (audit F8)
+        var codes = new HashSet<string>();
+        for (int i = 0; i < 400; i++)
+        {
+            var dna = RigDna.Compute(Inv(cpu: $"CPU-{i}", ram: 16 + (i % 8) * 8, disk: $"Disk-{i}"));
+            Assert.True(codes.Add(dna.Code), $"collisione al rig {i}: {dna.Code}");
+        }
+    }
 }

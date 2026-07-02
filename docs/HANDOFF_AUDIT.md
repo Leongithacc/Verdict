@@ -40,8 +40,9 @@ Executed and **CI-verified** this session:
 
 - **F7 (Phase 4) — DONE + verified.** Pipeline verdict now driven by the PRIMARY metric (median frametime), exposed as `ComparisonReport.PrimaryVerdict`; `PipelineValidator` no longer treats "any of 4 metrics significant" as an effect (that inflated the A/A false-positive rate to ~18.5%). New test: primary flat + a secondary metric firing → A/A still passes.
 - **F6 (Phase 2) — DONE + verified.** `SafeOpen.Url` guards the two browser-open sites (BIOS guide, update page) to http/https only before they reach the shell — the shell-open counterpart of the OpenSettings allowlist. Local-file opens are app-computed paths, left as-is.
+- **F8 (Phase 5) — DONE + verified (pragmatic variant, no migration).** `RigDna` now uses a **64-bit** FNV-1a and derives the two code segments from **independent 20-bit slices** → 40 bits of real entropy (was ~32: the 2nd segment used to be a rotation of the 1st), moving the birthday-collision threshold from ~65k to ~1M rigs. **Deliberately kept the `RIG-XXXX-XXXX` format** so the Worker regex is unchanged and **no migration / beta-reset is needed** (existing near-empty evidence simply re-populates under the new codes). Literal "≥64 bits" would require a longer code + a server regex change + a format-version negotiation — disproportionate for a hobby-scale user base where 40 bits (~1M) already far exceeds realistic scale. The "reversibility" half of F8 is a wording matter, already handled in M1 (PRIVACY §3.3 "self-reported, unattested"). If the user base ever approaches ~10⁵ rigs, widen the format then.
 
-**Still open (SDK/CI available now, just not yet done):** F8-client (RigDna 64-bit — **needs a decision: reset the beta community table vs dual-format**), F9 (CI real-backend HKCU round-trip), F14 (resume half-applied), F10 (MDE method doc).
+**Still open (SDK/CI available now, just not yet done):** F9 (CI real-backend HKCU round-trip), F14 (resume half-applied), F10 (MDE method doc). All Low/Info.
 
 ---
 
