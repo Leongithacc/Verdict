@@ -15,6 +15,9 @@ public class UpdateCheckTests
     [InlineData("v1.2", "1.1", 1)]   // tolerates leading 'v'
     [InlineData("1.2-beta", "1.2", 0)] // drops prerelease suffix → equal numeric
     [InlineData("10.0", "9.0", 1)]   // numeric, not lexicographic (10 > 9)
+    [InlineData("4294967296.0", "1.0", 1)]  // component > int.MaxValue must not collapse to 0
+    [InlineData("99999999999999999999.0", "1.0", 1)] // > long.MaxValue: saturates, still "newer"
+    [InlineData("1.abc", "1.0", 0)]  // non-numeric garbage stays 0, as before
     public void VersionCompare_orders_correctly(string a, string b, int expectedSign)
         => Assert.Equal(expectedSign, Math.Sign(UpdateChecker.VersionCompare(a, b)));
 

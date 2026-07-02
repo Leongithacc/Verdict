@@ -79,26 +79,30 @@ public static class UpdateChecker
     /// </summary>
     public static int VersionCompare(string a, string b)
     {
-        static int[] Parse(string v)
+        static long[] Parse(string v)
         {
             v = v.Trim().TrimStart('v', 'V');
             int dash = v.IndexOf('-');          // drop "-beta", "-rc1", …
             if (dash >= 0)
                 v = v[..dash];
             var parts = v.Split('.', StringSplitOptions.RemoveEmptyEntries);
-            var nums = new int[parts.Length];
+            var nums = new long[parts.Length];
             for (int i = 0; i < parts.Length; i++)
-                nums[i] = int.TryParse(parts[i], NumberStyles.Integer, CultureInfo.InvariantCulture, out var n)
-                    ? n : 0;
+                // A numeric component too big even for long (date-stamped tags,
+                // garbage) saturates instead of collapsing to 0 — 0 would make a
+                // huge version look ancient and silently hide a real update.
+                nums[i] = long.TryParse(parts[i], NumberStyles.Integer, CultureInfo.InvariantCulture, out var n)
+                    ? n
+                    : parts[i].All(char.IsAsciiDigit) ? long.MaxValue : 0;
             return nums;
         }
 
-        int[] an = Parse(a), bn = Parse(b);
+        long[] an = Parse(a), bn = Parse(b);
         int len = Math.Max(an.Length, bn.Length);
         for (int i = 0; i < len; i++)
         {
-            int av = i < an.Length ? an[i] : 0;
-            int bv = i < bn.Length ? bn[i] : 0;
+            long av = i < an.Length ? an[i] : 0;
+            long bv = i < bn.Length ? bn[i] : 0;
             if (av != bv)
                 return av.CompareTo(bv);
         }
