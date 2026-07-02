@@ -179,6 +179,66 @@ public class KnowledgeBaseTests
                 $"{e.Id}: category='{e.Category}' non è tra le note [{string.Join(", ", known)}]");
     }
 
+    // ── F1: apply-safety validation (audit 2026-07-02) ───────────────────────
+
+    private static TweakEntry WithApply(string method, string path, string? valueAfter, string kind = "dword") =>
+        ValidEntry() with
+        {
+            Apply = new ApplySpec
+            {
+                Method = method,
+                Operations = [new ApplyOperation { Path = path, ValueAfter = valueAfter, Kind = kind }],
+            },
+        };
+
+    [Theory]
+    [InlineData("registry", @"HKLM\SYSTEM\CurrentControlSet\Control\X\Y", "2", "dword")]
+    [InlineData("registry", @"HKCU\Control Panel\Mouse\MouseSpeed", "0", "string")]
+    [InlineData("powercfg", "active-scheme", "8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c", "powercfg")]
+    [InlineData("powercfg-value", "501a4d13-42af-4429-9fd1-a8218c268e20/ee12f906-d277-404b-b6da-e5fa1a576df5", "0", "dword")]
+    [InlineData("bcdedit", "disabledynamictick", "yes", "bcdedit")]
+    [InlineData("nvidia-drs", "0x1057EB71", "0x08416747", "dword")]
+    [InlineData("dxuser", "VRROptimizeEnable", "1", "dxuser")]
+    public void Validator_WellFormedApplyOp_IsAccepted(string method, string path, string value, string kind)
+        => Assert.Empty(KnowledgeBaseValidator.Validate([WithApply(method, path, value, kind)]));
+
+    [Theory]
+    // hive fuori allowlist / senza hive
+    [InlineData("registry", @"HKCR\Something\Bad", "1", "dword", "registry path")]
+    [InlineData("registry", @"Software\NoHive\Value", "1", "dword", "registry path")]
+    // dword con valore non numerico
+    [InlineData("registry", @"HKLM\A\B", "abc", "dword", "uint")]
+    // kind sconosciuto
+    [InlineData("registry", @"HKLM\A\B", "1", "binary", "kind")]
+    // powercfg value non-GUID
+    [InlineData("powercfg", "active-scheme", "not-a-guid", "powercfg", "GUID")]
+    // powercfg-value path malformato
+    [InlineData("powercfg-value", "solo-un-guid", "0", "dword", "guid/guid")]
+    // bcdedit value con spazio → argument-splitting (il punto centrale di F1/F4)
+    [InlineData("bcdedit", "disabledynamictick", "yes on", "bcdedit", "value")]
+    // bcdedit element con carattere illegale
+    [InlineData("bcdedit", "disable-tick", "yes", "bcdedit", "element")]
+    // nvidia-drs id non hex/dec
+    [InlineData("nvidia-drs", "0xZZZ", "1", "dword", "id")]
+    // dxuser value non 0/1
+    [InlineData("dxuser", "VRROptimizeEnable", "5", "dxuser", "0 o 1")]
+    public void Validator_MalformedApplyOp_IsRejected(
+        string method, string path, string value, string kind, string expectedFragment)
+    {
+        var problems = KnowledgeBaseValidator.Validate([WithApply(method, path, value, kind)]);
+        Assert.Contains(problems, p => p.Contains(expectedFragment));
+    }
+
+    [Fact]
+    public void Validator_BcdEditValueWithQuote_IsRejected()
+    {
+        // Un apice nel valore bcdedit potrebbe rompere il quoting dell'argomento:
+        // deve essere impossibile che una voce così arrivi al Process.Start.
+        var problems = KnowledgeBaseValidator.Validate(
+            [WithApply("bcdedit", "disabledynamictick", "yes\" extra", "bcdedit")]);
+        Assert.Contains(problems, p => p.Contains("value"));
+    }
+
     private static TweakEntry ValidEntry() => new()
     {
         Id = "test-entry",
