@@ -80,8 +80,9 @@ public sealed record SystemSnapshot
     public bool? R6SiegeInstalled { get; init; }
     public bool? WarzoneInstalled { get; init; }
 
-    /// <summary>Maps a KB entry's `game` key to its detection result.</summary>
-    public bool? GameInstalled(string game) => game switch
+    /// <summary>Maps a KB entry's `game` key to its detection result.
+    /// Case-insensitive: KB values are lowercase, but callers may not be.</summary>
+    public bool? GameInstalled(string game) => game.ToLowerInvariant() switch
     {
         "fortnite" => FortniteInstalled,
         "valorant" => ValorantInstalled,
