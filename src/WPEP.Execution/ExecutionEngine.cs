@@ -492,8 +492,15 @@ public sealed class ExecutionEngine(
     /// on timeout the process tree is killed and we report failure (no checkpoint).</summary>
     private static bool TryCreateRestorePoint(string description)
     {
-        // Sanitise the description for single-quoted PowerShell (escape ' as '').
-        var safe = description.Replace("'", "''");
+        // Whitelist, not escaping: the description crosses TWO parsers (native
+        // argument quoting, then PowerShell) and a char-escape approach must be
+        // correct for both at once — a stray '"' would break out of -Command.
+        // Callers only pass "Verdict: <tweak-id>" today, so this is lossless.
+        var safe = new string(description
+            .Where(c => char.IsLetterOrDigit(c) || c is ' ' or '-' or ':' or '.' or '_')
+            .ToArray());
+        if (safe.Length == 0)
+            safe = "Verdict";
         Process? p = null;
         try
         {
