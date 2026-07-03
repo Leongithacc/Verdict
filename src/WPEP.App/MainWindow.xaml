@@ -76,9 +76,11 @@
                       StrokeStartLineCap="Round" StrokeEndLineCap="Round"
                       Data="M 15 80 A 55 55 0 0 1 125 80" />
                 <!-- Needle (linea che ruota dal centro 70,80) -->
+                <!-- Perno UNICO in (70,80) via CenterX/CenterY. NIENTE RenderTransformOrigin:
+                     in WPF si sommerebbe al CenterX/CenterY sfalsando il perno del needle. -->
                 <Path Stroke="{Binding NoiseColor, Converter={StaticResource TokenBrush}}"
                       StrokeThickness="3" StrokeStartLineCap="Round" StrokeEndLineCap="Round"
-                      Data="M 70 80 L 20 80" RenderTransformOrigin="0.5,0.9">
+                      Data="M 70 80 L 20 80">
                   <Path.RenderTransform>
                     <RotateTransform CenterX="70" CenterY="80" Angle="{Binding NoiseAngle}" />
                   </Path.RenderTransform>

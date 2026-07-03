@@ -170,11 +170,10 @@ a tavolino è OK:**
 **Quindi resta solo da controllare a OCCHIO (nessuno di questi è un crash):**
 1. **Gauge Noise Score** — il needle deve puntare all'altezza giusta (score 0 = tutto
    a sinistra, 100 = tutto a destra) e ruotare quando lo score cambia.
-   ⚠ **RISCHIO NOTO**: il needle (`MainWindow.xaml:81-84`) ha SIA
-   `RenderTransformOrigin="0.5,0.9"` SIA `RotateTransform CenterX="70" CenterY="80"`.
-   In WPF i due centri si SOMMANO → il perno può risultare sfalsato. Se il needle
-   ruota attorno al punto sbagliato, **fix di una riga**: togli
-   `RenderTransformOrigin="0.5,0.9"` dal `<Path>` (tieni solo CenterX/CenterY).
+   ✅ **Già corretto** (commit 2026-07-03): il needle aveva SIA `RenderTransformOrigin`
+   SIA `RotateTransform CenterX/CenterY` — in WPF si sommano e sfalsano il perno. Tolto
+   il `RenderTransformOrigin`, resta il solo centro (70,80). Verifica solo che il perno
+   sia alla base del needle (centro del semicerchio), non altrove.
 2. **Card con gradient + drop-shadow** — le Card devono avere il gradiente viola
    (Surface→Surface2), non un fondo piatto o trasparente.
 3. **Switch premium** (toggle) — l'animazione Storyboard del knob deve scorrere, non
