@@ -39,8 +39,22 @@ public sealed class JournalSession
 {
     public DateTimeOffset StartedAtUtc { get; set; }
     public bool RestorePointCreated { get; set; }
+
+    /// <summary>How many operations the plan had when the session started. Lets
+    /// <see cref="ExecutionEngine.DetectIncompleteSessions"/> tell a crash between
+    /// op N and N+1 (journaled entries &lt; planned) apart from a completed session —
+    /// without this the two are indistinguishable (audit F14). 0 = legacy journal
+    /// written before this field existed: unknown, skipped by the detection.</summary>
+    public int PlannedOps { get; set; }
+
     public List<JournalEntry> Entries { get; set; } = [];
 }
+
+/// <summary>A journaled session that did not run to completion: the process died
+/// mid-apply (crash/power loss), leaving the tweak only partially applied. The
+/// journal is intact, so Undo of what WAS applied remains available.</summary>
+public sealed record IncompleteSession(
+    string JournalFile, string TweakId, int PlannedOps, int JournaledOps, int VerifiedOps);
 
 /// <summary>Result of an undo: how many entries were restored, and which were SKIPPED
 /// because their current value no longer matches what Verdict wrote (changed outside
@@ -159,6 +173,7 @@ public sealed class ExecutionEngine(
         {
             StartedAtUtc = DateTimeOffset.UtcNow,
             RestorePointCreated = createRestorePoint && TryCreateRestorePoint($"Verdict: {plan.TweakId}"),
+            PlannedOps = plan.Operations.Count,
         };
         var file = System.IO.Path.Combine(journalDirectory,
             $"session-{DateTime.Now:yyyyMMdd-HHmmss}-{plan.TweakId}.json");
@@ -305,6 +320,39 @@ public sealed class ExecutionEngine(
             }
         }
         return drifted;
+    }
+
+    /// <summary>Read-only scan (audit F14): journaled sessions that did NOT run to
+    /// completion — the process died mid-apply (crash/power loss), leaving the tweak
+    /// half-applied. Detected as: fewer journaled entries than the plan had ops, or an
+    /// entry journaled but never verified. Legacy journals (PlannedOps=0, written before
+    /// the field existed) are skipped: for them complete and crashed are indistinguishable.
+    /// The caller offers Undo of what WAS applied — the journal is intact by design
+    /// (journal-before-write), so recovery is always available.</summary>
+    public IReadOnlyList<IncompleteSession> DetectIncompleteSessions()
+    {
+        var found = new List<IncompleteSession>();
+        foreach (var file in ListSessions(journalDirectory))
+        {
+            JournalSession? s;
+            try { s = JsonSerializer.Deserialize<JournalSession>(System.IO.File.ReadAllText(file)); }
+            catch { continue; }
+            if (s is null || s.PlannedOps <= 0)
+                continue;
+            if (s.Entries.Count > 0 && s.Entries.All(e => e.Undone))
+                continue; // già annullata per intero: niente da recuperare
+
+            bool incomplete = s.Entries.Count < s.PlannedOps ||
+                              s.Entries.Any(e => !e.Verified && !e.Undone);
+            if (incomplete)
+                found.Add(new IncompleteSession(
+                    file,
+                    s.Entries.FirstOrDefault()?.TweakId ?? System.IO.Path.GetFileName(file),
+                    s.PlannedOps,
+                    s.Entries.Count,
+                    s.Entries.Count(e => e.Verified)));
+        }
+        return found;
     }
 
     /// <summary>Reads the current live value for a journal entry (per method).</summary>

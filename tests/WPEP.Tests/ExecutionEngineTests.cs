@@ -115,6 +115,102 @@ public class ExecutionEngineTests : IDisposable
         Assert.False(plan.Operations[1].ExistedBefore); // ValueB not set
     }
 
+    // ── F14: detection delle sessioni half-applied (crash a metà apply) ──────
+
+    private void WriteJournal(string name, JournalSession session) =>
+        File.WriteAllText(Path.Combine(_journalDir, name),
+            System.Text.Json.JsonSerializer.Serialize(session));
+
+    private static JournalEntry JEntry(string path, bool verified = true, bool undone = false) => new()
+    {
+        TweakId = "test-tweak",
+        Method = "registry",
+        Path = path,
+        Kind = "dword",
+        ValueAfter = "1",
+        Verified = verified,
+        Undone = undone,
+    };
+
+    [Fact]
+    public void DetectIncompleteSessions_CompletedApply_IsNotFlagged()
+    {
+        var engine = new ExecutionEngine(new FakeRegistry(), _journalDir);
+        engine.Execute(engine.BuildPlan(Entry()), createRestorePoint: false);
+
+        Assert.Empty(engine.DetectIncompleteSessions());
+    }
+
+    [Fact]
+    public void DetectIncompleteSessions_CrashBetweenOps_IsFlagged()
+    {
+        // Il processo è morto tra op 1 e op 2: journal con 1 entry ma PlannedOps=2.
+        Directory.CreateDirectory(_journalDir);
+        WriteJournal("session-20260703-000001-test-tweak.json", new JournalSession
+        {
+            StartedAtUtc = DateTimeOffset.UnixEpoch,
+            PlannedOps = 2,
+            Entries = [JEntry(@"HKCU\Test\Key\ValueA")],
+        });
+        var engine = new ExecutionEngine(new FakeRegistry(), _journalDir);
+
+        var found = engine.DetectIncompleteSessions();
+
+        var s = Assert.Single(found);
+        Assert.Equal("test-tweak", s.TweakId);
+        Assert.Equal(2, s.PlannedOps);
+        Assert.Equal(1, s.JournaledOps);
+    }
+
+    [Fact]
+    public void DetectIncompleteSessions_CrashBeforeVerify_IsFlagged()
+    {
+        // Journalata ma mai verificata: crash tra write e verify.
+        Directory.CreateDirectory(_journalDir);
+        WriteJournal("session-20260703-000002-test-tweak.json", new JournalSession
+        {
+            StartedAtUtc = DateTimeOffset.UnixEpoch,
+            PlannedOps = 1,
+            Entries = [JEntry(@"HKCU\Test\Key\ValueA", verified: false)],
+        });
+        var engine = new ExecutionEngine(new FakeRegistry(), _journalDir);
+
+        Assert.Single(engine.DetectIncompleteSessions());
+    }
+
+    [Fact]
+    public void DetectIncompleteSessions_LegacyJournalWithoutPlannedOps_IsSkipped()
+    {
+        // Journal scritto prima del campo PlannedOps (=0): completo e crashato sono
+        // indistinguibili → onestamente non flaggato.
+        Directory.CreateDirectory(_journalDir);
+        WriteJournal("session-20260703-000003-test-tweak.json", new JournalSession
+        {
+            StartedAtUtc = DateTimeOffset.UnixEpoch,
+            PlannedOps = 0,
+            Entries = [JEntry(@"HKCU\Test\Key\ValueA")],
+        });
+        var engine = new ExecutionEngine(new FakeRegistry(), _journalDir);
+
+        Assert.Empty(engine.DetectIncompleteSessions());
+    }
+
+    [Fact]
+    public void DetectIncompleteSessions_FullyUndoneSession_IsNotFlagged()
+    {
+        // Sessione incompleta ma già annullata per intero: niente da recuperare.
+        Directory.CreateDirectory(_journalDir);
+        WriteJournal("session-20260703-000004-test-tweak.json", new JournalSession
+        {
+            StartedAtUtc = DateTimeOffset.UnixEpoch,
+            PlannedOps = 2,
+            Entries = [JEntry(@"HKCU\Test\Key\ValueA", undone: true)],
+        });
+        var engine = new ExecutionEngine(new FakeRegistry(), _journalDir);
+
+        Assert.Empty(engine.DetectIncompleteSessions());
+    }
+
     [Fact]
     public void NvidiaDrs_Apply_WritesVerifies_AndUndoDeletesWhenNotSetBefore()
     {

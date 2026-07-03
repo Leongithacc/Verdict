@@ -45,7 +45,9 @@ Executed and **CI-verified** this session:
 - **F9 (Phase 7) — DONE + verified.** New test calls `EngineSelfTest.RunReal()` — the **real** `RealRegistryAccess` write→verify→undo pipeline on a throwaway HKCU key (no admin, self-cleaning) — so the highest-risk code (actual registry writes) now has automated CI coverage, not just fake-backed orchestration.
 - **F10 (Phase 4) — DONE.** README method note now states precisely that the noise-gate MDE = null-CI half-width (a conservative repeatability proxy, not a powered sample-size calc) and that the verdict is primary-metric-driven.
 
-**Still open — a single Low item, deliberately deferred:** F14 (on-startup reconciliation of a half-applied multi-op tweak). It's optional polish: the journal already records what happened, so such a state is recoverable by hand today, and F2 (atomic journal) made that journal trustworthy. Left for a focused session; everything else in the audit is closed and CI-verified.
+- **F14 (Phase 7) — engine DONE + verified.** `JournalSession.PlannedOps` now records how many ops the plan had (without it, a crash between op N and N+1 is indistinguishable from a completed session). New read-only `ExecutionEngine.DetectIncompleteSessions()` flags sessions with fewer journaled entries than planned, or entries journaled-but-never-verified; legacy journals (PlannedOps=0) are honestly skipped; fully-undone sessions excluded. 5 tests. **UI surfacing intentionally left for the 2026-07-05 visual session**: the natural home is the Changes page ("this tweak was interrupted — undo what was applied?"), which should be wired when the GUI can actually be launched and seen.
+
+**All 14 audit findings are now closed and CI-verified** (F14's UI hook pending the visual session). Remaining items are the four Léon-only external actions (A1-A4).
 
 ---
 
