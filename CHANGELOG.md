@@ -6,6 +6,10 @@ All notable changes to Verdict are documented here. Format based on
 
 ## [Unreleased]
 
+Niente ancora.
+
+## [1.1] — 2026-07-02
+
 ### Added
 - **AI co-pilot — 4 swappable brains**: Ollama (local, default), Anthropic Claude,
   Google Gemini, OpenAI GPT. Cloud API keys encrypted at rest with DPAPI.

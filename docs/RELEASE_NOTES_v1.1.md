@@ -30,7 +30,7 @@ La pagina Co-pilota ora offre 4 cervelli — scegli quello che vuoi, cambi con u
 | GPT | `gpt-5` | OpenAI |
 
 Le API key cloud sono cifrate a riposo con DPAPI. Guida completa in [docs/BRAINS.md](BRAINS.md).
-Dal CLI: `wpep copilot "..." --brain gemini --api-key <k>` (o env `GOOGLE_API_KEY`).
+Dal CLI: `wpep copilot "..." --brain gemini --api-key <k>` (o env `GEMINI_API_KEY`).
 
 ### Community evidence — vetrina live opt-in
 Il ledger anonimo ora ha un backend remoto vero: **Cloudflare Worker + D1**, deployato
@@ -62,12 +62,28 @@ Cards con gradient e drop-shadow, Switch con Storyboard + BlurEffect glow, Prima
 scale-in press, MissileButton rosso per Session CTA. Sostituite le emoji delle icone (✓ ⚠ ✕)
 con Path Geometry SVG. 11 icone Nav con colore dinamico legato allo state.
 
-### 3 nuovi tweak KB
+### 5 nuovi tweak KB + audit URL
 - **Warzone Reflex on** — CoD Warzone è nella lista Reflex ufficiale Nvidia.
 - **Ultimate Performance power plan** — sblocca lo schema nascosto Win11 via `powercfg -duplicatescheme` (desktop only).
 - **Delivery Optimization P2P disable** — riduce upload background durante gioco. MS Learn.
+- **Storage Sense disable** — evita cleanup automatici (spike I/O) durante la sessione. MS Learn.
+- **NIC power management off** — ping stabile, niente micro-riconnessioni sui cambi di stato. MS Learn.
+- 5 URL fonte morti/redirectati sostituiti con gli equivalenti attuali.
 
-**Knowledge Base ora a 133 voci**, sempre con fonte primaria verificata (regola d'oro invariata).
+**Knowledge Base ora a 135 voci**, sempre con fonte primaria verificata (regola d'oro invariata).
+
+### Hardening da audit interno (2026-07-02)
+Doppio audit sicurezza/architettura, tutto risolto nello stesso giorno e verificato in CI:
+- **Leaderboard community sbloccata** — mancava l'header CORS sulle risposte del Worker: il browser
+  bloccava la fetch da github.io e la pagina restava vuota per tutti. Fixato + deployato.
+- **Journal, evidence e settings ora crash-safe** — write atomico (temp + rename): un crash a metà
+  scrittura non può più corrompere la rete di sicurezza dell'undo.
+- **Validazione apply-safety della KB** — i valori delle operazioni (path registry, elementi bcdedit,
+  GUID powercfg) sono validati fail-closed al caricamento: una KB manomessa non raggiunge mai una
+  scrittura.
+- **Verdetto statistico sulla metrica primaria** — niente più inflazione da confronti multipli
+  (~18.5% → α) nel validatore A/A.
+- Dettagli completi e trasparenti in [docs/HANDOFF_AUDIT.md](HANDOFF_AUDIT.md).
 
 ### Release workflow automatico
 Push di un tag `v*` → `.github/workflows/release.yml` build + test + package + `gh release create`.
@@ -96,5 +112,6 @@ fonte verificata prima di ammettere un tweak.
 
 ## Firme
 
-Rilasciata UNSIGNED. Sha256 dello zip elencato nella pagina release. Sorgente MIT su
+Rilasciata UNSIGNED. Verifica il download con il file `SHA256SUMS.txt` allegato a questa release:
+`Get-FileHash Verdict-1.1.zip -Algorithm SHA256` (PowerShell) deve combaciare. Sorgente MIT su
 [github.com/Leongithacc/Verdict](https://github.com/Leongithacc/Verdict).
