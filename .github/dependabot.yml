@@ -7,3 +7,10 @@ updates:
     labels:
       - "dependencies"
       - "ci"
+    ignore:
+      # Trio Pages pinnato in pages.yml: con le major nuove (configure-pages 6,
+      # upload-pages-artifact 5, deploy-pages 5) il servizio Pages rifiuta la
+      # deployment (verificato 2/2 il 2026-07-03). Non riproporle.
+      - dependency-name: "actions/configure-pages"
+      - dependency-name: "actions/upload-pages-artifact"
+      - dependency-name: "actions/deploy-pages"
