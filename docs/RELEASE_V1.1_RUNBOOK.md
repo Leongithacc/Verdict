@@ -151,6 +151,42 @@ dotnet run --project src/WPEP.App
 
 Se qualcosa fallisce qui, **STOP**: fixa e riparti dal punto 3. Non taggare codice rotto.
 
+### 3b. Visual QA del design pass cieco (il vero motivo per non taggare prima del 5/7)
+
+I commit della 2ª passata Design sono stati scritti SENZA mai lanciare la GUI (SDK
+non disponibile fino al 5/7). Compilano e i 399 test passano, ma i binding WPF
+falliscono a runtime in SILENZIO (non crashano, semplicemente non renderizzano).
+
+**Revisione statica già fatta (2026-07-03, Fable 5) — tutto ciò che si può verificare
+a tavolino è OK:**
+- `NoiseAngle` esiste sul VM (0°→180°) → target del binding del needle presente.
+- Le chiavi colore `C.*` dei `DynamicResource` (gauge, gradient Card, MissileButton)
+  sono definite staticamente in `Theme.xaml:7-25` → i gradienti risolvono già al load,
+  non restano trasparenti. `ThemePresets.Apply` gira nel ctor di `SettingsViewModel`.
+- `MissileButton`/`GhostButton` (`BasedOn PrimaryButton`) e le icone Path
+  (`BasedOn IconBase`) hanno la base definita PRIMA nel dizionario → risolvono.
+- I `RelativeSource AncestorType=RadioButton/ItemsControl` puntano ad antenati reali.
+
+**Quindi resta solo da controllare a OCCHIO (nessuno di questi è un crash):**
+1. **Gauge Noise Score** — il needle deve puntare all'altezza giusta (score 0 = tutto
+   a sinistra, 100 = tutto a destra) e ruotare quando lo score cambia.
+   ⚠ **RISCHIO NOTO**: il needle (`MainWindow.xaml:81-84`) ha SIA
+   `RenderTransformOrigin="0.5,0.9"` SIA `RotateTransform CenterX="70" CenterY="80"`.
+   In WPF i due centri si SOMMANO → il perno può risultare sfalsato. Se il needle
+   ruota attorno al punto sbagliato, **fix di una riga**: togli
+   `RenderTransformOrigin="0.5,0.9"` dal `<Path>` (tieni solo CenterX/CenterY).
+2. **Card con gradient + drop-shadow** — le Card devono avere il gradiente viola
+   (Surface→Surface2), non un fondo piatto o trasparente.
+3. **Switch premium** (toggle) — l'animazione Storyboard del knob deve scorrere, non
+   saltare; il glow deve apparire su ON.
+4. **Icone Nav sidebar** — le 11 icone Path devono colorarsi con lo state
+   (selezionata = accent, non selezionata = muted), non restare tutte grigie.
+5. **MissileButton** (Session CTA) — deve avere il gradiente accent→rosso.
+6. **Icone ✓ ⚠ ✕** nelle liste — devono essere le Path SVG, non i caratteri emoji.
+
+Se 1-6 sono ok visivamente, il design pass è validato e puoi taggare. Se qualcosa
+è solo brutto (non rotto), valuta se bloccare o rimandare a v1.1.1.
+
 ---
 
 ## 4. Package portatile
