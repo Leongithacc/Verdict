@@ -133,7 +133,7 @@ wpep tools install-presentmon   pinned 2.4.1, SHA256 verified
 wpep apply <id>              show the exact before→after; writes NOTHING
 wpep apply <id> --yes        apply it (verified + journaled); HKLM/boot need admin
 wpep apply-all [--yes]       all recommended+applicable tweaks, one consent, each undoable
-wpep changes                 list journaled sessions (applied / undone)
+wpep changes                 list journaled sessions (applied / undone / interrupted)
 wpep undo <file|last>        restore previous values, verified
 wpep selftest                prove the engine works here (scratch key, full cleanup)
 

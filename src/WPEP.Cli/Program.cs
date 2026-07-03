@@ -1103,6 +1103,11 @@ static int RunChanges()
         WPEP.Execution.ExecutionEngine.DefaultJournalDirectory);
     if (sessions.Count == 0) { Console.WriteLine("Nessuna modifica applicata. Verdict non ha scritto nulla."); return 0; }
 
+    // F14: sessioni interrotte a metà (crash durante l'apply) — read-only.
+    var incomplete = NewEngine().DetectIncompleteSessions()
+        .Select(i => i.JournalFile)
+        .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
     Console.WriteLine($"{sessions.Count} sessioni journaled (più recenti in fondo):\n");
     foreach (var f in sessions)
     {
@@ -1111,10 +1116,15 @@ static int RunChanges()
             var s = JsonSerializer.Deserialize<WPEP.Execution.JournalSession>(File.ReadAllText(f));
             string tweak = s?.Entries.FirstOrDefault()?.TweakId ?? "?";
             bool allUndone = s is { Entries.Count: > 0 } && s.Entries.All(e => e.Undone);
-            Console.WriteLine($"  {Path.GetFileName(f),-54} {tweak} {(allUndone ? "[annullato]" : "[attivo]")}");
+            string state = incomplete.Contains(f) ? "[INCOMPLETO - apply interrotto]"
+                : allUndone ? "[annullato]" : "[attivo]";
+            Console.WriteLine($"  {Path.GetFileName(f),-54} {tweak} {state}");
         }
         catch { Console.WriteLine($"  {Path.GetFileName(f)}  (illeggibile)"); }
     }
+    if (incomplete.Count > 0)
+        Console.WriteLine($"\n{incomplete.Count} sessione/i interrotta/e a metà (il PC si è spento durante l'apply). " +
+            "Annullale con 'wpep undo <file>' per riportare il sistema com'era prima.");
     Console.WriteLine("\nAnnulla con: wpep undo <nomefile>   (o 'wpep undo last')");
     return 0;
 }
