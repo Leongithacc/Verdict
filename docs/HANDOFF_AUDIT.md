@@ -47,7 +47,17 @@ Executed and **CI-verified** this session:
 
 - **F14 (Phase 7) — engine DONE + verified.** `JournalSession.PlannedOps` now records how many ops the plan had (without it, a crash between op N and N+1 is indistinguishable from a completed session). New read-only `ExecutionEngine.DetectIncompleteSessions()` flags sessions with fewer journaled entries than planned, or entries journaled-but-never-verified; legacy journals (PlannedOps=0) are honestly skipped; fully-undone sessions excluded. 5 tests. **CLI surfacing DONE**: `wpep changes` now marks interrupted sessions `[INCOMPLETO - apply interrotto]` with a hint to undo them (no GUI needed, CI-verified). **GUI surfacing intentionally left for the 2026-07-05 visual session**: the natural home is the Changes page ("this tweak was interrupted — undo what was applied?"), to be wired when the GUI can actually be launched and seen.
 
-**All 14 audit findings are now closed and CI-verified** (F14's UI hook pending the visual session). Remaining items are the four Léon-only external actions (A1-A4).
+**All 14 audit findings are now closed and CI-verified.**
+
+**Update 2026-07-04 (release session, Opus 4.8):** F14's GUI hook is DONE — the Changes page now
+surfaces half-applied sessions with an "Interrotto" badge (Path `IconWarn` + `Warn` token, no emoji),
+mirroring the CLI. **v1.1 tagged and released** (build green, 407 tests, GUI visual-QA passed by Léon;
+release asset `Verdict-1.1.zip` + `SHA256SUMS.txt` live). **F12/A3 CLOSED as documented**: the
+ephemeral no-DR stance for the community D1 table is now written in `V7_REMOTE_BACKEND_DESIGN.md §10.1`
+and cross-linked from `PRIVACY.md §4` — an `wrangler d1 export` to R2 is deferred until any "trust the
+numbers" marketing. Remaining Léon-only external actions: **A1** (WAF per-IP — may be unavailable on
+Free `*.workers.dev`, then deferred to a custom domain), **A2** (uptime monitor on `/v1/health`),
+**A4** (optional code-signing cert).
 
 ---
 

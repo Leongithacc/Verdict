@@ -110,6 +110,9 @@ INSERT su una colonna IP.
   `DELETE FROM evidence WHERE received_at < datetime('now','-365 days')`.
   Cache aggregata `stats_cache`: ricostruita ogni notte, di fatto infinita ma
   derivata (nessuna PII).
+  I dati community sono best-effort e **senza backup/DR** per la beta (sono anonimi
+  e ricostruibili): stance accettata, dettagli in
+  [V7_REMOTE_BACKEND_DESIGN.md §10.1](V7_REMOTE_BACKEND_DESIGN.md).
 
 ## 5. Come cancellare i tuoi dati
 

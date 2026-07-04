@@ -225,6 +225,21 @@ lo aggira — il per-rig è un secondo livello, non una difesa. Stato reale:
 Rationale: esiti vecchi di 1 anno hanno scarso valore (driver/Windows/hardware
 sono cambiati). Limit aiuta storage D1 + privacy.
 
+### 10.1 Backup / disaster recovery (stance accettata — audit F12/A3, 2026-07-04)
+
+**Nessun DR per la beta, deliberatamente.** La tabella `evidence` è l'unica copia
+delle submission community, ma i dati sono **anonimi, rolling 365 giorni e non
+critici**: le uniche cose che gli utenti vedono (le aggregazioni `stats_cache`) si
+ricostruiscono dal contenuto vivo. Se il database D1 venisse perso, l'impatto è la
+perdita di uno storico best-effort che si ri-popola da solo man mano che arrivano
+nuove submission — nessun dato personale, nessuna promessa di durabilità infranta.
+
+Un export periodico `wrangler d1 export` verso R2 va valutato **solo** prima di
+qualunque messaggio pubblico/marketing che chieda di "fidarsi dei numeri" della
+community su base storica. Fino ad allora la stance effimera è quella corretta per
+un progetto hobby/beta a maintainer singolo. Cloudflare gestisce già la durabilità
+infrastrutturale di D1 (replica gestita); questo è solo sul *nostro* backup logico.
+
 ## 11. Deployment runbook (una tantum)
 
 ```bash
