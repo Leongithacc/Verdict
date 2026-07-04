@@ -41,6 +41,10 @@ public sealed class ExecutionService
     public string? LatestActiveSessionFor(string tweakId) => _engine.LatestActiveSessionFor(tweakId);
     public IReadOnlyList<string> Sessions() =>
         ExecutionEngine.ListSessions(ExecutionEngine.DefaultJournalDirectory);
+    /// <summary>Read-only scan (audit F14): journaled sessions the process died mid-apply,
+    /// left half-applied. Surfaced in the Changes page as an "interrotto" badge so the user
+    /// can undo what WAS applied. Mirrors the CLI 'wpep changes' marking.</summary>
+    public IReadOnlyList<IncompleteSession> DetectIncompleteSessions() => _engine.DetectIncompleteSessions();
 
     public static bool IsElevated => Elevation.IsElevated();
 
@@ -228,7 +232,7 @@ public sealed class ApplyAllViewModel : ViewModelBase
     }
 }
 
-public sealed record ChangeSession(string File, string Display, string Detail, bool AllUndone);
+public sealed record ChangeSession(string File, string Display, string Detail, bool AllUndone, bool Incomplete);
 
 /// <summary>The Changes page: every journaled apply, undoable in reverse.</summary>
 public sealed class ChangesViewModel : ViewModelBase
@@ -316,8 +320,11 @@ public sealed class ChangesViewModel : ViewModelBase
     public void Refresh()
     {
         Sessions.Clear();
+        var incomplete = _exec.DetectIncompleteSessions()
+            .Select(i => i.JournalFile)
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
         foreach (var file in _exec.Sessions().Reverse())
-            Sessions.Add(Describe(file));
+            Sessions.Add(Describe(file, incomplete.Contains(file)));
         Raise(nameof(IsEmpty));
         Raise(nameof(HasRevertableSessions));
     }
@@ -338,7 +345,7 @@ public sealed class ChangesViewModel : ViewModelBase
             total > 0 ? "Ok" : "Info");
     }
 
-    private static ChangeSession Describe(string file)
+    private static ChangeSession Describe(string file, bool incomplete)
     {
         // Show exactly what each session changed; degrade gracefully if unreadable.
         try
@@ -354,11 +361,11 @@ public sealed class ChangesViewModel : ViewModelBase
                 bool allUndone = session.Entries.All(e => e.Undone);
                 string when = session.StartedAtUtc.ToLocalTime().ToString("yyyy-MM-dd HH:mm");
                 return new ChangeSession(file, $"{tweak} · {when}",
-                    string.Join("\n", lines), allUndone);
+                    string.Join("\n", lines), allUndone, incomplete);
             }
         }
         catch { /* fall through to filename-only */ }
-        return new ChangeSession(file, Path.GetFileNameWithoutExtension(file), "", false);
+        return new ChangeSession(file, Path.GetFileNameWithoutExtension(file), "", false, incomplete);
     }
 
     public RelayCommand<ChangeSession> UndoCommand => new(session =>

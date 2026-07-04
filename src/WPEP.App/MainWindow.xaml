@@ -1162,6 +1162,13 @@
                     <TextBlock Style="{StaticResource Body}" Text="{Binding Display}" />
                     <TextBlock Style="{StaticResource Mono}" FontSize="11" Margin="0,4,0,0"
                                Foreground="{DynamicResource TextMuted}" Text="{Binding Detail}" />
+                    <StackPanel Orientation="Horizontal" Margin="0,6,0,0"
+                                Visibility="{Binding Incomplete, Converter={StaticResource BoolToVis}}">
+                      <Path Style="{StaticResource IconWarn}" Fill="{DynamicResource Warn}"
+                            VerticalAlignment="Center" Margin="0,0,6,0" />
+                      <TextBlock VerticalAlignment="Center" FontSize="11" Foreground="{DynamicResource Warn}"
+                                 Text="Interrotto — apply non completato (il PC si è spento a metà). Annulla per tornare com'era." />
+                    </StackPanel>
                   </StackPanel>
                 </DockPanel>
               </Border>
