@@ -10,6 +10,7 @@ Documento pubblico che confronta Verdict con gli altri strumenti nella categoria
 Vedi anche gli approfondimenti dedicati:
 - [VS_HONE.md](VS_HONE.md) — Hone, il competitor più grosso
 - [VS_RAPTECHPC.md](VS_RAPTECHPC.md) — RapTechPC, insufficient evidence
+- [VS_PLATINUM.md](VS_PLATINUM.md) — Platinum+ Optimizer, script elevato non documentato
 
 ## Chi confrontiamo
 
@@ -18,6 +19,7 @@ Vedi anche gli approfondimenti dedicati:
 | **Verdict** (questo progetto) | Optimizer + measurement | GitHub Releases | Free | MIT |
 | **Hone** | Optimizer preset-based | Epic Games Store | Free + Premium | Closed |
 | **RapTechPC** | Optimizer tool | TikTok social presence | Free (?) | Non verificato |
+| **Platinum+ Optimizer** | Script tweaking (batch/PowerShell) | GitHub + workers.dev | Free | Sorgente senza LICENSE; build `.bat` marcate "Malicious activity" da ANY.RUN |
 | **Wemod** | Game trainer / mod | Wemod client | Free + Pro | Closed |
 | **Iolo System Mechanic** | System optimizer generalista | Web download | Subscription (~$50/y) | Closed |
 | **Advanced SystemCare (IObit)** | System optimizer generalista | Web download | Free + Pro | Closed |
@@ -46,7 +48,7 @@ Legenda: ✓ = fatto in modo verificabile · ~ = parziale · ✗ = no per design
 | Community evidence opt-in con backend privacy-first | ✓ (Worker + D1) | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ |
 | BIOS guide QR per marca | ✓ (6 vendor) | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ |
 | DPC/ISR diagnostics per driver | ✓ (ETW) | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ |
-| Placebo Museum (mostra cosa NON funziona) | ✓ (14 voci) | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ |
+| Placebo Museum (mostra cosa NON funziona) | ✓ (16 voci) | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ | ✗ |
 | Rimozione di funzioni essenziali di Windows | ✗ (per policy) | ✗ | ? | ✗ | ✓ | ✓ | ✗ | ✗ | ✗ |
 | Modifica in-game (trainer / godmode / etc) | ✗ (per policy) | ✗ | ✗ | ✓ (feature) | ✗ | ✗ | ✗ | ✗ | ✗ |
 | FPS limiter | ~ (via NVAPI) | ~ | ? | ✗ | ✗ | ✗ | ✓ (feature) | ✓ | ✗ |
@@ -86,6 +88,17 @@ Legenda: ✓ = fatto in modo verificabile · ~ = parziale · ✗ = no per design
 - Ti fidi del brand
 - **Avvertenza**: entrambi in passato hanno avuto controversie su rimozione
   aggressiva di componenti Windows / registry deep-clean. Verifica reviews recenti.
+
+### Attenzione con **Platinum+ Optimizer**
+- È uno script batch/PowerShell elevato, distribuito **senza README né LICENSE**,
+  che non documenta quali modifiche applica (le scopri solo eseguendolo o in sandbox)
+- Diverse versioni `.bat` sono marcate **"Malicious activity"** dal verdetto
+  automatico del sandbox pubblico ANY.RUN — non è una condanna provata, ma non
+  siamo riusciti a verificarlo come sicuro
+- I tweak di rete che tocca sono gli stessi che la nostra KB classifica come
+  controversi/placebo, e disattiva servizi/aree di sicurezza (es. EFS)
+- Dettagli e fonti verificate in [VS_PLATINUM.md](VS_PLATINUM.md). Per la regola
+  d'oro di Verdict, uno strumento non documentato non è nemmeno una fonte valida
 
 ### Usa **Windows 11 Game Mode + Game Bar nativi** se
 - Non vuoi installare niente di terze parti

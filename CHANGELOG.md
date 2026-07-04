@@ -6,7 +6,16 @@ All notable changes to Verdict are documented here. Format based on
 
 ## [Unreleased]
 
-Niente ancora.
+### Added
+- **2 nuove voci Knowledge Base (Placebo Museum)** dal vetting della ricerca
+  Perplexity 2026-07, entrambe con fonte primaria Microsoft verificata:
+  `tcp-chimney-offload-disable` (feature deprecata da Windows Server 2016 e già
+  off di default → niente da applicare) e `tcp-autotuning-disable` (placebo per
+  il gaming UDP; disattivarlo danneggia il throughput TCP). KB ora a **137 voci**
+  (16 placebo). Trail in [`docs/KB_RESEARCH.md`](docs/KB_RESEARCH.md).
+- **[`docs/VS_PLATINUM.md`](docs/VS_PLATINUM.md)** — analisi competitor onesta di
+  Platinum+Optimizer, nella serie VS_HONE / VS_RAPTECHPC; riga aggiunta a
+  [`docs/COMPARISON.md`](docs/COMPARISON.md).
 
 ## [1.1] — 2026-07-02
 
@@ -14,6 +23,9 @@ Niente ancora.
 - **AI co-pilot — 4 swappable brains**: Ollama (local, default), Anthropic Claude,
   Google Gemini, OpenAI GPT. Cloud API keys encrypted at rest with DPAPI.
   Selectable from Settings page and CLI `wpep copilot --brain ...`.
+- **Changes page flags half-applied sessions** (audit F14): a tweak interrupted
+  mid-apply (crash / power loss) now shows an "Interrotto" badge with an undo hint,
+  mirroring the CLI `wpep changes` marking. Closes the audit's last open UI item.
 - **5 new BIOS-guided tweaks** with verified per-vendor steps (ASUS / MSI /
   Gigabyte / ASRock × IT + EN): Secure Boot, TPM 2.0, Above 4G Decoding, CSM
   disable, Virtualization (VT-x / AMD-V). Required by Vanguard (Valorant) and
