@@ -1,8 +1,6 @@
 # Verdict v1.1
 
-> Testo destinato al body della pagina **GitHub Release v1.1**. Riflette lo stato del progetto al
-> 2026-07-01, pronta per il tag `v1.1` al ritorno al PC di sviluppo il 2026-07-05. Per il changelog
-> tecnico completo → [CHANGELOG.md](../CHANGELOG.md); per l'esperienza dev → [HANDOVER.md](HANDOVER.md).
+> Changelog tecnico completo → [CHANGELOG.md](../CHANGELOG.md) · esperienza dev → [HANDOVER.md](HANDOVER.md).
 
 ## In una riga
 
