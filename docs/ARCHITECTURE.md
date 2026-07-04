@@ -36,7 +36,7 @@ backend è **stateless per richiesta** e memorizza solo record anonimi aggregabi
 │      ▼           ▼               ▼                        │
 │  ┌─────────┐ ┌──────────┐  ┌────────────────┐            │
 │  │Analyzer │ │Execution │  │KnowledgeBase   │            │
-│  │(WMI,ETW,│ │(V2 engine│  │(135 entries,   │            │
+│  │(WMI,ETW,│ │(V2 engine│  │(137 entries,   │            │
 │  │Registry,│ │ registry │  │ tweaks.json)   │            │
 │  │Steam,   │ │ powercfg │  └────────────────┘            │
 │  │Epic,    │ │ bcdedit  │                                 │

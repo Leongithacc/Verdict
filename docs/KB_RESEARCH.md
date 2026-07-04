@@ -66,3 +66,25 @@ da registry stanno tutte tra controverso e placebo.
 
 URL completi nel JSON: `src/WPEP.KnowledgeBase/kb/tweaks.json` (validati a load time:
 fonte obbligatoria se non placebo, rollback e passi manuali obbligatori sempre).
+
+## Vetting ricerca Perplexity 2026-07 (post-v1.1)
+
+Léon ha fatto vagliare 3 ricerche Perplexity (threat analysis di Platinum+Optimizer,
+tassonomia tweak Windows, workflow A/B). **~90% era già in KB** — spesso già smontato
+come placebo/controversial (Game Mode, HAGS, core parking, NetworkThrottlingIndex,
+SysMain, trasparenze, dGPU preference, USB selective suspend, dynamic tick, Nagle…) —
+e la "metodologia A/B" proposta è ciò che Verdict già implementa con statistica migliore
+(Mann-Whitney + bootstrap + noise gate + journal/undo). L'unico asset davvero nuovo è il
+doc competitor [`VS_PLATINUM.md`](VS_PLATINUM.md).
+
+Sono stati vagliati **3 candidati KB** con la regola d'oro (fonte primaria Microsoft
+verificata live via WebFetch, 2026-07-04):
+
+| Candidato | Esito | Fonte primaria |
+|---|---|---|
+| **TCP Chimney Offload disable** (`netsh int tcp set global chimney=disabled`) | ✅ **Aggiunto — placebo** (`tcp-chimney-offload-disable`). Feature deprecata da Windows Server 2016 e già `disabled` di default: il comando spegne qualcosa di già spento. | [net-sub-performance-tuning-nics](https://learn.microsoft.com/en-us/windows-server/networking/technologies/network-subsystem/net-sub-performance-tuning-nics) — *"Don't use… TCP Chimney Offload. These technologies are deprecated in Windows Server 2016"* |
+| **TCP Auto-Tuning disable** (`autotuninglevel=disabled`) | ✅ **Aggiunto — placebo** (`tcp-autotuning-disable`, `risk=low` con risk_notes). Placebo per il gaming (traffico UDP); disattivarlo fissa la finestra TCP e **danneggia** il throughput. MS lo documenta solo come workaround per router/firewall vecchi non-RFC1323. | [net-sub-performance-tuning-nics](https://learn.microsoft.com/en-us/windows-server/networking/technologies/network-subsystem/net-sub-performance-tuning-nics) + [receive-window-auto-tuning-for-http](https://learn.microsoft.com/en-us/troubleshoot/windows-server/networking/receive-window-auto-tuning-for-http) |
+| **RSS / NIC offload toggles disable** | ⛔ **Skipped, no gaming source.** MS documenta gli offload come *"usually beneficial"* e per bassa latenza raccomanda di **abilitarli**, non disattivarli. Nessuna fonte su un beneficio gaming del disabilitare RSS/offload; l'opposto (RSS *enabled*) è già in KB come `nic-rss-enable`. | — (nessuna fonte primaria a favore del disable → non aggiunto) |
+
+KB: **135 → 137 voci** (placebo 14 → 16). Vedi anche [`VS_PLATINUM.md`](VS_PLATINUM.md).
+Nota per fra tre mesi: non rifare questo vetting — questi tre sono già stati chiusi.

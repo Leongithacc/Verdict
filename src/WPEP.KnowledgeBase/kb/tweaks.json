@@ -3822,5 +3822,56 @@
       "undo": "manual-steps",
       "gui_only_reason": "Device Manager tab — registry equivalente e' per-instance (PnP GUID) non stabile cross-hardware"
     }
+  },
+  {
+    "id": "tcp-chimney-offload-disable",
+    "name": "Disattivare TCP Chimney Offload 'per la rete'",
+    "category": "network",
+    "description": "Pezzo da museo. TCP Chimney Offload è una tecnologia che Microsoft documenta come DEPRECATA da Windows Server 2016 ('might adversely affect performance') e che sui Windows moderni è già disabilitata di default (l'output di 'netsh int tcp show global' mostra 'Chimney Offload State : disabled'). Il comando 'netsh int tcp set global chimney=disabled' che girano le guide disattiva qualcosa che è già spento: non cambia nulla.",
+    "hardware_prerequisites": [],
+    "expected_impact": "Zero. La feature è deprecata e già disattivata di default: non c'è niente da spegnere.",
+    "evidence_level": "placebo",
+    "sources": [
+      "https://learn.microsoft.com/en-us/windows-server/networking/technologies/network-subsystem/net-sub-performance-tuning-nics"
+    ],
+    "risk": "none",
+    "risk_notes": "",
+    "rollback": "Se per qualche motivo era stato abilitato: 'netsh int tcp set global chimney=enabled' da prompt admin (sconsigliato, è deprecato). Il default corretto è disabled.",
+    "manual_steps": "Non necessario. Verifica lo stato con 'netsh int tcp show global' da prompt: su Windows moderni 'Chimney Offload State' è già 'disabled'.",
+    "conflicts_with": [],
+    "measurable": false,
+    "apply": {
+      "method": "gui-only",
+      "operations": [],
+      "requires_reboot": false,
+      "undo": "manual-steps",
+      "gui_only_reason": "Placebo/pezzo da museo: TCP Chimney Offload è deprecato da Windows Server 2016 e già off di default. Niente da applicare."
+    }
+  },
+  {
+    "id": "tcp-autotuning-disable",
+    "name": "Disattivare TCP Receive Window Auto-Tuning 'per il lag'",
+    "category": "network",
+    "description": "Consigliato ovunque per il 'lag', ma è un placebo per il gaming e potenzialmente dannoso. L'Auto-Tuning scala dinamicamente la finestra di ricezione TCP per sfruttare tutta la banda; Microsoft documenta che il livello 'disabled' fissa la finestra al valore di default e che disabilitarlo serve SOLO come workaround per router/firewall vecchi non conformi a RFC 1323 — non come ottimizzazione. I giochi competitivi usano UDP (l'auto-tuning è una feature del receive window TCP), quindi sul ping in-game l'effetto è nullo.",
+    "hardware_prerequisites": [],
+    "expected_impact": "Zero sul ping/latenza in partita (traffico di gioco UDP). Sul lato TCP disattivarlo può solo peggiorare il throughput di download, aggiornamenti e copie di rete.",
+    "evidence_level": "placebo",
+    "sources": [
+      "https://learn.microsoft.com/en-us/windows-server/networking/technologies/network-subsystem/net-sub-performance-tuning-nics",
+      "https://learn.microsoft.com/en-us/troubleshoot/windows-server/networking/receive-window-auto-tuning-for-http"
+    ],
+    "risk": "low",
+    "risk_notes": "Disattivarlo fissa la finestra TCP al default e riduce il throughput dei trasferimenti su reti a banda-latenza elevata. Microsoft lo documenta come workaround per hardware di rete vecchio non-RFC1323, non come tweak di performance.",
+    "rollback": "'netsh interface tcp set global autotuninglevel=normal' da prompt admin (normal è il default di fabbrica).",
+    "manual_steps": "Non farlo per il gaming. Se e solo se un router/firewall datato rompe le connessioni, Microsoft indica 'netsh interface tcp set global autotuninglevel=disabled' come workaround temporaneo, poi ripristinare 'normal'.",
+    "conflicts_with": [],
+    "measurable": false,
+    "apply": {
+      "method": "gui-only",
+      "operations": [],
+      "requires_reboot": false,
+      "undo": "manual-steps",
+      "gui_only_reason": "Placebo per il gaming (traffico UDP) e dannoso per il throughput TCP: Microsoft lo documenta solo come workaround per rete vecchia. Niente da applicare."
+    }
   }
 ]
