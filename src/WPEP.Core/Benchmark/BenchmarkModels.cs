@@ -38,9 +38,15 @@ public sealed record RunEnvironment(
         $"plan {PowerPlanGuid}";
 }
 
+/// <summary>Optional tags tying a run to what produced it: the game, the tweak under test, and the
+/// phase ("baseline"/"post"). Null for runs recorded before this field (legacy) or captured ad-hoc —
+/// the Storico page uses them to group runs and pair baseline↔post for a verdict.</summary>
+public sealed record RunTags(string? Game = null, string? TweakId = null, string? Phase = null);
+
 /// <summary>A complete benchmark run: metrics plus the full frametime series,
 /// kept so the Statistics module can compare whole distributions later.
-/// Environment is null only for runs recorded before F10 (legacy).</summary>
+/// Environment is null only for runs recorded before F10 (legacy);
+/// Tags is null for legacy/ad-hoc runs (see <see cref="RunTags"/>).</summary>
 public sealed record BenchmarkRun(
     string Label,
     string ProcessName,
@@ -48,4 +54,5 @@ public sealed record BenchmarkRun(
     double RequestedSeconds,
     RunMetrics Metrics,
     IReadOnlyList<double> FrameTimesMs,
-    RunEnvironment? Environment = null);
+    RunEnvironment? Environment = null,
+    RunTags? Tags = null);
