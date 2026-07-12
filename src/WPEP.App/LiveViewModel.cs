@@ -25,7 +25,8 @@ public sealed class LiveViewModel : ViewModelBase
     }
 
     public string CpuText => _last is null ? "—" : $"{_last.CpuPercent:F0}%";
-    public string RamText => _last is null ? "—" : $"{_last.RamUsedGb:F1} / {_last.RamTotalGb:F1} GB";
+    public string RamText => _last is null ? "—"
+        : $"{(_last.RamTotalGb > 0 ? _last.RamUsedGb / _last.RamTotalGb * 100 : 0):F0}%  ·  {_last.RamUsedGb:F1} / {_last.RamTotalGb:F1} GB";
     public bool HasGpu => _last?.Gpu is not null;
     public bool GpuUnavailable => _last is not null && _last.Gpu is null;
     public string GpuUtilText => _last?.Gpu?.UtilPercent is { } u ? $"{u:F0}%" : "—";
