@@ -7,6 +7,18 @@ All notable changes to Verdict are documented here. Format based on
 ## [Unreleased]
 
 ### Added
+- **Pagina "Live" — telemetria in tempo reale** (1 Hz): CPU%/RAM sempre, GPU
+  utilizzo/temperatura/clock se NVIDIA (via `nvidia-smi`, con fallback onesto),
+  sparkline CPU dell'ultimo minuto. Read-only, anti-cheat safe; il polling si
+  ferma da solo quando la pagina non è visibile o la finestra è minimizzata.
+- **Pagina "Storico" — misure nel tempo**: le run Ghost/wizard persistite su disco
+  diventano una vista con verdetto before/after per sessione (stessa statistica del
+  wizard) e trend della mediana frametime. Legge run vecchie e nuove insieme.
+- **Pagina "Gioco" — ottimizza-per-gioco di prima classe**: scegli un titolo →
+  tweak di sistema con evidenza applicabili col toggle (journal/undo) + impostazioni
+  in-game/driver; "Misura l'effetto" apre il wizard. Promossa dal Lab (default-on).
+- **`RunTags` opzionali su `BenchmarkRun`** (gioco/tweak/fase) con JSON back-compat
+  per taggare le misure future senza rompere quelle vecchie.
 - **2 nuove voci Knowledge Base (Placebo Museum)** dal vetting della ricerca
   Perplexity 2026-07, entrambe con fonte primaria Microsoft verificata:
   `tcp-chimney-offload-disable` (feature deprecata da Windows Server 2016 e già

@@ -238,3 +238,50 @@ non intrusivo (piccola pill verde a lato).
   2ª passata deve funzionare con TUTTI e 10, non solo Villain. Test mentale: il gauge
   cockpit su un tema "Aurora" (chiaro) resta leggibile? Se no, ridefinire con
   `DynamicResource` invece che hardcoded.
+
+## AGGIORNAMENTO 2026-07-04 — 3 PAGINE NUOVE da elevare (feature "più potente")
+
+Opus ha aggiunto 3 pagine di prima classe (nav a sinistra). Sono **funzionali e stabili**,
+markup volutamente minimo con gli stili esistenti (`Card`, `Switch`, `Mono`, `H1/H2`, `Muted`,
+token `Accent`/`Text`/`TextMuted`/`OnAccent`, converter `TokenBrush`). **Tocca solo la
+rappresentazione**: i binding e i ViewModel NON si muovono. Gusto Léon invariato (carbonio,
+viola villain `#4A0080`, cockpit/fighter-jet, no emoji — i glyph nav sono `Path` stroke).
+
+### A. Pagina "Gioco" (`GameViewModel`, DataTemplate `local:GameViewModel`, nav icona rombo)
+- **Scopo:** scegli un titolo → tweak di sistema con evidenza (applicabili col toggle) + impostazioni
+  in-game/driver informative; bottone "Misura l'effetto".
+- **Da elevare:** il `ComboBox` selettore titolo (ora spoglio); le due colonne "TWEAK DI SISTEMA"
+  (righe con toggle `Switch`) e "IN-GAME / DRIVER" (righe nome+dettaglio) — dategli gerarchia e
+  profondità cockpit; il bottone "Misura l'effetto" come CTA. Stato "disattivato dal Lab" e
+  "serve scansione" sono due `Border Card` da rendere eleganti, non spogli.
+
+### B. Pagina "Storico" (`HistoryViewModel`, DataTemplate `local:HistoryViewModel`, nav icona trend)
+- **Scopo:** le misure nel tempo. Lista sessioni col verdetto before/after (badge colorato via
+  `TokenBrush`: Ok/Danger/Warn/Neutral) + **sparkline trend** (Polyline in un `Viewbox`, `TrendPoints`).
+- **Da elevare:** lo sparkline è una `Polyline` grezza dentro `Viewbox Width=260` — trasformalo in un
+  vero grafico cockpit (griglia leggera, punto finale evidenziato, gradiente sotto la linea se vuoi,
+  asse tempo→). Le righe-sessione (`Card` con badge verdetto) meritano il trattamento "risultato".
+  Empty-state e bottone "Apri la cartella delle run" da rifinire.
+
+### C. Pagina "Live" (`LiveViewModel`, DataTemplate `local:LiveViewModel`, nav icona onda/battito)
+- **Scopo:** telemetria real-time 1 Hz. Card CPU% e RAM (numeri `Mono` grandi), sparkline CPU
+  ultimo minuto (`CpuTrend`), riquadro GPU (util/temp/clock) se NVIDIA, else messaggio onesto.
+- **Da elevare:** questa è LA pagina "abitacolo fighter-jet". I due numeri CPU/RAM come **strumenti**
+  (gauge o barre animate?), lo sparkline CPU come un cardiofrequenzimetro, il blocco GPU a 3 strumenti.
+  È la vetrina della vibe cockpit: qui il viola villain + glow rendono di più.
+- **Vincolo tecnico:** i valori arrivano da un `DispatcherTimer` 1 Hz; se aggiungi animazioni non
+  legarle a `Poll()` (jitter). Le `PointCollection` (`CpuTrend`/`TrendPoints`) sono in coordinate
+  VM-space normalizzate in un box fisso — se cambi il box, è nel VM, non nello XAML.
+
+### Priorità (3 pagine)
+1. **Live** (massimo impatto cockpit).
+2. **Storico** (lo sparkline trend è il pezzo forte).
+3. **Gioco** (più semplice, ma il selettore + le due colonne vogliono gerarchia).
+
+### Invarianti (come sopra) + specifici
+- Sparkline: restano `Polyline`/`PointCollection` **senza librerie esterne** (dependency hygiene: 4
+  NuGet totali). Se servono gradienti/griglie, `DynamicResource` in `Theme.xaml`, mai hardcoded.
+- La pagina Live deve restare leggera: niente effetti che girano quando la pagina non è visibile
+  (il timer si ferma da solo su nav-leave/minimize — non aggiungere animazioni infinite globali).
+- Tutti gli stati (empty, "solo NVIDIA", "serve scansione", "disattivato dal Lab") vanno stilizzati,
+  non lasciati come `Border` spogli.
