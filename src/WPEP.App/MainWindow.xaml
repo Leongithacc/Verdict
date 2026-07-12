@@ -1619,6 +1619,69 @@
       </ScrollViewer>
     </DataTemplate>
 
+    <!-- ============ LIVE (telemetria in tempo reale) ============ -->
+    <DataTemplate DataType="{x:Type local:LiveViewModel}">
+      <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <StackPanel Margin="32,24" MaxWidth="900" HorizontalAlignment="Left">
+          <TextBlock Style="{StaticResource H1}" Text="Live" />
+          <TextBlock Style="{StaticResource Muted}" Margin="0,4,0,16" TextWrapping="Wrap"
+                     Text="Telemetria in tempo reale (1 aggiornamento al secondo). Sola lettura, nessuna scrittura — anti-cheat safe. Il polling si ferma quando lasci questa pagina o minimizzi." />
+
+          <UniformGrid Columns="2" Margin="0,0,0,12">
+            <Border Style="{StaticResource Card}" Margin="0,0,8,0">
+              <StackPanel>
+                <TextBlock Style="{StaticResource Mono}" FontSize="30" Foreground="{DynamicResource Accent}" Text="{Binding CpuText}" />
+                <TextBlock Style="{StaticResource H2}" Text="CPU" Margin="0,6,0,0" />
+              </StackPanel>
+            </Border>
+            <Border Style="{StaticResource Card}" Margin="8,0,0,0">
+              <StackPanel>
+                <TextBlock Style="{StaticResource Mono}" FontSize="30" Foreground="{DynamicResource Accent}" Text="{Binding RamText}" />
+                <TextBlock Style="{StaticResource H2}" Text="RAM" Margin="0,6,0,0" />
+              </StackPanel>
+            </Border>
+          </UniformGrid>
+
+          <Border Style="{StaticResource Card}" Padding="18,14" Margin="0,0,0,12"
+                  Visibility="{Binding HasTrend, Converter={StaticResource BoolToVis}}">
+            <StackPanel>
+              <TextBlock FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource Accent}" Text="CPU — ULTIMO MINUTO" />
+              <Viewbox Height="56" HorizontalAlignment="Left" Margin="0,8,0,0" Stretch="Fill" Width="260">
+                <Polyline Points="{Binding CpuTrend}" Stroke="{DynamicResource Accent}" StrokeThickness="2" StrokeLineJoin="Round" />
+              </Viewbox>
+            </StackPanel>
+          </Border>
+
+          <Border Style="{StaticResource Card}" Padding="18,14"
+                  Visibility="{Binding HasGpu, Converter={StaticResource BoolToVis}}">
+            <StackPanel>
+              <TextBlock Text="GPU (NVIDIA)" Style="{StaticResource H2}" />
+              <UniformGrid Columns="3" Margin="0,10,0,0">
+                <StackPanel>
+                  <TextBlock Style="{StaticResource Mono}" FontSize="22" Foreground="{DynamicResource Text}" Text="{Binding GpuUtilText}" />
+                  <TextBlock Style="{StaticResource Muted}" FontSize="11" Text="Utilizzo" />
+                </StackPanel>
+                <StackPanel>
+                  <TextBlock Style="{StaticResource Mono}" FontSize="22" Foreground="{DynamicResource Text}" Text="{Binding GpuTempText}" />
+                  <TextBlock Style="{StaticResource Muted}" FontSize="11" Text="Temperatura" />
+                </StackPanel>
+                <StackPanel>
+                  <TextBlock Style="{StaticResource Mono}" FontSize="22" Foreground="{DynamicResource Text}" Text="{Binding GpuClockText}" />
+                  <TextBlock Style="{StaticResource Muted}" FontSize="11" Text="Clock core" />
+                </StackPanel>
+              </UniformGrid>
+            </StackPanel>
+          </Border>
+
+          <Border Style="{StaticResource Card}" Padding="18,14"
+                  Visibility="{Binding GpuUnavailable, Converter={StaticResource BoolToVis}}">
+            <TextBlock Style="{StaticResource Muted}" TextWrapping="Wrap"
+                       Text="GPU: telemetria non disponibile (per ora solo NVIDIA via nvidia-smi)." />
+          </Border>
+        </StackPanel>
+      </ScrollViewer>
+    </DataTemplate>
+
     <!-- ============ STORICO (misure nel tempo) ============ -->
     <DataTemplate DataType="{x:Type local:HistoryViewModel}">
       <ScrollViewer VerticalScrollBarVisibility="Auto">
@@ -1979,6 +2042,13 @@
                 <Path Width="16" Height="16" Stretch="Uniform" Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=RadioButton}}" StrokeThickness="1.5" Fill="Transparent"
                       Data="M 8 2 L 8 10 M 4 6 L 12 6 M 4 10 L 12 10 M 4 14 L 12 14" Margin="0,0,10,0" VerticalAlignment="Center" />
                 <TextBlock Text="Diagnostica" VerticalAlignment="Center" />
+              </StackPanel>
+            </RadioButton>
+            <RadioButton x:Name="NavLive" Style="{StaticResource NavButton}" Checked="OnNavLive">
+              <StackPanel Orientation="Horizontal">
+                <Path Width="16" Height="16" Stretch="Uniform" Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=RadioButton}}" StrokeThickness="1.5" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round" Fill="Transparent"
+                      Data="M 2 8 L 5 8 L 7 3 L 9 13 L 11 8 L 14 8" Margin="0,0,10,0" VerticalAlignment="Center" />
+                <TextBlock Text="Live" VerticalAlignment="Center" />
               </StackPanel>
             </RadioButton>
             <RadioButton x:Name="NavKb" Style="{StaticResource NavButton}" Checked="OnNavKb">

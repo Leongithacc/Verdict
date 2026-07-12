@@ -33,11 +33,24 @@ public partial class MainWindow : Window
                 CoPilotViewModel => NavCoPilot,
                 GameViewModel => NavGame,
                 HistoryViewModel => NavHistory,
+                LiveViewModel => NavLive,
                 SettingsViewModel => NavSettings,
                 _ => null,
             };
             if (radio is not null)
                 radio.IsChecked = true;
+            // Il polling live gira solo sulla pagina Live: fermalo appena si va altrove.
+            if (_vm.CurrentPage is not LiveViewModel)
+                _vm.Live.Stop();
+        };
+
+        // Ferma/riprendi il polling live col minimize (nessuno spreco se la finestra è nascosta).
+        StateChanged += (_, _) =>
+        {
+            if (WindowState == WindowState.Minimized)
+                _vm.Live.Stop();
+            else if (_vm.CurrentPage is LiveViewModel)
+                _vm.Live.Start();
         };
     }
 
@@ -144,6 +157,11 @@ public partial class MainWindow : Window
     {
         _vm.History.Refresh();    // rilegge le run dal disco a ogni apertura
         _vm.CurrentPage = _vm.History;
+    }
+    private void OnNavLive(object s, RoutedEventArgs e)
+    {
+        _vm.CurrentPage = _vm.Live;
+        _vm.Live.Start();         // primo campione immediato + avvio timer 1 Hz
     }
     private void OnNavLab(object s, RoutedEventArgs e) => _vm.CurrentPage = _vm.Lab;
     private void OnNavCoPilot(object s, RoutedEventArgs e) => _vm.CurrentPage = _vm.CoPilot;
