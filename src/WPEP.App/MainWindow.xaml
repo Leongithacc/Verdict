@@ -224,51 +224,7 @@
             </StackPanel>
           </Border>
 
-          <!-- Optimize for [game] (Lab feature): pick a title, see its tailored plan. -->
-          <Border Style="{StaticResource Card}" Margin="0,12,0,0" Padding="18,14"
-                  Visibility="{Binding ShowOptimizeForGame, Converter={StaticResource BoolToVis}}">
-            <StackPanel>
-              <StackPanel Orientation="Horizontal">
-                <TextBlock Text="🎯" FontSize="16" VerticalAlignment="Center" />
-                <TextBlock Text="Ottimizza per gioco" Style="{StaticResource H2}" Margin="8,0,0,0" />
-                <ComboBox ItemsSource="{Binding Games}" SelectedItem="{Binding SelectedGame}"
-                          Width="180" Margin="16,0,0,0" VerticalAlignment="Center" />
-              </StackPanel>
-              <TextBlock Style="{StaticResource Muted}" Margin="0,6,0,0" TextWrapping="Wrap"
-                         Text="Scegli un titolo: Verdict raccoglie i tweak di sistema con evidenza + le impostazioni in-game/driver ottimali per QUEL gioco." />
-              <Grid Margin="0,12,0,0"
-                    Visibility="{Binding SelectedGame, Converter={StaticResource NullToVis}}">
-                <Grid.ColumnDefinitions>
-                  <ColumnDefinition Width="*" />
-                  <ColumnDefinition Width="*" />
-                </Grid.ColumnDefinitions>
-                <StackPanel Grid.Column="0" Margin="0,0,8,0">
-                  <TextBlock Text="TWEAK DI SISTEMA" FontSize="11" FontWeight="SemiBold"
-                             Foreground="{DynamicResource Accent}" Margin="0,0,0,4" />
-                  <ItemsControl ItemsSource="{Binding GameSystemTweaks}">
-                    <ItemsControl.ItemTemplate><DataTemplate>
-                      <TextBlock Text="{Binding}" Foreground="{DynamicResource Text}"
-                                 TextWrapping="Wrap" Margin="0,2" />
-                    </DataTemplate></ItemsControl.ItemTemplate>
-                  </ItemsControl>
-                </StackPanel>
-                <StackPanel Grid.Column="1" Margin="8,0,0,0">
-                  <TextBlock Text="IN-GAME / DRIVER" FontSize="11" FontWeight="SemiBold"
-                             Foreground="{DynamicResource Accent}" Margin="0,0,0,4" />
-                  <ItemsControl ItemsSource="{Binding GameInGameSettings}">
-                    <ItemsControl.ItemTemplate><DataTemplate>
-                      <StackPanel Margin="0,2">
-                        <TextBlock Text="{Binding Name}" Foreground="{DynamicResource Text}"
-                                   FontWeight="SemiBold" TextWrapping="Wrap" />
-                        <TextBlock Text="{Binding Detail}" Style="{StaticResource Muted}"
-                                   FontSize="11" TextWrapping="Wrap" />
-                      </StackPanel>
-                    </DataTemplate></ItemsControl.ItemTemplate>
-                  </ItemsControl>
-                </StackPanel>
-              </Grid>
-            </StackPanel>
-          </Border>
+          <!-- Optimize-for-game è ora una pagina dedicata (nav "Gioco") — vedi GameViewModel. -->
 
           <UniformGrid Columns="3" Margin="0,24,0,0">
             <Border Style="{StaticResource Card}" Margin="0,0,8,0">
@@ -1663,6 +1619,96 @@
       </ScrollViewer>
     </DataTemplate>
 
+    <!-- ============ GIOCO (ottimizza per gioco, promosso dal Lab) ============ -->
+    <DataTemplate DataType="{x:Type local:GameViewModel}">
+      <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <StackPanel Margin="32,24" MaxWidth="900" HorizontalAlignment="Left">
+          <TextBlock Style="{StaticResource H1}" Text="Gioco" />
+          <TextBlock Style="{StaticResource Muted}" Margin="0,4,0,16" TextWrapping="Wrap"
+                     Text="Scegli un titolo: Verdict raccoglie i tweak di sistema con evidenza (applicabili qui col toggle) + le impostazioni in-game/driver ottimali per QUEL gioco." />
+
+          <Border Style="{StaticResource Card}" Padding="18,14"
+                  Visibility="{Binding IsEnabled, Converter={StaticResource BoolToVisInverted}}">
+            <TextBlock TextWrapping="Wrap" Foreground="{DynamicResource TextMuted}"
+                       Text="La funzione 'Ottimizza per gioco' è disattivata. Attivala dal Lab per usare questa pagina." />
+          </Border>
+
+          <StackPanel Orientation="Horizontal" Margin="0,0,0,14"
+                      Visibility="{Binding IsEnabled, Converter={StaticResource BoolToVis}}">
+            <TextBlock Text="Titolo:" VerticalAlignment="Center" Foreground="{DynamicResource Text}" />
+            <ComboBox ItemsSource="{Binding Games}" SelectedItem="{Binding SelectedGame}"
+                      Width="220" Margin="10,0,0,0" VerticalAlignment="Center" />
+            <Button Style="{StaticResource GhostButton}" Content="Misura l'effetto" Margin="16,0,0,0"
+                    Command="{Binding MeasureCommand}"
+                    Visibility="{Binding HasSelection, Converter={StaticResource BoolToVis}}" />
+          </StackPanel>
+
+          <Border Style="{StaticResource Card}" Padding="18,14"
+                  Visibility="{Binding NeedsScan, Converter={StaticResource BoolToVis}}">
+            <TextBlock TextWrapping="Wrap" Foreground="{DynamicResource TextMuted}"
+                       Text="Fai prima una scansione dalla pagina Verdict: serve per sapere quali tweak sono già attivi sul tuo PC e quali si possono applicare." />
+          </Border>
+
+          <Grid Visibility="{Binding ShowPlan, Converter={StaticResource BoolToVis}}">
+            <Grid.ColumnDefinitions>
+              <ColumnDefinition Width="*" />
+              <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+
+            <Border Grid.Column="0" Style="{StaticResource Card}" Margin="0,0,8,0" Padding="18,14" VerticalAlignment="Top">
+              <StackPanel>
+                <TextBlock Text="TWEAK DI SISTEMA" FontSize="11" FontWeight="SemiBold"
+                           Foreground="{DynamicResource Accent}" Margin="0,0,0,8" />
+                <ItemsControl ItemsSource="{Binding SystemTweaks}">
+                  <ItemsControl.ItemTemplate><DataTemplate>
+                    <Grid Margin="0,4">
+                      <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                      </Grid.ColumnDefinitions>
+                      <StackPanel Grid.Column="0" Margin="0,0,8,0">
+                        <TextBlock Text="{Binding Name}" Foreground="{DynamicResource Text}"
+                                   FontWeight="SemiBold" TextWrapping="Wrap" />
+                        <TextBlock Text="{Binding StateNote}" Style="{StaticResource Muted}"
+                                   FontSize="11" TextWrapping="Wrap" />
+                      </StackPanel>
+                      <ToggleButton Grid.Column="1" Style="{StaticResource Switch}" VerticalAlignment="Center"
+                                    IsChecked="{Binding IsOn, Mode=TwoWay}"
+                                    IsEnabled="{Binding ToggleEnabled}"
+                                    ToolTip="{Binding StatusLine}" />
+                    </Grid>
+                  </DataTemplate></ItemsControl.ItemTemplate>
+                </ItemsControl>
+                <TextBlock Style="{StaticResource Muted}" FontSize="11" Margin="0,4,0,0"
+                           Visibility="{Binding HasSystemTweaks, Converter={StaticResource BoolToVisInverted}}"
+                           Text="Nessun tweak di sistema applicabile per il tuo rig." />
+              </StackPanel>
+            </Border>
+
+            <Border Grid.Column="1" Style="{StaticResource Card}" Margin="8,0,0,0" Padding="18,14" VerticalAlignment="Top">
+              <StackPanel>
+                <TextBlock Text="IN-GAME / DRIVER" FontSize="11" FontWeight="SemiBold"
+                           Foreground="{DynamicResource Accent}" Margin="0,0,0,8" />
+                <ItemsControl ItemsSource="{Binding InGameSettings}">
+                  <ItemsControl.ItemTemplate><DataTemplate>
+                    <StackPanel Margin="0,4">
+                      <TextBlock Text="{Binding Name}" Foreground="{DynamicResource Text}"
+                                 FontWeight="SemiBold" TextWrapping="Wrap" />
+                      <TextBlock Text="{Binding Detail}" Style="{StaticResource Muted}"
+                                 FontSize="11" TextWrapping="Wrap" />
+                    </StackPanel>
+                  </DataTemplate></ItemsControl.ItemTemplate>
+                </ItemsControl>
+                <TextBlock Style="{StaticResource Muted}" FontSize="11" Margin="0,4,0,0"
+                           Visibility="{Binding HasInGameSettings, Converter={StaticResource BoolToVisInverted}}"
+                           Text="Nessuna impostazione in-game dedicata per questo titolo." />
+              </StackPanel>
+            </Border>
+          </Grid>
+        </StackPanel>
+      </ScrollViewer>
+    </DataTemplate>
+
     <DataTemplate DataType="{x:Type local:SettingsViewModel}">
       <ScrollViewer VerticalScrollBarVisibility="Auto">
         <StackPanel Margin="32,24" MaxWidth="640" HorizontalAlignment="Left">
@@ -1859,6 +1905,13 @@
                 <Path Width="16" Height="16" Stretch="Uniform" Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=RadioButton}}" StrokeThickness="1.5" StrokeStartLineCap="Round" StrokeEndLineCap="Round" Fill="Transparent"
                       Data="M 3 13 L 3 8 M 7 13 L 7 5 M 11 13 L 11 3" Margin="0,0,10,0" VerticalAlignment="Center" />
                 <TextBlock Text="Misura" VerticalAlignment="Center" />
+              </StackPanel>
+            </RadioButton>
+            <RadioButton x:Name="NavGame" Style="{StaticResource NavButton}" Checked="OnNavGame">
+              <StackPanel Orientation="Horizontal">
+                <Path Width="16" Height="16" Stretch="Uniform" Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=RadioButton}}" StrokeThickness="1.5" StrokeLineJoin="Round" Fill="Transparent"
+                      Data="M 8 2 L 14 8 L 8 14 L 2 8 Z M 8 5 L 11 8 L 8 11 L 5 8 Z" Margin="0,0,10,0" VerticalAlignment="Center" />
+                <TextBlock Text="Gioco" VerticalAlignment="Center" />
               </StackPanel>
             </RadioButton>
             <RadioButton x:Name="NavDiagnostics" Style="{StaticResource NavButton}" Checked="OnNavDiagnostics">

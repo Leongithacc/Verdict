@@ -65,7 +65,7 @@ public static class FeatureCatalog
 
         // ── Intelligenza per-gioco ──────────────────────────────────────────────
         new(OptimizeForGame, "Ottimizza per [gioco]", "Un click: tweak di sistema + impostazioni in-game/NVIDIA ottimali per QUEL titolo.",
-            "Per-gioco", Status: FeatureStatus.Beta, Glyph: "🎯", Where: "Verdict (pannello gioco)"),
+            "Per-gioco", DefaultEnabled: true, Status: FeatureStatus.Stable, Glyph: "🎯", Where: "Gioco (pagina)"),
         new(NetworkDuel, "Network Duel", "Ping/jitter/bufferbloat verso i server DEI TUOI giochi, con voto.",
             "Per-gioco", Status: FeatureStatus.Experimental, Glyph: "🛰", Where: "Diagnostica"),
 

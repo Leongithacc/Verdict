@@ -1,4 +1,5 @@
 using WPEP.Advisor;
+using WPEP.Core.SystemInfo;
 using WPEP.KnowledgeBase;
 using Xunit;
 
@@ -54,5 +55,30 @@ public class OptimizeForGameTests
         var plan = OptimizeForGame.Build("minesweeper", Kb);
         Assert.NotEmpty(plan.SystemTweaks);
         Assert.Empty(plan.InGameSettings);
+    }
+
+    [Fact]
+    public void Build_WithSnapshot_DropsTweaksNotApplicableToRig()
+    {
+        // Il tailoring sul rig è il path usato dalla pagina Gioco (GameViewModel passa lo snapshot):
+        // un tweak "solo NVIDIA" deve sparire su un rig AMD, uno senza prerequisiti deve restare.
+        var kb = new[]
+        {
+            E("sys-any", EvidenceLevel.EvidenceStrong),
+            new TweakEntry
+            {
+                Id = "sys-nvidia-only", Name = "NV", Category = "gpu", Description = "d",
+                ExpectedImpact = "i", EvidenceLevel = EvidenceLevel.EvidenceStrong,
+                Sources = ["https://x"], Risk = RiskLevel.None, Rollback = "r", ManualSteps = "m",
+                Measurable = true, HardwarePrerequisites = ["gpu:nvidia"],
+            },
+        };
+        var amdRig = new SystemSnapshot
+        {
+            CapturedAtUtc = DateTimeOffset.UnixEpoch, GpuName = "AMD Radeon RX 7900 XTX",
+        };
+        var plan = OptimizeForGame.Build("valorant", kb, amdRig);
+        Assert.Contains(plan.SystemTweaks, t => t.Id == "sys-any");
+        Assert.DoesNotContain(plan.SystemTweaks, t => t.Id == "sys-nvidia-only");
     }
 }

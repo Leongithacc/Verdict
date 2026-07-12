@@ -31,6 +31,7 @@ public partial class MainWindow : Window
                 ReportViewModel => NavReport,
                 ChangesViewModel => NavChanges,
                 CoPilotViewModel => NavCoPilot,
+                GameViewModel => NavGame,
                 SettingsViewModel => NavSettings,
                 _ => null,
             };
@@ -43,7 +44,6 @@ public partial class MainWindow : Window
     {
         _vm.Verdict.RecomputeScore();     // reflect a Score toggle made in the Lab
         _vm.Verdict.RecomputeRiskScope(); // reflect a Risk Slider toggle made in the Lab
-        _vm.Verdict.RefreshGames();       // reflect an Optimize-for-game toggle made in the Lab
         _vm.CurrentPage = _vm.Verdict;
     }
     private void OnNavScan(object s, RoutedEventArgs e)
@@ -133,6 +133,11 @@ public partial class MainWindow : Window
     {
         _vm.Profiles.RefreshProfiles();
         _vm.CurrentPage = _vm.Profiles;
+    }
+    private void OnNavGame(object s, RoutedEventArgs e)
+    {
+        _vm.Game.RefreshGames();  // popola la lista giochi + riflette una scansione arrivata dopo
+        _vm.CurrentPage = _vm.Game;
     }
     private void OnNavLab(object s, RoutedEventArgs e) => _vm.CurrentPage = _vm.Lab;
     private void OnNavCoPilot(object s, RoutedEventArgs e) => _vm.CurrentPage = _vm.CoPilot;

@@ -36,6 +36,7 @@ public sealed class MainViewModel : ViewModelBase
     public LabViewModel Lab { get; }
     public ProfilesViewModel Profiles { get; }
     public CoPilotViewModel CoPilot { get; }
+    public GameViewModel Game { get; }
     public ApplyAllViewModel ApplyAll { get; }
 
     public ViewModelBase CurrentPage { get => _currentPage; set => Set(ref _currentPage, value); }
@@ -87,6 +88,7 @@ public sealed class MainViewModel : ViewModelBase
         ApplyAll = new ApplyAllViewModel(this, Execution);
         Profiles = new ProfilesViewModel(this);
         CoPilot = new CoPilotViewModel(this);
+        Game = new GameViewModel(this);
         _currentPage = Verdict;
 
         StartFirstScanCommand = new(() =>
@@ -528,41 +530,13 @@ public sealed class VerdictViewModel(MainViewModel main) : ViewModelBase
         () => main.ApplyAll.Open(_applicableRecommended),
         () => _applicableRecommended.Count > 0);
 
-    // ── Optimize for [game] (Lab feature) ────────────────────────────────────
-    private IReadOnlyList<TweakEntry> _kbCache = [];
+    // ── Rig snapshot ─────────────────────────────────────────────────────────
+    // Optimize-for-game è ora una pagina di prima classe (GameViewModel), non più un
+    // pannello embedded qui. Lo snapshot resta qui (usato da Noise/Vanguard/co-pilota)
+    // ed è esposto per la pagina Gioco, che lo usa per tailorare i tweak al rig.
     private SystemSnapshot? _snapshotCache;
-    private string? _selectedGame;
-    public bool ShowOptimizeForGame => main.Settings.IsFeatureEnabled(FeatureCatalog.OptimizeForGame);
-    public ObservableCollection<string> Games { get; } = [];
-    public ObservableCollection<string> GameSystemTweaks { get; } = [];
-    public ObservableCollection<GameSettingRow> GameInGameSettings { get; } = [];
-    public string? SelectedGame
-    {
-        get => _selectedGame;
-        set { if (Set(ref _selectedGame, value)) RebuildGamePlan(); }
-    }
-
-    /// <summary>Loads the game list for the optimizer (cached KB). Cheap; safe to call on nav.</summary>
-    public void RefreshGames()
-    {
-        Raise(nameof(ShowOptimizeForGame));
-        if (!ShowOptimizeForGame) return;
-        if (_kbCache.Count == 0)
-            try { _kbCache = KnowledgeBaseLoader.Load(); } catch { return; }
-        if (Games.Count == 0)
-            foreach (var g in OptimizeForGame.AvailableGames(_kbCache)) Games.Add(g);
-    }
-
-    private void RebuildGamePlan()
-    {
-        GameSystemTweaks.Clear();
-        GameInGameSettings.Clear();
-        if (_selectedGame is null || _kbCache.Count == 0) return;
-        var plan = OptimizeForGame.Build(_selectedGame, _kbCache, _snapshotCache);
-        foreach (var t in plan.SystemTweaks) GameSystemTweaks.Add(t.Name);
-        foreach (var s in plan.InGameSettings)
-            GameInGameSettings.Add(new GameSettingRow(s.Name, s.ExpectedImpact));
-    }
+    /// <summary>Ultimo snapshot della scansione (null finché non si scansiona).</summary>
+    public SystemSnapshot? Snapshot => _snapshotCache;
 
     public void SetIdle(string header)
     {
