@@ -32,6 +32,7 @@ public partial class MainWindow : Window
                 ChangesViewModel => NavChanges,
                 CoPilotViewModel => NavCoPilot,
                 GameViewModel => NavGame,
+                HistoryViewModel => NavHistory,
                 SettingsViewModel => NavSettings,
                 _ => null,
             };
@@ -138,6 +139,11 @@ public partial class MainWindow : Window
     {
         _vm.Game.RefreshGames();  // popola la lista giochi + riflette una scansione arrivata dopo
         _vm.CurrentPage = _vm.Game;
+    }
+    private void OnNavHistory(object s, RoutedEventArgs e)
+    {
+        _vm.History.Refresh();    // rilegge le run dal disco a ogni apertura
+        _vm.CurrentPage = _vm.History;
     }
     private void OnNavLab(object s, RoutedEventArgs e) => _vm.CurrentPage = _vm.Lab;
     private void OnNavCoPilot(object s, RoutedEventArgs e) => _vm.CurrentPage = _vm.CoPilot;

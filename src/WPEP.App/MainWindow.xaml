@@ -1619,6 +1619,66 @@
       </ScrollViewer>
     </DataTemplate>
 
+    <!-- ============ STORICO (misure nel tempo) ============ -->
+    <DataTemplate DataType="{x:Type local:HistoryViewModel}">
+      <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <StackPanel Margin="32,24" MaxWidth="900" HorizontalAlignment="Left">
+          <TextBlock Style="{StaticResource H1}" Text="Storico" />
+          <TextBlock Style="{StaticResource Muted}" Margin="0,4,0,16" TextWrapping="Wrap"
+                     Text="Le tue misure nel tempo: ogni sessione col suo verdetto before/after e il trend della mediana frametime. Sola lettura." />
+
+          <Border Style="{StaticResource Card}" Padding="18,14"
+                  Visibility="{Binding IsEmpty, Converter={StaticResource BoolToVis}}">
+            <TextBlock TextWrapping="Wrap" Foreground="{DynamicResource TextMuted}"
+                       Text="Nessuna misura registrata ancora. Vai su Misura → Ghost Tweak per una sessione baseline/post: comparirà qui." />
+          </Border>
+
+          <Border Style="{StaticResource Card}" Padding="18,14" Margin="0,0,0,12"
+                  Visibility="{Binding HasTrend, Converter={StaticResource BoolToVis}}">
+            <StackPanel>
+              <TextBlock FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource Accent}"
+                         Text="{Binding TrendProcess, StringFormat='TREND MEDIANA FRAMETIME — {0}'}" />
+              <Viewbox Height="60" HorizontalAlignment="Left" Margin="0,8,0,0" Stretch="Fill" Width="260">
+                <Polyline Points="{Binding TrendPoints}" Stroke="{DynamicResource Accent}"
+                          StrokeThickness="2" StrokeLineJoin="Round" />
+              </Viewbox>
+              <TextBlock Style="{StaticResource Muted}" FontSize="11" Margin="0,6,0,0"
+                         Text="Più in basso = mediana più bassa = meglio. Da sinistra (vecchio) a destra (recente)." />
+            </StackPanel>
+          </Border>
+
+          <ItemsControl ItemsSource="{Binding Sessions}">
+            <ItemsControl.ItemTemplate><DataTemplate>
+              <Border Style="{StaticResource Card}" Padding="16,12" Margin="0,0,0,8">
+                <Grid>
+                  <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                  </Grid.ColumnDefinitions>
+                  <StackPanel Grid.Column="0" Margin="0,0,10,0">
+                    <StackPanel Orientation="Horizontal">
+                      <TextBlock Text="{Binding ProcessName}" Foreground="{DynamicResource Text}" FontWeight="SemiBold" />
+                      <TextBlock Text="{Binding When}" Style="{StaticResource Muted}" FontSize="11"
+                                 Margin="10,0,0,0" VerticalAlignment="Center" />
+                    </StackPanel>
+                    <TextBlock Text="{Binding Detail}" Style="{StaticResource Muted}" FontSize="11" Margin="0,2,0,0" TextWrapping="Wrap" />
+                  </StackPanel>
+                  <Border Grid.Column="1" CornerRadius="6" Padding="9,4" VerticalAlignment="Center"
+                          Background="{Binding VerdictColor, Converter={StaticResource TokenBrush}}">
+                    <TextBlock Text="{Binding Verdict}" FontSize="12" FontWeight="SemiBold"
+                               Foreground="{DynamicResource OnAccent}" />
+                  </Border>
+                </Grid>
+              </Border>
+            </DataTemplate></ItemsControl.ItemTemplate>
+          </ItemsControl>
+
+          <Button Style="{StaticResource GhostButton}" Content="Apri la cartella delle run"
+                  Margin="0,6,0,0" HorizontalAlignment="Left" Command="{Binding OpenRunsFolderCommand}" />
+        </StackPanel>
+      </ScrollViewer>
+    </DataTemplate>
+
     <!-- ============ GIOCO (ottimizza per gioco, promosso dal Lab) ============ -->
     <DataTemplate DataType="{x:Type local:GameViewModel}">
       <ScrollViewer VerticalScrollBarVisibility="Auto">
@@ -1933,6 +1993,13 @@
                 <Path Width="16" Height="16" Stretch="Uniform" Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=RadioButton}}" StrokeThickness="1.5" Fill="Transparent"
                       Data="M 4 2 L 12 2 L 12 14 L 4 14 Z M 6 6 L 10 6 M 6 9 L 10 9 M 6 12 L 8 12" Margin="0,0,10,0" VerticalAlignment="Center" />
                 <TextBlock Text="Report" VerticalAlignment="Center" />
+              </StackPanel>
+            </RadioButton>
+            <RadioButton x:Name="NavHistory" Style="{StaticResource NavButton}" Checked="OnNavHistory">
+              <StackPanel Orientation="Horizontal">
+                <Path Width="16" Height="16" Stretch="Uniform" Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=RadioButton}}" StrokeThickness="1.5" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round" Fill="Transparent"
+                      Data="M 2 12 L 6 8 L 9 10 L 14 4" Margin="0,0,10,0" VerticalAlignment="Center" />
+                <TextBlock Text="Storico" VerticalAlignment="Center" />
               </StackPanel>
             </RadioButton>
             <RadioButton x:Name="NavChanges" Style="{StaticResource NavButton}" Checked="OnNavChanges">

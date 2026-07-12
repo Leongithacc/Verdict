@@ -37,6 +37,7 @@ public sealed class MainViewModel : ViewModelBase
     public ProfilesViewModel Profiles { get; }
     public CoPilotViewModel CoPilot { get; }
     public GameViewModel Game { get; }
+    public HistoryViewModel History { get; }
     public ApplyAllViewModel ApplyAll { get; }
 
     public ViewModelBase CurrentPage { get => _currentPage; set => Set(ref _currentPage, value); }
@@ -89,6 +90,7 @@ public sealed class MainViewModel : ViewModelBase
         Profiles = new ProfilesViewModel(this);
         CoPilot = new CoPilotViewModel(this);
         Game = new GameViewModel(this);
+        History = new HistoryViewModel();
         _currentPage = Verdict;
 
         StartFirstScanCommand = new(() =>
