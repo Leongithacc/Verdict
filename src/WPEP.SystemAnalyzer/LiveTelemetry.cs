@@ -56,9 +56,19 @@ public sealed class NvidiaSmiGpuTelemetry : IGpuTelemetry
                 CreateNoWindow = true,
             });
             if (p is null) return null;
-            string? line = p.StandardOutput.ReadLine();
-            p.WaitForExit(2000);
-            return ParseGpuCsv(line);
+
+            // Lettura async + WaitForExit con timeout: se nvidia-smi si impianta lo uccidiamo invece
+            // di bloccare il thread per sempre (altrimenti il polling della pagina Live si congela).
+            var readTask = p.StandardOutput.ReadToEndAsync();
+            if (!p.WaitForExit(2000))
+            {
+                try { p.Kill(entireProcessTree: true); } catch { /* best-effort */ }
+                return null;
+            }
+            string output = readTask.GetAwaiter().GetResult();
+            string? first = output.Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+                .FirstOrDefault();
+            return ParseGpuCsv(first);
         }
         catch { return null; } // nvidia-smi assente/lento/errore → nessun dato, mai crash
     }

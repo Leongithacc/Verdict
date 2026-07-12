@@ -16,11 +16,12 @@ public sealed class LiveViewModel : ViewModelBase
     private readonly DispatcherTimer _timer;
     private readonly Queue<double> _cpuHistory = new();
     private TelemetrySample? _last;
+    private bool _polling;
 
     public LiveViewModel()
     {
         _timer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(1) };
-        _timer.Tick += (_, _) => Poll();
+        _timer.Tick += (_, _) => _ = Poll();
     }
 
     public string CpuText => _last is null ? "—" : $"{_last.CpuPercent:F0}%";
@@ -39,15 +40,25 @@ public sealed class LiveViewModel : ViewModelBase
     public void Start()
     {
         if (_timer.IsEnabled) return;
-        Poll();
+        _ = Poll();
         _timer.Start();
     }
 
     public void Stop() => _timer.Stop();
 
-    private void Poll()
+    /// <summary>Campiona in background (nvidia-smi può impiegare ~100-300 ms: NON deve bloccare il
+    /// thread UI) e aggiorna i binding al ritorno sul contesto UI. La guardia evita sovrapposizioni
+    /// se un campione è più lento del tick.</summary>
+    private async Task Poll()
     {
-        _last = _source.Sample();
+        if (_polling) return;
+        _polling = true;
+        try
+        {
+            _last = await Task.Run(() => _source.Sample());
+        }
+        finally { _polling = false; }
+
         _cpuHistory.Enqueue(_last.CpuPercent);
         while (_cpuHistory.Count > HistoryLen) _cpuHistory.Dequeue();
         BuildCpuTrend();

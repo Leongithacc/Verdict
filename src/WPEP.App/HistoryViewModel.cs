@@ -64,7 +64,14 @@ public sealed class HistoryViewModel : ViewModelBase
             return new HistorySessionRow(s.SessionId, when, s.ProcessName,
                 "Solo baseline", "Neutral", $"mediana {s.BaselineMedianMs:F1} ms · nessun post", false);
 
-        var report = ComparisonEngine.Compare(s.Baseline, s.Post);
+        ComparisonEngine.ComparisonReport report;
+        try { report = ComparisonEngine.Compare(s.Baseline, s.Post); }
+        catch // sessione degenere (dati insufficienti/rotti): non deve far crashare lo Storico
+        {
+            return new HistorySessionRow(s.SessionId, when, s.ProcessName,
+                "Dati insufficienti", "Neutral",
+                $"mediana {s.BaselineMedianMs:F1} → {s.PostMedianMs:F1} ms", false);
+        }
         double deltaPct = Math.Abs(report.Metrics[0].DeltaPercent);
         string verdict = report.PrimaryVerdict switch
         {
